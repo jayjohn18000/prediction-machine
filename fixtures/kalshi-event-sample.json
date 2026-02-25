@@ -1,0 +1,43 @@
+{
+  "event": {
+    "event_ticker": "KXPRESNOMD-28",
+    "series_ticker": "KXPRESNOMD",
+    "title": "2028 Democratic Presidential Nominee",
+    "category": "Politics",
+    "strike_date": "2028-11-07T00:00:00Z"
+  },
+  "series": {
+    "ticker": "KXPRESNOMD",
+    "title": "US Presidential Nomination (Democratic)",
+    "category": "Politics",
+    "tags": ["US Elections"],
+    "settlement_sources": ["https://www.fec.gov/"]
+  },
+  "markets": [
+    {
+      "ticker": "KXPRESNOMD-28-GN",
+      "event_ticker": "KXPRESNOMD-28",
+      "series_ticker": "KXPRESNOMD",
+      "yes_sub_title": "Gavin Newsom",
+      "no_sub_title": "Someone else",
+      "market_type": "binary",
+      "open_time": "2026-01-01T00:00:00Z",
+      "close_time": "2028-11-06T23:59:59Z",
+      "expected_expiration_time": "2028-11-07T12:00:00Z",
+      "latest_expiration_time": "2028-11-10T00:00:00Z"
+    },
+    {
+      "ticker": "KXPRESNOMD-28-KH",
+      "event_ticker": "KXPRESNOMD-28",
+      "series_ticker": "KXPRESNOMD",
+      "yes_sub_title": "Kamala Harris",
+      "no_sub_title": "Someone else",
+      "market_type": "binary",
+      "open_time": "2026-01-01T00:00:00Z",
+      "close_time": "2028-11-06T23:59:59Z",
+      "expected_expiration_time": "2028-11-07T12:00:00Z",
+      "latest_expiration_time": "2028-11-10T00:00:00Z"
+    }
+  ]
+}
+

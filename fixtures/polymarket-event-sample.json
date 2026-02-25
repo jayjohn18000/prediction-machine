@@ -1,0 +1,45 @@
+{
+  "event": {
+    "id": "evt-dem-nom-2028",
+    "slug": "democratic-presidential-nominee-2028",
+    "title": "2028 Democratic Presidential Nominee",
+    "category": "Politics",
+    "subcategory": "Elections",
+    "tags": [
+      { "id": "us-politics", "label": "US Politics", "slug": "us-politics" }
+    ],
+    "startDate": "2026-01-01T00:00:00Z",
+    "endDate": "2028-11-07T00:00:00Z"
+  },
+  "markets": [
+    {
+      "id": "mkt-newsom",
+      "conditionId": "cond-newsom",
+      "slug": "2028-dem-nominee-gavin-newsom",
+      "question": "Will Gavin Newsom be the 2028 Democratic presidential nominee?",
+      "category": "Politics",
+      "outcomes": "[\"Yes\",\"No\"]",
+      "shortOutcomes": "[\"Yes\",\"No\"]",
+      "outcomePrices": "[\"0.35\",\"0.65\"]",
+      "clobTokenIds": "[\"token-newsom-yes\",\"token-newsom-no\"]",
+      "startDate": "2026-01-01T00:00:00Z",
+      "endDate": "2028-11-07T00:00:00Z",
+      "enableOrderBook": true
+    },
+    {
+      "id": "mkt-harris",
+      "conditionId": "cond-harris",
+      "slug": "2028-dem-nominee-kamala-harris",
+      "question": "Will Kamala Harris be the 2028 Democratic presidential nominee?",
+      "category": "Politics",
+      "outcomes": "[\"Yes\",\"No\"]",
+      "shortOutcomes": "[\"Yes\",\"No\"]",
+      "outcomePrices": "[\"0.25\",\"0.75\"]",
+      "clobTokenIds": "[\"token-harris-yes\",\"token-harris-no\"]",
+      "startDate": "2026-01-01T00:00:00Z",
+      "endDate": "2028-11-07T00:00:00Z",
+      "enableOrderBook": true
+    }
+  ]
+}
+
