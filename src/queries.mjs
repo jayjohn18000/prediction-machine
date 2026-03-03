@@ -150,6 +150,69 @@ export const SQL = {
     limit $4;
   `,
 
+  review_queue: `
+    select
+      p.id as proposed_id,
+      p.provider_market_id_a,
+      p.provider_market_id_b,
+      p.proposed_relationship_type,
+      p.confidence,
+      p.reasons,
+      p.created_at,
+      pa.provider_id as provider_id_a,
+      pr_a.code as provider_code_a,
+      pa.provider_market_ref as ref_a,
+      pa.title as title_a,
+      pa.category as category_a,
+      pa.status as status_a,
+      pa.url as url_a,
+      pa.close_time as close_time_a,
+      pb.provider_id as provider_id_b,
+      pr_b.code as provider_code_b,
+      pb.provider_market_ref as ref_b,
+      pb.title as title_b,
+      pb.category as category_b,
+      pb.status as status_b,
+      pb.url as url_b,
+      pb.close_time as close_time_b
+    from pmci.proposed_links p
+    join pmci.provider_markets pa on pa.id = p.provider_market_id_a
+    join pmci.providers pr_a on pr_a.id = pa.provider_id
+    join pmci.provider_markets pb on pb.id = p.provider_market_id_b
+    join pmci.providers pr_b on pr_b.id = pb.provider_id
+    where p.category = $1
+      and p.decision is null
+      and p.confidence >= $2
+    order by p.confidence desc, p.created_at asc
+    limit $3;
+  `,
+
+  latest_snapshots_with_raw: `
+    select distinct on (s.provider_market_id)
+      s.provider_market_id,
+      s.observed_at,
+      s.price_yes,
+      s.raw
+    from pmci.provider_market_snapshots s
+    where s.provider_market_id = any($1::bigint[])
+    order by s.provider_market_id, s.observed_at desc;
+  `,
+
+  observer_health: `
+    select cycle_at, pairs_attempted, pairs_succeeded, pairs_configured,
+      kalshi_fetch_errors, polymarket_fetch_errors,
+      spread_insert_errors, pmci_ingestion_errors, json_parse_errors
+    from pmci.observer_heartbeats
+    order by cycle_at desc limit 20
+  `,
+
+  canonical_events: `
+    select id, slug, title, category, start_time, end_time, metadata, created_at
+    from pmci.canonical_events
+    where ($1::text is null or category = $1)
+    order by created_at desc
+  `,
+
   insert_market_link: `
     insert into pmci.market_links (
       family_id, provider_id, provider_market_id, relationship_type, status,

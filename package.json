@@ -12,11 +12,32 @@
     "supabase": "supabase",
     "db:push": "supabase db push",
     "db:pull": "supabase db pull",
-    "discover:dem2028": "node scripts/discover-dem-2028-dual-listings.mjs"
+    "discover:dem2028": "node scripts/discover-dem-2028-dual-listings.mjs",
+    "api:pmci": "node src/api.mjs",
+    "verify:schema": "node scripts/verify-pmci-schema.mjs",
+    "seed:pmci": "node scripts/seed-pmci-families-links.mjs",
+    "bootstrap": "node scripts/pmci-bootstrap.mjs",
+    "pmci:ingest:politics:universe": "node scripts/pmci-ingest-politics-universe.mjs",
+    "pmci:check:poly": "node scripts/pmci-check-polymarket-snapshots.mjs",
+    "pmci:probe": "node scripts/pmci-ingestion-probe.mjs",
+    "pmci:smoke": "node scripts/pmci-smoke.mjs",
+    "pmci:check-top-divergences": "node scripts/check-top-divergences.mjs",
+    "pmci:check-coverage": "node scripts/check-coverage.mjs",
+    "pmci:watch": "node scripts/pmci-watch.mjs",
+    "pmci:validate:politics": "node scripts/pmci-validate-politics.mjs",
+    "pmci:propose:politics": "node scripts/pmci-propose-links-politics.mjs",
+    "pmci:review": "node scripts/pmci-review-cli.mjs",
+    "pmci:check:proposals": "node scripts/pmci-check-proposals.mjs",
+    "pmci:discover:kalshi:politics": "node scripts/pmci-discover-kalshi-politics-series.mjs",
+    "pmci:status": "node scripts/pmci-projection-status.mjs",
+    "pmci:check:round-trip": "node scripts/pmci-check-round-trip.mjs"
   },
   "dependencies": {
+    "@fastify/rate-limit": "^10.3.0",
     "@supabase/supabase-js": "^2.91.1",
-    "pg": "^8.18.0"
+    "fastify": "^5.x",
+    "pg": "^8.18.0",
+    "zod": "^3.x"
   },
   "devDependencies": {
     "nodemon": "^3.1.14",
