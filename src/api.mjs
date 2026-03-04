@@ -624,27 +624,34 @@ app.get("/v1/market-families", { rateLimit: RATE_LIMIT_CONFIG }, async (req) => 
   if (!parsed.success) return { error: parsed.error.flatten() };
 
   const { rows: families } = await query(SQL.families_by_event, [parsed.data.event_id]);
-  const out = [];
+  if (families.length === 0) return [];
 
-  for (const f of families) {
-    const { rows: links } = await query(SQL.current_links_for_family, [f.id]);
-    const marketIds = links.map(l => l.provider_market_id);
-    const { rows: snaps } = await query(SQL.latest_snapshots_for_markets, [marketIds]);
+  const familyIds = families.map((f) => f.id);
+  const { rows: allLinks } = await query(SQL.links_for_families_batch, [familyIds]);
+  const allMarketIds = [...new Set(allLinks.map((l) => l.provider_market_id))];
+  const { rows: snaps } = allMarketIds.length
+    ? await query(SQL.latest_snapshots_for_markets, [allMarketIds])
+    : { rows: [] };
 
-    const latest = new Map(snaps.map(s => [s.provider_market_id, s]));
-    const consensus = computeConsensus(links, latest);
+  const latestByMarketId = new Map(snaps.map((s) => [s.provider_market_id, s]));
+  const linksByFamily = new Map();
+  for (const l of allLinks) {
+    if (!linksByFamily.has(l.family_id)) linksByFamily.set(l.family_id, []);
+    linksByFamily.get(l.family_id).push(l);
+  }
 
-    out.push({
+  return families.map((f) => {
+    const links = linksByFamily.get(f.id) ?? [];
+    const consensus = computeConsensus(links, latestByMarketId);
+    return {
       id: Number(f.id),
       canonical_event_id: f.canonical_event_id,
       canonical_market_id: f.canonical_market_id,
       label: f.label,
       consensus_price: consensus,
       num_links: links.length,
-    });
-  }
-
-  return out;
+    };
+  });
 });
 
 app.get("/v1/market-links", { rateLimit: RATE_LIMIT_CONFIG }, async (req) => {
@@ -720,23 +727,36 @@ app.get("/v1/signals/top-divergences", { preHandler: assertFreshness, rateLimit:
   if (!parsed.success) return { error: parsed.error.flatten() };
 
   const { rows: families } = await query(SQL.families_by_event, [parsed.data.event_id]);
+  if (families.length === 0) return [];
+
+  const familyIds = families.map((f) => f.id);
+  const { rows: allLinks } = await query(SQL.links_for_families_batch, [familyIds]);
+  const allMarketIds = [...new Set(allLinks.map((l) => l.provider_market_id))];
+  const { rows: snaps } = allMarketIds.length
+    ? await query(SQL.latest_snapshots_for_markets, [allMarketIds])
+    : { rows: [] };
+
+  const latestByMarketId = new Map(snaps.map((s) => [s.provider_market_id, s]));
+  const linksByFamily = new Map();
+  for (const l of allLinks) {
+    if (!linksByFamily.has(l.family_id)) linksByFamily.set(l.family_id, []);
+    linksByFamily.get(l.family_id).push(l);
+  }
+
   const results = [];
 
   for (const f of families) {
-    const { rows: links } = await query(SQL.current_links_for_family, [f.id]);
-    const marketIds = links.map(l => l.provider_market_id);
-    if (marketIds.length === 0) continue;
+    const links = linksByFamily.get(f.id) ?? [];
+    if (links.length === 0) continue;
 
-    const { rows: snaps } = await query(SQL.latest_snapshots_for_markets, [marketIds]);
-    const latest = new Map(snaps.map(s => [s.provider_market_id, s]));
-    const consensus = computeConsensus(links, latest);
+    const consensus = computeConsensus(links, latestByMarketId);
 
     const legs = [];
     let maxDivergence = null;
     let lastObservedAt = null;
 
     for (const l of links) {
-      const snap = latest.get(l.provider_market_id);
+      const snap = latestByMarketId.get(l.provider_market_id);
       const priceYes = snap?.price_yes ?? null;
       const div = computeDivergence(priceYes, consensus);
       if (div != null && (maxDivergence == null || div > maxDivergence)) maxDivergence = div;

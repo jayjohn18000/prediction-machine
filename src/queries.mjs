@@ -87,6 +87,33 @@ export const SQL = {
     order by l.relationship_type, l.confidence desc;
   `,
 
+  links_for_families_batch: `
+    select
+      l.id,
+      l.family_id,
+      p.code as provider,
+      l.provider_id,
+      l.provider_market_id,
+      l.relationship_type,
+      l.status,
+      l.link_version,
+      l.confidence,
+      l.correlation_window,
+      l.lag_seconds,
+      l.correlation_strength,
+      l.break_rate,
+      l.last_validated_at,
+      l.staleness_score,
+      l.reasons,
+      pm.title as market_title,
+      pm.provider_market_ref as provider_market_ref
+    from pmci.v_market_links_current l
+    join pmci.providers p on p.id = l.provider_id
+    join pmci.provider_markets pm on pm.id = l.provider_market_id
+    where l.family_id = any($1::int[])
+    order by l.family_id, l.relationship_type, l.confidence desc;
+  `,
+
   next_linker_run_version: `
     select coalesce(max(version), 0) + 1 as next_version
     from pmci.linker_runs;

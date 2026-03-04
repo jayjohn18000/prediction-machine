@@ -541,10 +541,29 @@ async function ingestPolymarketUniverse(pmciClient, providerId, opts) {
         const liquidity = parseNum(m?.liquidity) ?? null;
         const volume24h = parseNum(m?.volume24hr ?? m?.volume_24hr) ?? null;
 
+        // Detect binary per-candidate markets (Polymarket convention: one Yes/No market per candidate).
+        // Without this, every candidate in the event collides on slug#Yes / slug#No during upsert.
+        const isBinaryYesNo =
+          outcomes?.length === 2 &&
+          outcomes[0]?.toLowerCase() === 'yes' &&
+          outcomes[1]?.toLowerCase() === 'no';
+        const rawGroupTitle = m?.groupItemTitle ? String(m.groupItemTitle).trim() : null;
+        const PLACEHOLDER_RE = /^(player|person|option|candidate)\s+[a-z]$/i;
+        if (isBinaryYesNo && rawGroupTitle && PLACEHOLDER_RE.test(rawGroupTitle)) {
+          // Placeholder slot (Player U, Option H, Person J, etc.) — no real candidate data, skip entirely.
+          continue;
+        }
+        // candidateName is set when this is a real named-candidate binary market.
+        const candidateName = isBinaryYesNo && rawGroupTitle && !PLACEHOLDER_RE.test(rawGroupTitle) ? rawGroupTitle : null;
+
         // Path 1: outcomePrices available — use them and set price_source = "outcomePrices"
         if (!skipReason && outcomes && outcomes.length > 0 && prices && prices.length === outcomes.length) {
-          for (let k = 0; k < outcomes.length; k += 1) {
-            const outcomeName = String(outcomes[k] ?? '').trim();
+          // For binary per-candidate markets, only ingest the Yes outcome keyed by candidate name.
+          const outcomesToIngest = candidateName
+            ? [{ k: 0, outcomeName: candidateName }]
+            : outcomes.map((o, k) => ({ k, outcomeName: String(o ?? '').trim() }));
+
+          for (const { k, outcomeName } of outcomesToIngest) {
             const priceYes = prices[k];
             if (priceYes == null) continue;
 
@@ -602,9 +621,16 @@ async function ingestPolymarketUniverse(pmciClient, providerId, opts) {
         if (!skipReason && outcomes && outcomes.length > 0 && !prices) {
           const derived = getDerivedPrice(m);
           if (derived) {
-            const yesIdx = outcomes.findIndex((o) => String(o).toLowerCase() === 'yes');
-            const idxYes = yesIdx >= 0 ? yesIdx : outcomes.length === 2 ? 0 : 0;
-            const outcomeName = String(outcomes[idxYes] ?? 'Yes').trim();
+            let outcomeName;
+            let outcomeIndex;
+            if (candidateName) {
+              outcomeName = candidateName;
+              outcomeIndex = 0;
+            } else {
+              const yesIdx = outcomes.findIndex((o) => String(o).toLowerCase() === 'yes');
+              outcomeIndex = yesIdx >= 0 ? yesIdx : 0;
+              outcomeName = String(outcomes[outcomeIndex] ?? 'Yes').trim();
+            }
             const providerMarketRef = `${slug}#${outcomeName}`;
             const title = String(m?.question || m?.title || providerMarketRef);
 
@@ -623,7 +649,7 @@ async function ingestPolymarketUniverse(pmciClient, providerId, opts) {
                   provider: 'polymarket',
                   tag_id: tagId,
                   market_id: marketId,
-                  outcome_index: idxYes,
+                  outcome_index: outcomeIndex,
                   outcome_name: outcomeName,
                 },
                 priceYes: derived.price,
@@ -640,7 +666,7 @@ async function ingestPolymarketUniverse(pmciClient, providerId, opts) {
                     slug,
                     tag_id: tagId,
                     market_id: marketId,
-                    outcome_index: idxYes,
+                    outcome_index: outcomeIndex,
                     outcome_name: outcomeName,
                     price_source: derived.source,
                   },

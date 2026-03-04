@@ -9,6 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import pg from 'pg';
+import { extractMatchingFields } from '../lib/pmci-matching-adapters.mjs';
 
 const { Client } = pg;
 
@@ -367,6 +368,7 @@ function parseKalshiTitle(ref, title) {
     entityTokens,
     raceTokens,
     rawEntity,
+    outcomeName: rawEntity || null,
   };
 }
 
@@ -393,6 +395,22 @@ function keywordOverlapScore(tokensA, tokensB) {
   for (const t of setA) if (setB.has(t)) inter += 1;
   const union = setA.size + setB.size - inter;
   return union === 0 ? 0 : inter / union;
+}
+
+function computeEntityOverlap(tokensA, tokensB) {
+  const a = new Set((tokensA || []).filter((t) => t && t.length > 1));
+  const b = new Set((tokensB || []).filter((t) => t && t.length > 1));
+  if (!a.size || !b.size) return null;
+  let inter = 0;
+  for (const t of a) if (b.has(t)) inter += 1;
+  if (inter === 0) return 0;
+  const minSize = Math.min(a.size, b.size);
+  if (inter === minSize) return 1;
+  return 0.5;
+}
+
+function normalizeOutcomeName(name) {
+  return String(name || '').trim().toLowerCase();
 }
 
 /** Equivalent: high entity + high title/slug. Proxy: less on slug_similarity; add keyword_overlap, entity_strength, topic_match, time_window. */
@@ -510,24 +528,47 @@ async function main() {
     let snapshotRawByMarket = new Map();
     if (allMarketIds.length > 0) {
       const snapRes = await client.query(
-        `SELECT DISTINCT ON (provider_market_id) provider_market_id, raw
+        `SELECT DISTINCT ON (provider_market_id) provider_market_id, price_yes, raw
          FROM pmci.provider_market_snapshots
          WHERE provider_market_id = ANY($1::bigint[])
          ORDER BY provider_market_id, observed_at DESC`,
         [allMarketIds],
       );
       for (const r of snapRes.rows || []) {
-        snapshotRawByMarket.set(Number(r.provider_market_id), r.raw || {});
+        snapshotRawByMarket.set(Number(r.provider_market_id), {
+          raw: r.raw || {},
+          priceYes: typeof r.price_yes === 'number' ? r.price_yes : null,
+        });
       }
+    }
+
+    const kalshiMatchingFieldsById = new Map();
+    for (const m of kalshiAll) {
+      kalshiMatchingFieldsById.set(m.id, extractMatchingFields(m, 'kalshi'));
+    }
+    const polyMatchingFieldsById = new Map();
+    for (const m of polyAll) {
+      polyMatchingFieldsById.set(m.id, extractMatchingFields(m, 'polymarket'));
     }
 
     const canonicalSlugs = new Map();
     const ceRes = await client.query(`SELECT id, slug FROM pmci.canonical_events WHERE category = $1`, [CATEGORY]);
     for (const r of ceRes.rows || []) canonicalSlugs.set(r.slug, r.id);
 
+    function getSnapshotMeta(pmId) {
+      const entry = snapshotRawByMarket.get(Number(pmId));
+      if (entry && typeof entry === 'object') return entry;
+      return { raw: entry || {}, priceYes: null };
+    }
+
     function getPriceSource(pmId) {
-      const raw = snapshotRawByMarket.get(Number(pmId)) || {};
+      const { raw } = getSnapshotMeta(pmId);
       return raw?._pmci?.price_source ?? null;
+    }
+
+    function getPriceYes(pmId) {
+      const { priceYes } = getSnapshotMeta(pmId);
+      return typeof priceYes === 'number' && !Number.isNaN(priceYes) ? priceYes : null;
     }
 
     // Block key = topic_signature (office+geo+year) or fallback topic_key. Compare only within same block.
@@ -536,12 +577,25 @@ async function main() {
       return sig || extractTopicKey({ title: m.title, provider_market_ref: m.provider_market_ref });
     }
 
+    function shouldPairByTemplate(a, b) {
+      const fa = a?.matchingFields;
+      const fb = b?.matchingFields;
+      if (!fa || !fb) return true;
+      if (!fa.template || !fb.template) return true;
+      if (fa.template === 'unknown' || fb.template === 'unknown') return true;
+      if (!fa.jurisdiction || !fb.jurisdiction) return true;
+      if (fa.jurisdiction !== fb.jurisdiction) return false;
+      if (!fa.cycle || !fb.cycle) return true;
+      return String(fa.cycle) === String(fb.cycle);
+    }
+
     // Source = unlinked only. Target = ALL (linked + unlinked) in same block. Attach unlinked to existing families.
     function addKalshi(block, m, list) {
       const parsed = parseKalshiTitle(m.provider_market_ref, m.title);
       const topicKey = extractTopicKey({ title: m.title, provider_market_ref: m.provider_market_ref });
       const topicSignature = extractTopicSignature({ title: m.title, provider_market_ref: m.provider_market_ref });
       const genericEntity = isGenericEntity(parsed.normalizedEntity, parsed.rawEntity || '');
+      const matchingFields = kalshiMatchingFieldsById.get(m.id) || null;
       list.get(block).push({
         id: m.id,
         provider_id: kalshiId,
@@ -554,6 +608,8 @@ async function main() {
         topicKey,
         topicSignature,
         genericEntity,
+        matchingFields,
+        template: matchingFields?.template ?? 'unknown',
         isLinked: linkedIds.has(Number(m.id)),
         familyId: marketIdToFamilyId.get(Number(m.id)) ?? null,
       });
@@ -564,6 +620,7 @@ async function main() {
       const topicKey = extractTopicKey({ title: m.title, provider_market_ref: m.provider_market_ref });
       const topicSignature = extractTopicSignature({ title: m.title, provider_market_ref: m.provider_market_ref });
       const genericEntity = isGenericEntity(parsed.normalizedEntity, parsed.outcomeName || '');
+      const matchingFields = polyMatchingFieldsById.get(m.id) || null;
       list.get(block).push({
         id: m.id,
         provider_id: polyId,
@@ -578,6 +635,8 @@ async function main() {
         topicKey,
         topicSignature,
         genericEntity,
+        matchingFields,
+        template: matchingFields?.template ?? 'unknown',
         isLinked: linkedIds.has(Number(m.id)),
         familyId: marketIdToFamilyId.get(Number(m.id)) ?? null,
       });
@@ -713,7 +772,7 @@ async function main() {
       );
       if (!entityGatePass) return { wroteEquiv: false, wroteProxy: false };
       topicStats.pairs_passed_entity_gate += 1;
-      const proxyEntityGate = !k.genericEntity && !p.genericEntity;
+      const proxyEntityGate = !k.genericEntity || !p.genericEntity;
       if (entityGatePass && !proxyEntityGate) {
         topicStats.pairs_filtered_generic = (topicStats.pairs_filtered_generic || 0) + 1;
         report.filtered_generic_entities += 1;
@@ -735,11 +794,13 @@ async function main() {
       const lastNameMatch = !!(k.normalizedEntity && p.normalizedEntity && getLastName(k.normalizedEntity) === getLastName(p.normalizedEntity));
       const entityStrength = lastNameMatch ? 1 : (entityMatch ? 0.7 : 0);
       const topicMatchBonus = 0.1;
+      let dateDeltaDays = null;
       let timeWindowBonus = 0;
       if (k.close_time && p.close_time) {
         const a = new Date(k.close_time).getTime();
         const b = new Date(p.close_time).getTime();
         const days = Math.abs(a - b) / (24 * 60 * 60 * 1000);
+        dateDeltaDays = Math.round(days);
         if (days <= 60) timeWindowBonus = 0.05;
       }
 
@@ -765,6 +826,60 @@ async function main() {
         k.topicSignature !== 'nominee';
       const sameBlockBonus = sameSpecificSig && lastNameMatch ? 0.35 : 0;
       const equivalent_confidence = Math.min(1, rawEquivConf + sameBlockBonus);
+
+      const priceA = getPriceYes(k.id);
+      const priceB = getPriceYes(p.id);
+      let price_spread = null;
+      if (priceA != null && priceB != null) {
+        price_spread = Math.abs(priceA - priceB);
+      }
+
+      let outcome_name_match = null;
+      const normOutcomeA = normalizeOutcomeName(k.outcomeName || 'yes');
+      const normOutcomeB = normalizeOutcomeName(p.outcomeName || 'yes');
+      if (normOutcomeA || normOutcomeB) {
+        if (normOutcomeA && normOutcomeB) {
+          if (normOutcomeA === normOutcomeB) {
+            outcome_name_match = 1;
+          } else if (normOutcomeA.includes(normOutcomeB) || normOutcomeB.includes(normOutcomeA)) {
+            outcome_name_match = 0.5;
+          } else {
+            outcome_name_match = 0;
+          }
+        } else {
+          outcome_name_match = 0;
+        }
+      }
+
+      let featureTemplate = 'unknown';
+      const fa = k.matchingFields;
+      const fb = p.matchingFields;
+      if (
+        fa &&
+        fb &&
+        fa.template &&
+        fb.template &&
+        fa.template !== 'unknown' &&
+        fa.template === fb.template &&
+        fa.jurisdiction &&
+        fb.jurisdiction &&
+        fa.jurisdiction === fb.jurisdiction &&
+        fa.cycle &&
+        fb.cycle &&
+        String(fa.cycle) === String(fb.cycle)
+      ) {
+        featureTemplate = fa.template;
+      }
+
+      const features = {
+        title_jaccard: Math.round(titleSim * 10000) / 10000,
+        entity_overlap: computeEntityOverlap(k.entityTokens, p.entityTokens),
+        date_delta_days: dateDeltaDays,
+        price_spread,
+        outcome_name_match,
+        confidence_raw: Math.round(rawEquivConf * 10000) / 10000,
+        template: featureTemplate,
+      };
 
       if (proxyEntityGate) {
         if (!topicStats.topProxyPairs) topicStats.topProxyPairs = [];
@@ -835,10 +950,10 @@ async function main() {
         const insProp = await client.query(
           `INSERT INTO pmci.proposed_links (
             category, provider_market_id_a, provider_market_id_b, proposed_relationship_type,
-            confidence, reasons, decision, reviewed_at, reviewer_note, accepted_family_id, accepted_link_version, accepted_relationship_type
-          ) VALUES ($1, $2, $3, 'equivalent', $4, $5::jsonb, 'accepted', now(), 'auto-accepted', $6, $7, 'equivalent')
+            confidence, reasons, features, decision, reviewed_at, reviewer_note, accepted_family_id, accepted_link_version, accepted_relationship_type
+          ) VALUES ($1, $2, $3, 'equivalent', $4, $5::jsonb, $6::jsonb, 'accepted', now(), 'auto-accepted', $7, $8, 'equivalent')
           RETURNING id`,
-          [CATEGORY, idA, idB, equivalent_confidence, JSON.stringify(reasons), familyId, version],
+          [CATEGORY, idA, idB, equivalent_confidence, JSON.stringify(reasons), JSON.stringify(features), familyId, version],
         );
         const proposedLinkId = insProp.rows?.[0]?.id;
         if (proposedLinkId) {
@@ -863,9 +978,9 @@ async function main() {
         try {
           await client.query(
             `INSERT INTO pmci.proposed_links (
-              category, provider_market_id_a, provider_market_id_b, proposed_relationship_type, confidence, reasons
-            ) VALUES ($1, $2, $3, 'equivalent', $4, $5::jsonb)`,
-            [CATEGORY, idA, idB, equivalent_confidence, JSON.stringify(reasons)],
+              category, provider_market_id_a, provider_market_id_b, proposed_relationship_type, confidence, reasons, features
+            ) VALUES ($1, $2, $3, 'equivalent', $4, $5::jsonb, $6::jsonb)`,
+            [CATEGORY, idA, idB, equivalent_confidence, JSON.stringify(reasons), JSON.stringify(features)],
           );
           report.proposals_written_equivalent += 1;
           existingPairs.add(`${idA}:${idB}:equivalent`);
@@ -877,7 +992,7 @@ async function main() {
         return { wroteEquiv: true, wroteProxy: false };
       }
 
-      if (proxyEntityGate && proxy_confidence >= 0.88 && proxy_confidence < 0.97 && (entityMatch || sharedTopics)) {
+      if (proxyEntityGate && proxy_confidence >= 0.86 && proxy_confidence < 0.98 && (entityMatch || sharedTopics)) {
         if (report.proposals_written_proxy >= PMCI_MAX_PROPOSALS_PROXY) {
           report.caps_hit_proxy = true;
           return { wroteEquiv: false, wroteProxy: false };
@@ -885,14 +1000,15 @@ async function main() {
         try {
           await client.query(
             `INSERT INTO pmci.proposed_links (
-              category, provider_market_id_a, provider_market_id_b, proposed_relationship_type, confidence, reasons
-            ) VALUES ($1, $2, $3, 'proxy', $4, $5::jsonb)`,
+              category, provider_market_id_a, provider_market_id_b, proposed_relationship_type, confidence, reasons, features
+            ) VALUES ($1, $2, $3, 'proxy', $4, $5::jsonb, $6::jsonb)`,
             [
               CATEGORY,
               idA,
               idB,
               proxy_confidence,
               JSON.stringify({ ...reasons, proxy_reason: 'topic_or_entity_match' }),
+              JSON.stringify(features),
             ],
           );
           report.proposals_written_proxy += 1;
@@ -928,6 +1044,7 @@ async function main() {
         }
         if (perBlockEquiv + perBlockProxy >= PMCI_MAX_PER_BLOCK) break;
         for (const p of pAll) {
+          if (!shouldPairByTemplate(k, p)) continue;
           const r = await considerPair(k, p, block, topicStats, true);
           if (r?.wroteEquiv) perBlockEquiv += 1;
           if (r?.wroteProxy) perBlockProxy += 1;
@@ -945,6 +1062,7 @@ async function main() {
         }
         if (perBlockEquiv + perBlockProxy >= PMCI_MAX_PER_BLOCK) break;
         for (const k of kAll) {
+          if (!shouldPairByTemplate(k, p)) continue;
           const r = await considerPair(k, p, block, topicStats, false);
           if (r?.wroteEquiv) perBlockEquiv += 1;
           if (r?.wroteProxy) perBlockProxy += 1;
