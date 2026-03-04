@@ -1,0 +1,1516 @@
+openapi: 3.1.0
+
+info:
+  title: PMCI API
+  version: "2026-03-02"
+  description: |
+    Prediction Market Canonical Intelligence API.
+
+    Observe cross-provider market prices, divergence signals, coverage gaps, and manage
+    market-link review proposals. Observation-only — no trading.
+
+    **Auth tiers:**
+    - **Public** — `/v1/health/*` routes, no key required.
+    - **Standard** — All other routes. Send `x-pmci-api-key` when `PMCI_API_KEY` is configured on the server.
+    - **Admin** — `POST /v1/resolve/link` only. Send `x-pmci-admin-key` when `PMCI_ADMIN_KEY` is configured.
+
+    When neither env var is set the API is fully open — useful for local development.
+
+servers:
+  - url: http://localhost:8787
+    description: Local development (no TLS)
+  - url: https://{host}
+    description: Production (Caddy TLS termination)
+    variables:
+      host:
+        default: api.yourdomain.com
+        description: Value of PMCI_HOST env var
+
+components:
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: x-pmci-api-key
+      description: |
+        Required on all non-health routes when `PMCI_API_KEY` env var is set on the server.
+        Returns 401 if the key is wrong or missing.
+    AdminKeyHeader:
+      type: apiKey
+      in: header
+      name: x-pmci-admin-key
+      description: |
+        Required only for `POST /v1/resolve/link` when `PMCI_ADMIN_KEY` env var is set on the server.
+
+  headers:
+    XPmciVersion:
+      description: API version string. Present on every response.
+      schema:
+        type: string
+        example: "2026-03-02"
+
+  schemas:
+    # ── Errors ────────────────────────────────────────────────────────────────
+
+    ErrorUnauthorized:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          enum: [unauthorized]
+
+    ErrorRateLimited:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          enum: [rate_limited]
+        message:
+          type: string
+          example: "Too many requests. See max and timeWindow in response headers."
+
+    ErrorStale:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          enum: [stale_data]
+        lag_seconds:
+          type: integer
+          nullable: true
+        max_lag_seconds:
+          type: integer
+        message:
+          type: string
+
+    ErrorValidation:
+      type: object
+      description: |
+        Zod validation failure. Returned with HTTP 200 when query params or request body
+        fail schema validation.
+      required: [error]
+      properties:
+        error:
+          type: object
+          properties:
+            fieldErrors:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+            formErrors:
+              type: array
+              items:
+                type: string
+
+    # ── Domain ────────────────────────────────────────────────────────────────
+
+    CanonicalEvent:
+      type: object
+      required: [id, slug, title, category, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+          example: dem-2028
+        title:
+          type: string
+          example: "Democratic Primary 2028"
+        category:
+          type: string
+          example: politics
+        start_time:
+          type: string
+          format: date-time
+          nullable: true
+        end_time:
+          type: string
+          format: date-time
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    Provider:
+      type: object
+      required: [code, name]
+      properties:
+        code:
+          type: string
+          example: kalshi
+        name:
+          type: string
+          example: Kalshi
+
+    CoverageResponse:
+      type: object
+      required: [provider, total_markets, matched_markets, coverage_ratio, unmatched_breakdown]
+      properties:
+        provider:
+          type: string
+        category:
+          type: string
+          nullable: true
+        total_markets:
+          type: integer
+        matched_markets:
+          type: integer
+        coverage_ratio:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        unmatched_breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              reason:
+                type: string
+              count:
+                type: integer
+
+    CoverageSummaryResponse:
+      type: object
+      required: [provider, total_markets, linked_markets, unlinked_markets, coverage_ratio]
+      properties:
+        provider:
+          type: string
+        category:
+          type: string
+          nullable: true
+        since:
+          type: string
+          nullable: true
+        total_markets:
+          type: integer
+        linked_markets:
+          type: integer
+        unlinked_markets:
+          type: integer
+        coverage_ratio:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+
+    MarketObject:
+      type: object
+      required: [provider, provider_market_id, title, status]
+      properties:
+        provider:
+          type: string
+        provider_market_id:
+          type: integer
+        provider_market_ref:
+          type: string
+          nullable: true
+        title:
+          type: string
+        category:
+          type: string
+          nullable: true
+        status:
+          type: string
+        first_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        url:
+          type: string
+          format: uri
+          nullable: true
+
+    MarketFamily:
+      type: object
+      required: [id, canonical_event_id, label, num_links]
+      properties:
+        id:
+          type: integer
+        canonical_event_id:
+          type: string
+          format: uuid
+        canonical_market_id:
+          type: string
+          nullable: true
+        label:
+          type: string
+        consensus_price:
+          type: number
+          nullable: true
+        num_links:
+          type: integer
+
+    MarketLink:
+      type: object
+      required: [id, family_id, provider, provider_market_id, relationship_type, status, link_version, confidence]
+      properties:
+        id:
+          type: integer
+        family_id:
+          type: integer
+        provider:
+          type: string
+        provider_market_id:
+          type: integer
+        provider_market_ref:
+          type: string
+          nullable: true
+        relationship_type:
+          type: string
+          enum: [identical, equivalent, proxy, correlated]
+        status:
+          type: string
+        link_version:
+          type: integer
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        price:
+          type: number
+          nullable: true
+        consensus_price:
+          type: number
+          nullable: true
+        divergence:
+          type: number
+          nullable: true
+        correlation_window:
+          type: string
+          nullable: true
+        lag_seconds:
+          type: integer
+          nullable: true
+        correlation_strength:
+          type: number
+          minimum: -1
+          maximum: 1
+          nullable: true
+        break_rate:
+          type: number
+          nullable: true
+        last_validated_at:
+          type: string
+          format: date-time
+          nullable: true
+        staleness_score:
+          type: number
+          nullable: true
+        reasons:
+          type: object
+          additionalProperties: true
+        market_title:
+          type: string
+          nullable: true
+
+    DivergenceSignal:
+      type: object
+      properties:
+        family_id:
+          type: integer
+        provider:
+          type: string
+        provider_market_id:
+          type: integer
+        relationship_type:
+          type: string
+        price:
+          type: number
+          nullable: true
+        consensus_price:
+          type: number
+          nullable: true
+        divergence:
+          type: number
+          nullable: true
+
+    TopDivergenceResult:
+      type: object
+      properties:
+        family_id:
+          type: integer
+        label:
+          type: string
+        consensus_price:
+          type: number
+          nullable: true
+        max_divergence:
+          type: number
+          nullable: true
+        last_observed_at:
+          type: string
+          format: date-time
+          nullable: true
+        legs:
+          type: array
+          items:
+            type: object
+            properties:
+              provider:
+                type: string
+              provider_market_id:
+                type: integer
+              provider_market_ref:
+                type: string
+                nullable: true
+              price_yes:
+                type: number
+                nullable: true
+              divergence:
+                type: number
+                nullable: true
+              relationship_type:
+                type: string
+              confidence:
+                type: number
+
+    FreshnessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, stale, error]
+        api_version:
+          type: string
+        now:
+          type: string
+          format: date-time
+        latest_snapshot_at:
+          type: string
+          format: date-time
+          nullable: true
+        lag_seconds:
+          type: integer
+          nullable: true
+        latest_by_provider:
+          type: array
+          items:
+            type: object
+            properties:
+              provider:
+                type: string
+              latest_snapshot_at:
+                type: string
+                format: date-time
+                nullable: true
+              lag_seconds:
+                type: integer
+                nullable: true
+        counts:
+          type: object
+          properties:
+            provider_markets:
+              type: integer
+            snapshots:
+              type: integer
+            families:
+              type: integer
+            current_links:
+              type: integer
+
+    CheckResult:
+      type: object
+      properties:
+        count:
+          type: integer
+        pass:
+          type: boolean
+
+    ProjectionReadyResponse:
+      type: object
+      properties:
+        ready:
+          type: boolean
+        api_version:
+          type: string
+        checks:
+          type: object
+          properties:
+            provider_markets:
+              $ref: "#/components/schemas/CheckResult"
+            snapshots:
+              $ref: "#/components/schemas/CheckResult"
+            families:
+              $ref: "#/components/schemas/CheckResult"
+            active_links:
+              $ref: "#/components/schemas/CheckResult"
+            freshness_seconds:
+              type: object
+              properties:
+                lag:
+                  type: integer
+                  nullable: true
+                pass:
+                  type: boolean
+        missing_steps:
+          type: array
+          items:
+            type: string
+
+    ObserverHealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, stale, no_data, error]
+        latest_cycle_at:
+          type: string
+          format: date-time
+          nullable: true
+        lag_seconds:
+          type: integer
+          nullable: true
+        api_version:
+          type: string
+        rolling_success_rate:
+          type: number
+          minimum: 0
+          maximum: 1
+          nullable: true
+          description: Success rate over the rolling window including all cycles.
+        true_success_rate:
+          type: number
+          minimum: 0
+          maximum: 1
+          nullable: true
+          description: |
+            Success rate counting only cycles where pairs_configured > 0.
+            More accurate than rolling_success_rate when the observer recently restarted.
+        pairs_configured_total:
+          type: integer
+          description: Sum of pairs_configured across all cycles in the rolling window.
+        rolling_window_cycles:
+          type: integer
+          description: Number of heartbeat cycles in the current rolling window.
+        error_totals:
+          type: object
+          properties:
+            kalshi_fetch_errors:
+              type: integer
+            polymarket_fetch_errors:
+              type: integer
+            spread_insert_errors:
+              type: integer
+            pmci_ingestion_errors:
+              type: integer
+            json_parse_errors:
+              type: integer
+
+    SloResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        started_at:
+          type: string
+          format: date-time
+        api_version:
+          type: string
+        request_metrics:
+          type: object
+          properties:
+            total:
+              type: integer
+            errors:
+              type: integer
+            error_rate:
+              type: number
+            p95_latency_ms:
+              type: integer
+              nullable: true
+            sample_size:
+              type: integer
+        db_metrics:
+          type: object
+          properties:
+            started_at:
+              type: string
+              format: date-time
+            total_queries:
+              type: integer
+            total_errors:
+              type: integer
+            sample_size:
+              type: integer
+            p95_ms:
+              type: integer
+              nullable: true
+            avg_ms:
+              type: number
+              nullable: true
+        freshness_health:
+          $ref: "#/components/schemas/FreshnessResponse"
+        projection_health:
+          $ref: "#/components/schemas/ProjectionReadyResponse"
+        observer_health:
+          $ref: "#/components/schemas/ObserverHealthResponse"
+        checks:
+          type: object
+          properties:
+            ingestion_success:
+              type: object
+              properties:
+                target:
+                  type: number
+                actual:
+                  type: number
+                  nullable: true
+                pass:
+                  type: boolean
+            api_p95_latency_ms:
+              type: object
+              properties:
+                target:
+                  type: integer
+                actual:
+                  type: integer
+                  nullable: true
+                pass:
+                  type: boolean
+            freshness_lag_seconds:
+              type: object
+              properties:
+                target:
+                  type: integer
+                actual:
+                  type: integer
+                  nullable: true
+                pass:
+                  type: boolean
+            projection_ready:
+              type: object
+              properties:
+                target:
+                  type: boolean
+                actual:
+                  type: boolean
+                pass:
+                  type: boolean
+
+    UsageEndpoint:
+      type: object
+      properties:
+        path:
+          type: string
+        total_requests:
+          type: integer
+        avg_latency_ms:
+          type: integer
+        error_count:
+          type: integer
+        last_seen_at:
+          type: string
+          format: date-time
+
+    UsageResponse:
+      type: object
+      properties:
+        window:
+          type: string
+          enum: ["24h"]
+        endpoints:
+          type: array
+          items:
+            $ref: "#/components/schemas/UsageEndpoint"
+
+    ReviewMarketSnapshot:
+      type: object
+      nullable: true
+      properties:
+        price_yes:
+          type: number
+          nullable: true
+        observed_at:
+          type: string
+          format: date-time
+        price_source:
+          type: string
+          nullable: true
+
+    ReviewMarketDetail:
+      type: object
+      properties:
+        provider:
+          type: string
+        provider_market_id:
+          type: integer
+        provider_market_ref:
+          type: string
+          nullable: true
+        title:
+          type: string
+        category:
+          type: string
+          nullable: true
+        status:
+          type: string
+        url:
+          type: string
+          nullable: true
+        close_time:
+          type: string
+          format: date-time
+          nullable: true
+        latest_snapshot:
+          $ref: "#/components/schemas/ReviewMarketSnapshot"
+
+    ReviewQueueItem:
+      type: object
+      properties:
+        proposed_id:
+          type: integer
+        proposed_relationship_type:
+          type: string
+          enum: [equivalent, proxy]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        reasons:
+          type: object
+          additionalProperties: true
+        proposal_type:
+          type: string
+        target_family_id:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        market_a:
+          $ref: "#/components/schemas/ReviewMarketDetail"
+        market_b:
+          $ref: "#/components/schemas/ReviewMarketDetail"
+
+    ReviewDecisionRequest:
+      type: object
+      required: [proposed_id, decision, relationship_type]
+      properties:
+        proposed_id:
+          type: integer
+        decision:
+          type: string
+          enum: [accept, reject, skip]
+        relationship_type:
+          type: string
+          enum: [equivalent, proxy]
+        note:
+          type: string
+          nullable: true
+
+    ReviewDecisionResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        decision:
+          type: string
+        family_id:
+          type: integer
+          nullable: true
+        link_version:
+          type: integer
+          nullable: true
+        divergence_available:
+          type: boolean
+        divergence_note:
+          type: string
+          nullable: true
+
+    ResolveLinkRequest:
+      type: object
+      required: [family_id, provider_code, provider_market_id, relationship_type, confidence, reasons]
+      properties:
+        family_id:
+          type: integer
+        provider_code:
+          type: string
+          enum: [kalshi, polymarket]
+        provider_market_id:
+          type: integer
+        relationship_type:
+          type: string
+          enum: [identical, equivalent, proxy, correlated]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        reasons:
+          type: object
+          additionalProperties: true
+          description: Caller-defined key/value context. Shape is open-ended.
+          default: {}
+        correlation_window:
+          type: string
+          nullable: true
+        lag_seconds:
+          type: integer
+          nullable: true
+        correlation_strength:
+          type: number
+          minimum: -1
+          maximum: 1
+          nullable: true
+
+    ResolveLinkResponse:
+      type: object
+      properties:
+        link_id:
+          type: integer
+        link_version:
+          type: integer
+        status:
+          type: string
+
+  responses:
+    Unauthorized:
+      description: API key missing or incorrect.
+      headers:
+        X-PMCI-Version:
+          $ref: "#/components/headers/XPmciVersion"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorUnauthorized"
+
+    RateLimited:
+      description: Rate limit exceeded. Default is 60 requests per 60 seconds per key.
+      headers:
+        X-PMCI-Version:
+          $ref: "#/components/headers/XPmciVersion"
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorRateLimited"
+
+    Stale:
+      description: |
+        Data is stale — observer lag exceeds `PMCI_MAX_LAG_SECONDS` (default 120s).
+        Only returned from `/v1/signals/*` routes. Restart the observer with `npm run start`.
+      headers:
+        X-PMCI-Version:
+          $ref: "#/components/headers/XPmciVersion"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorStale"
+
+paths:
+  # ── Health (Public, no auth) ───────────────────────────────────────────────
+
+  /v1/health/freshness:
+    get:
+      summary: Data freshness
+      description: |
+        Returns the age of the latest snapshot per provider and aggregate counts.
+        Use this as a liveness check — `status: "ok"` means the observer is running and data
+        is within `PMCI_MAX_LAG_SECONDS`.
+      operationId: getHealthFreshness
+      tags: [Health]
+      responses:
+        "200":
+          description: Freshness status
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FreshnessResponse"
+              example:
+                status: ok
+                api_version: "2026-03-02"
+                now: "2026-03-03T16:00:00.000Z"
+                latest_snapshot_at: "2026-03-03T15:59:30.000Z"
+                lag_seconds: 30
+                latest_by_provider:
+                  - provider: kalshi
+                    latest_snapshot_at: "2026-03-03T15:59:30.000Z"
+                    lag_seconds: 30
+                  - provider: polymarket
+                    latest_snapshot_at: "2026-03-03T15:59:28.000Z"
+                    lag_seconds: 32
+                counts:
+                  provider_markets: 1336
+                  snapshots: 306329
+                  families: 61
+                  current_links: 122
+
+  /v1/health/slo:
+    get:
+      summary: SLO health
+      description: |
+        Aggregate SLO report covering ingestion success rate, API p95 latency, data freshness,
+        and projection readiness. `status: "ok"` means all four checks pass.
+      operationId: getHealthSlo
+      tags: [Health]
+      responses:
+        "200":
+          description: SLO report
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SloResponse"
+
+  /v1/health/projection-ready:
+    get:
+      summary: Projection readiness
+      description: |
+        Per-check readiness gate: markets, snapshots, families, active links, freshness.
+        When `ready: false`, `missing_steps` lists the remediation commands to run.
+      operationId: getHealthProjectionReady
+      tags: [Health]
+      responses:
+        "200":
+          description: Projection readiness
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectionReadyResponse"
+
+  /v1/health/observer:
+    get:
+      summary: Observer heartbeat health
+      description: |
+        Rolling-window observer health backed by `pmci.observer_heartbeats`. Reports
+        `true_success_rate` (only cycles where `pairs_configured > 0`) and per-error-type totals.
+      operationId: getHealthObserver
+      tags: [Health]
+      responses:
+        "200":
+          description: Observer health
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ObserverHealthResponse"
+              example:
+                status: ok
+                latest_cycle_at: "2026-03-03T15:57:57.000Z"
+                lag_seconds: 123
+                api_version: "2026-03-02"
+                rolling_success_rate: 1
+                true_success_rate: 1
+                pairs_configured_total: 854
+                rolling_window_cycles: 20
+                error_totals:
+                  kalshi_fetch_errors: 0
+                  polymarket_fetch_errors: 0
+                  spread_insert_errors: 0
+                  pmci_ingestion_errors: 0
+                  json_parse_errors: 0
+
+  /v1/health/usage:
+    get:
+      summary: API usage (last 24h)
+      description: Per-endpoint request counts, average latency, and error counts over the last 24 hours.
+      operationId: getHealthUsage
+      tags: [Health]
+      responses:
+        "200":
+          description: Usage stats
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsageResponse"
+
+  # ── Providers & Coverage ──────────────────────────────────────────────────
+
+  /v1/providers:
+    get:
+      summary: List providers
+      description: Returns all providers known to the PMCI schema.
+      operationId: getProviders
+      tags: [Coverage]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      responses:
+        "200":
+          description: Provider list
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/canonical-events:
+    get:
+      summary: List canonical events
+      description: |
+        Returns all canonical events, optionally filtered by category. Use the returned
+        `id` (UUID) with `/v1/market-families`, `/v1/signals/top-divergences`, etc.
+      operationId: getCanonicalEvents
+      tags: [Families]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            example: politics
+          description: Filter by category (e.g. `politics`). Returns all events when omitted.
+      responses:
+        "200":
+          description: Canonical event list
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CanonicalEvent"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/coverage:
+    get:
+      summary: Market coverage
+      description: |
+        Returns match rate between provider markets and canonical market families.
+        `coverage_ratio` is `matched_markets / total_markets`. `unmatched_breakdown`
+        shows why unlinked markets have no family.
+
+        Returns `{ error: "unknown_provider" }` (HTTP 200) if the provider code is not in `pmci.providers`.
+      operationId: getCoverage
+      tags: [Coverage]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      parameters:
+        - name: provider
+          in: query
+          required: true
+          schema:
+            type: string
+            example: kalshi
+          description: Provider code (e.g. `kalshi`, `polymarket`)
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            example: politics
+      responses:
+        "200":
+          description: Coverage stats (or `{ error }` if provider unknown)
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CoverageResponse"
+                  - $ref: "#/components/schemas/ErrorValidation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/coverage/summary:
+    get:
+      summary: Coverage summary
+      description: Linked vs unlinked market counts over an optional time window.
+      operationId: getCoverageSummary
+      tags: [Coverage]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      parameters:
+        - name: provider
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: since
+          in: query
+          required: false
+          schema:
+            type: string
+            x-pmci-since-format: "ISO 8601 date-time or relative shorthand: '24h', '7d'"
+          description: |
+            Filter to markets first seen after this timestamp.
+            Accepts ISO 8601 (e.g. `2026-01-01T00:00:00Z`) or relative shorthand (`24h`, `7d`).
+      responses:
+        "200":
+          description: Coverage summary
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoverageSummaryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  # ── Markets ────────────────────────────────────────────────────────────────
+
+  /v1/markets/unlinked:
+    get:
+      summary: Unlinked markets
+      description: Markets that have no active family link. Useful for gap analysis and seeding new proposals.
+      operationId: getMarketsUnlinked
+      tags: [Markets]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      parameters:
+        - name: provider
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: since
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "ISO 8601 or relative shorthand (e.g. `24h`, `7d`)"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Unlinked market list
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketObject"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/markets/new:
+    get:
+      summary: Newly observed markets
+      description: Markets first seen after `since`. Useful for monitoring for new events.
+      operationId: getMarketsNew
+      tags: [Markets]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      parameters:
+        - name: provider
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: since
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "ISO 8601 or relative shorthand (e.g. `24h`, `7d`). Required."
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: New market list
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketObject"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  # ── Families & Links ───────────────────────────────────────────────────────
+
+  /v1/market-families:
+    get:
+      summary: Market families for an event
+      description: |
+        Returns all market families under a canonical event. A family groups equivalent
+        provider markets and carries a consensus price derived from weighted active links.
+      operationId: getMarketFamilies
+      tags: [Families]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      parameters:
+        - name: event_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID of the canonical event (from `pmci.canonical_events`).
+      responses:
+        "200":
+          description: Family list
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketFamily"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/market-links:
+    get:
+      summary: Links for a market family
+      description: |
+        Returns all provider market links belonging to a family, including per-link
+        price, divergence from consensus, confidence, and quality metrics.
+      operationId: getMarketLinks
+      tags: [Families]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      parameters:
+        - name: family_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: ID of the market family (from `pmci.market_families`).
+      responses:
+        "200":
+          description: Link list
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketLink"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  # ── Signals ────────────────────────────────────────────────────────────────
+
+  /v1/signals/divergence:
+    get:
+      summary: Per-link divergence for a family
+      description: |
+        Returns the current price divergence for each link in a family. Requires fresh data —
+        returns `503` if the observer lag exceeds `PMCI_MAX_LAG_SECONDS`.
+      operationId: getDivergence
+      tags: [Signals]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      parameters:
+        - name: family_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Divergence signals
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DivergenceSignal"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/Stale"
+
+  /v1/signals/top-divergences:
+    get:
+      summary: Top divergences across an event
+      description: |
+        Returns the families with the highest cross-provider price divergence under a canonical event,
+        sorted by `max_divergence` descending. Requires fresh data — returns `503` if stale.
+      operationId: getTopDivergences
+      tags: [Signals]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      parameters:
+        - name: event_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Top divergence results
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TopDivergenceResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/Stale"
+
+  # ── Review ─────────────────────────────────────────────────────────────────
+
+  /v1/review/queue:
+    get:
+      summary: Proposed link review queue
+      description: |
+        Returns pending link proposals above a confidence threshold. Use with
+        `POST /v1/review/decision` to accept, reject, or skip each proposal.
+      operationId: getReviewQueue
+      tags: [Review]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            default: politics
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 1
+        - name: min_confidence
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+            default: 0.88
+      responses:
+        "200":
+          description: Review queue items
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReviewQueueItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/review/decision:
+    post:
+      summary: Submit a review decision
+      description: |
+        Accept, reject, or skip a proposed link. Accepting with `relationship_type: "equivalent"`
+        creates or attaches to a market family and inserts an active `market_links` row.
+      operationId: postReviewDecision
+      tags: [Review]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewDecisionRequest"
+            example:
+              proposed_id: 42
+              decision: accept
+              relationship_type: equivalent
+              note: "Verified same candidate, same outcome"
+      responses:
+        "200":
+          description: Decision result
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewDecisionResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  # ── Admin ──────────────────────────────────────────────────────────────────
+
+  /v1/resolve/link:
+    post:
+      summary: Resolve a market link (admin)
+      description: |
+        Directly inserts an active link between a provider market and a canonical family.
+        Requires `x-pmci-admin-key` header when `PMCI_ADMIN_KEY` is set on the server.
+        Use for programmatic or backfill link resolution outside of the review queue.
+      operationId: resolveLink
+      tags: [Admin]
+      security:
+        - AdminKeyHeader: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveLinkRequest"
+            example:
+              family_id: 12
+              provider_code: kalshi
+              provider_market_id: 999
+              relationship_type: equivalent
+              confidence: 0.95
+              reasons:
+                source: manual
+                analyst: jaylen
+      responses:
+        "200":
+          description: Created link
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolveLinkResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+tags:
+  - name: Health
+    description: Public health and observability endpoints. No authentication required.
+  - name: Coverage
+    description: Provider market coverage and gap analysis.
+  - name: Markets
+    description: Market discovery — unlinked and newly observed markets.
+  - name: Families
+    description: Canonical market families and their provider links.
+  - name: Signals
+    description: Cross-provider price divergence signals. Requires fresh data.
+  - name: Review
+    description: Proposed link review queue and decision submission.
+  - name: Admin
+    description: Administrative link resolution. Requires admin key.

@@ -21,6 +21,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
+import { createPmciClient, getProviderIds, ingestPair, addIngestionCounts, writeHeartbeat } from './lib/pmci-ingestion.mjs';
+import { retry, fetchWithTimeout } from './lib/retry.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -35,6 +37,9 @@ function loadEnv() {
   } catch (_) {}
 }
 loadEnv();
+
+const PMCI_DEBUG = process.env.PMCI_DEBUG === '1';
+const USE_PMXT = process.env.USE_PMXT === '1'; // spike flag — see docs/pmxt-spike-result.md when ready
 
 const KALSHI_BASES = [
   'https://api.elections.kalshi.com/trade-api/v2',
@@ -88,17 +93,20 @@ function getSupabase() {
   return createClient(url, key);
 }
 
-/** One Kalshi request per cycle: fetch markets for event (limit 1000). Returns { map, ok }. Map: ticker -> { yesBid, yesAsk, yes, openInterest, volume24h }. */
+/** One Kalshi request per cycle: fetch markets for event (limit 1000). Returns { map, ok, jsonParseErrors }. Map: ticker -> { yesBid, yesAsk, yes, openInterest, volume24h }. */
 async function fetchAllKalshiPrices(base, eventTicker) {
   const map = new Map();
   const url = `${base}/markets?event_ticker=${encodeURIComponent(eventTicker)}&limit=1000`;
-  const res = await fetch(url);
+  const res = await retry(() => fetchWithTimeout(url, {}, 15_000), { maxAttempts: 2, baseDelayMs: 800 });
   if (!res.ok) {
     console.error(`Kalshi HTTP ${res.status} for event ${eventTicker}`);
     kalshiBase = null;
-    return { map, ok: false };
+    return { map, ok: false, jsonParseErrors: 0 };
   }
-  const data = await res.json().catch(() => null);
+  let data = null;
+  let jsonParseErrors = 0;
+  try { data = await res.json(); }
+  catch (_) { jsonParseErrors = 1; }
   const page = data?.markets;
   if (Array.isArray(page)) {
     for (const m of page) {
@@ -117,7 +125,7 @@ async function fetchAllKalshiPrices(base, eventTicker) {
       });
     }
   }
-  return { map, ok: true };
+  return { map, ok: true, jsonParseErrors };
 }
 
 function parseNum(v) {
@@ -129,7 +137,7 @@ function parseNum(v) {
 /** One Polymarket request per cycle: fetch event by slug, return event data (or null). */
 async function fetchPolymarketEvent(base, slug) {
   const url = `${base}/events/slug/${encodeURIComponent(slug)}`;
-  const res = await fetch(url);
+  const res = await retry(() => fetchWithTimeout(url, {}, 10_000), { maxAttempts: 2, baseDelayMs: 800 });
   if (!res.ok) {
     console.error(`Polymarket HTTP ${res.status} for slug ${slug}`);
     polymarketBase = null;
@@ -138,17 +146,19 @@ async function fetchPolymarketEvent(base, slug) {
   return res.json().catch(() => null);
 }
 
-/** Build outcomeName -> { yes, bestBid, bestAsk } from Polymarket event data and config pairs (match by question). */
+/** Build outcomeName -> { yes, bestBid, bestAsk } from Polymarket event data and config pairs (match by question). Returns { map, jsonParseErrors }. */
 function buildPolymarketPriceMap(eventData, pairs) {
   const map = new Map();
+  let jsonParseErrors = 0;
   const markets = eventData?.markets;
-  if (!Array.isArray(markets)) return map;
+  if (!Array.isArray(markets)) return { map, jsonParseErrors };
   for (const m of markets) {
     let outcomePricesArr = m?.outcomePrices;
     if (typeof outcomePricesArr === 'string') {
       try {
         outcomePricesArr = JSON.parse(outcomePricesArr);
       } catch {
+        jsonParseErrors += 1;
         continue;
       }
     }
@@ -171,7 +181,7 @@ function buildPolymarketPriceMap(eventData, pairs) {
       }
     }
   }
-  return map;
+  return { map, jsonParseErrors };
 }
 
 function isPriceValid(value) {
@@ -197,13 +207,17 @@ function groupPairsByEvent(pairs) {
   return [...groups.values()];
 }
 
-async function runOneCycleForEvent(eventTicker, slug, pairs, supabase) {
+async function runOneCycleForEvent(eventTicker, slug, pairs, supabase, pmciClientRef, pmciReport, pmciIdsRef, cycleErrors) {
   if (pairs.length === 0) return;
+
+  cycleErrors.pairsConfigured += pairs.length;
 
   let kalshiMap;
   if (kalshiBase) {
     const r = await fetchAllKalshiPrices(kalshiBase, eventTicker);
+    cycleErrors.jsonParseErrors += r.jsonParseErrors ?? 0;
     if (!r.ok) {
+      cycleErrors.kalshiFetchErrors += 1;
       kalshiBase = null;
       return;
     }
@@ -211,6 +225,7 @@ async function runOneCycleForEvent(eventTicker, slug, pairs, supabase) {
   } else {
     for (const base of KALSHI_BASES) {
       const r = await fetchAllKalshiPrices(base, eventTicker);
+      cycleErrors.jsonParseErrors += r.jsonParseErrors ?? 0;
       if (r.ok) {
         kalshiBase = base;
         kalshiMap = r.map;
@@ -221,6 +236,7 @@ async function runOneCycleForEvent(eventTicker, slug, pairs, supabase) {
   }
   if (!kalshiMap) {
     console.error('Kalshi: no event data for', eventTicker);
+    cycleErrors.kalshiFetchErrors += 1;
     return;
   }
 
@@ -241,23 +257,32 @@ async function runOneCycleForEvent(eventTicker, slug, pairs, supabase) {
   }
   if (!polymarketData?.markets?.length) {
     console.error('Polymarket: no event data for slug', slug);
+    cycleErrors.polymarketFetchErrors += 1;
     return;
   }
 
-  const polymarketMap = buildPolymarketPriceMap(polymarketData, pairs);
+  const { map: polymarketMap, jsonParseErrors: polyJsonParseErrors } = buildPolymarketPriceMap(polymarketData, pairs);
+  cycleErrors.jsonParseErrors += polyJsonParseErrors;
   const observedAt = new Date().toISOString();
 
   for (const pair of pairs) {
+    cycleErrors.pairsAttempted += 1;
     const k = kalshiMap.get(pair.kalshiTicker);
     const pm = polymarketMap.get(pair.polymarketOutcomeName);
     const kalshiYes = k?.yes;
     const polymarketYes = pm?.yes;
 
     if (!isPriceValid(kalshiYes)) {
+      if (PMCI_DEBUG) {
+        console.log(`PMCI_DEBUG pair event_id=${pair.polymarketSlug} candidate=${pair.polymarketOutcomeName} spread_insert=skip(kalshi_invalid) ingestPair_will_run=no`);
+      }
       console.error(`Price sanity: skipping "${pair.eventName}" – kalshi_yes invalid: ${kalshiYes}`);
       continue;
     }
     if (!isPriceValid(polymarketYes)) {
+      if (PMCI_DEBUG) {
+        console.log(`PMCI_DEBUG pair event_id=${pair.polymarketSlug} candidate=${pair.polymarketOutcomeName} spread_insert=skip(poly_invalid) ingestPair_will_run=no`);
+      }
       console.error(`Price sanity: skipping "${pair.eventName}" – polymarket_yes invalid: ${polymarketYes}`);
       continue;
     }
@@ -280,19 +305,135 @@ async function runOneCycleForEvent(eventTicker, slug, pairs, supabase) {
     };
 
     const { error } = await supabase.from('prediction_market_spreads').insert(row);
+    const spreadInsertOk = !error;
     if (error) {
+      if (PMCI_DEBUG) {
+        console.log(`PMCI_DEBUG pair event_id=${pair.polymarketSlug} candidate=${pair.polymarketOutcomeName} spread_insert=fail ingestPair_will_run=no (skipped after insert error)`);
+      }
       console.error(`Supabase insert error for ${pair.polymarketOutcomeName}:`, error.message);
+      cycleErrors.spreadInsertErrors += 1;
       continue;
     }
     console.log(`OK candidate=${pair.polymarketOutcomeName} spread=${spread}`);
+    cycleErrors.pairsSucceeded += 1;
+
+    const ingestPairWillRun = !!(pmciClientRef?.value && pmciReport && pmciIdsRef?.value);
+    if (PMCI_DEBUG) {
+      console.log(`PMCI_DEBUG pair event_id=${pair.polymarketSlug} candidate=${pair.polymarketOutcomeName} spread_insert=${spreadInsertOk ? 'ok' : 'fail'} ingestPair_will_run=${ingestPairWillRun ? 'yes' : 'no'}`);
+    }
+
+    if (ingestPairWillRun) {
+      try {
+        const result = await ingestPair(pmciClientRef.value, pair, k, pm, observedAt, pmciIdsRef.value);
+        addIngestionCounts(pmciReport, result);
+        if (PMCI_DEBUG) {
+          console.log(
+            `PMCI_DEBUG result event_id=${pair.polymarketSlug} candidate=${pair.polymarketOutcomeName} markets_upserted=${
+              result?.marketsUpserted ?? 0
+            } snapshots_appended=${result?.snapshotsAppended ?? 0}`,
+          );
+        }
+      } catch (err) {
+        if (PMCI_DEBUG) {
+          console.error('PMCI_INGEST_ERROR', err.message, err.stack);
+        }
+        cycleErrors.pmciIngestionErrors += 1;
+        const isConnectionError =
+          err?.code === 'ECONNRESET' ||
+          err?.code === 'ECONNREFUSED' ||
+          (typeof err?.message === 'string' && err.message.includes('Connection terminated'));
+        if (isConnectionError) {
+          pmciClientRef.value = null;
+          console.warn('PMCI connection lost mid-cycle. Will attempt reconnect next cycle.');
+          continue;
+        }
+        throw err;
+      }
+    }
   }
 }
 
-async function runOneCycle(pairs, supabase) {
+async function runOneCycle(pairs, supabase, pmciClientRef, pmciReport, pmciIdsRef, pmciRetryState) {
   if (pairs.length === 0) return;
+  if (pmciClientRef.value === null && pmciRetryState && !pmciRetryState.permanentlyDisabled) {
+    const result = await reconnectPmci(pmciRetryState);
+    if (result?.client) {
+      pmciClientRef.value = result.client;
+      pmciIdsRef.value = result.providerIds;
+    }
+  }
+  if (pmciReport) {
+    pmciReport.marketsUpserted = 0;
+    pmciReport.snapshotsAppended = 0;
+  }
+
+  const cycleErrors = {
+    cycleAt: new Date().toISOString(),
+    pairsAttempted: 0,
+    pairsSucceeded: 0,
+    pairsConfigured: 0,
+    kalshiFetchErrors: 0,
+    polymarketFetchErrors: 0,
+    spreadInsertErrors: 0,
+    pmciIngestionErrors: 0,
+    jsonParseErrors: 0,
+  };
+
   const eventGroups = groupPairsByEvent(pairs);
   for (const { eventTicker, slug, pairs: eventPairs } of eventGroups) {
-    await runOneCycleForEvent(eventTicker, slug, eventPairs, supabase);
+    await runOneCycleForEvent(eventTicker, slug, eventPairs, supabase, pmciClientRef, pmciReport, pmciIdsRef, cycleErrors);
+  }
+  if (pmciClientRef.value && pmciReport) {
+    if (pmciReport.marketsUpserted > 0 || pmciReport.snapshotsAppended > 0) {
+      console.log(`PMCI ingestion: markets_upserted=${pmciReport.marketsUpserted} snapshots_appended=${pmciReport.snapshotsAppended}`);
+    } else if (PMCI_DEBUG) {
+      console.log(`PMCI_DEBUG cycle totals: markets_upserted=${pmciReport.marketsUpserted} snapshots_appended=${pmciReport.snapshotsAppended}`);
+    }
+  }
+
+  await writeHeartbeat(pmciClientRef.value, cycleErrors);
+}
+
+async function reconnectPmci(retryState) {
+  if (!retryState || retryState.permanentlyDisabled) return null;
+  if (!process.env.DATABASE_URL) return null;
+
+  retryState.attempts += 1;
+  retryState.lastAttemptAt = new Date().toISOString();
+  console.log(`PMCI reconnect attempt ${retryState.attempts}/${retryState.maxAttempts}...`);
+
+  let client;
+  try {
+    client = createPmciClient();
+    if (!client) {
+      throw new Error('createPmciClient() returned null');
+    }
+    await client.connect();
+    const providerIds = await getProviderIds(client);
+    if (!providerIds?.kalshi || !providerIds?.polymarket) {
+      await client.end().catch(() => {});
+      console.warn('PMCI reconnect failed: providers missing. Run migrations.');
+      if (retryState.attempts >= retryState.maxAttempts) {
+        retryState.permanentlyDisabled = true;
+        console.warn('PMCI ingestion permanently disabled for this run (max retries reached).');
+      }
+      return { client: null, providerIds: null };
+    }
+    console.log(`PMCI reconnect succeeded on attempt ${retryState.attempts}. Ingestion re-enabled.`);
+    retryState.attempts = 0;
+    return { client, providerIds };
+  } catch (err) {
+    if (client) {
+      await client.end().catch(() => {});
+    }
+    console.error(
+      `PMCI reconnect attempt ${retryState.attempts}/${retryState.maxAttempts} failed: ${err?.message ?? String(err)}`,
+    );
+    if (retryState.attempts >= retryState.maxAttempts) {
+      retryState.permanentlyDisabled = true;
+      console.warn('PMCI ingestion permanently disabled for this run (max retries reached).');
+    }
+    return { client: null, providerIds: null };
   }
 }
 
@@ -301,15 +442,57 @@ async function main() {
   const supabase = getSupabase();
   const intervalSec = parseInt(process.env.SPREAD_OBSERVER_INTERVAL_SEC || String(DEFAULT_INTERVAL_SEC), 10) || DEFAULT_INTERVAL_SEC;
 
+  const pmciRetryState = {
+    attempts: 0,
+    maxAttempts: Number(process.env.PMCI_INGESTION_MAX_RETRIES ?? '3'),
+    lastAttemptAt: null,
+    permanentlyDisabled: false,
+  };
+
+  const pmciClientRef = { value: createPmciClient() };
+  const pmciIdsRef = { value: null };
+  if (pmciClientRef.value) {
+    try {
+      await pmciClientRef.value.connect();
+      pmciIdsRef.value = await getProviderIds(pmciClientRef.value);
+      if (!pmciIdsRef.value?.kalshi || !pmciIdsRef.value?.polymarket) {
+        console.warn('PMCI ingestion disabled: pmci.providers missing kalshi or polymarket. Run migrations.');
+        pmciClientRef.value
+          .end()
+          .catch(() => {})
+          .finally(() => {
+            pmciClientRef.value = null;
+            pmciIdsRef.value = null;
+          });
+      } else {
+        console.log('PMCI ingestion enabled (DATABASE_URL set, provider IDs resolved by code).');
+      }
+    } catch (err) {
+      console.warn('PMCI ingestion disabled: could not connect:', err.message);
+      pmciClientRef.value
+        .end()
+        .catch(() => {})
+        .finally(() => {
+          pmciClientRef.value = null;
+          pmciIdsRef.value = null;
+        });
+    }
+  }
+  const pmciReport = pmciClientRef.value ? { marketsUpserted: 0, snapshotsAppended: 0 } : null;
+
   console.log(`Prediction market spread observer started. Pairs: ${pairs.length}, interval: ${intervalSec}s`);
 
-  const run = () => runOneCycle(pairs, supabase).catch((err) => console.error('Cycle error:', err));
+  const run = () =>
+    runOneCycle(pairs, supabase, pmciClientRef, pmciReport, pmciIdsRef, pmciRetryState).catch((err) =>
+      console.error('Cycle error:', err),
+    );
 
   await run();
   const intervalId = setInterval(run, intervalSec * 1000);
 
   const shutdown = () => {
     clearInterval(intervalId);
+    if (pmciClientRef.value) pmciClientRef.value.end().catch(() => {});
     process.exit(0);
   };
   process.on('SIGINT', shutdown);

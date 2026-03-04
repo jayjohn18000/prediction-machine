@@ -1,0 +1,147 @@
+{
+  "run_id": "2026-03-01_1242",
+  "started_at": "2026-03-01T12:42:00-06:00",
+  "ended_at": "2026-03-01T12:42:00-06:00",
+  "git": {
+    "branch": "chore/infra-hardening-baseline-2026-02-26",
+    "commit_sha": "20b9aaf404d09fde2bea703e3859afeea007e50a",
+    "dirty": true
+  },
+  "environment": {
+    "node_version": "v25.4.0",
+    "bun_version": null,
+    "python_version": "3.14.3",
+    "os": "darwin-arm64"
+  },
+  "processes": [
+    {
+      "name": "api",
+      "start_command": "npm run api:pmci",
+      "pid": null,
+      "status": "stopped",
+      "log_file": "logs/api_2026-03-01_1242.log",
+      "health": {
+        "ok": false,
+        "checks": [
+          {
+            "type": "http",
+            "target": "GET /v1/health/freshness",
+            "result": "not_run",
+            "ts": "2026-03-01T12:42:00-06:00"
+          }
+        ]
+      },
+      "errors": []
+    },
+    {
+      "name": "observer",
+      "start_command": "npm run start",
+      "pid": null,
+      "status": "stopped",
+      "log_file": "logs/observer_2026-03-01_1242.log",
+      "health": {
+        "ok": false,
+        "checks": []
+      },
+      "errors": []
+    },
+    {
+      "name": "ingest_polymarket",
+      "start_command": "npm run pmci:ingest:politics:universe",
+      "pid": null,
+      "status": "unknown",
+      "log_file": "logs/ingest_polymarket_universe_2026-03-01_1242.log",
+      "health": {
+        "ok": null,
+        "checks": []
+      },
+      "errors": []
+    },
+    {
+      "name": "ingest_kalshi",
+      "start_command": "Part of observer (paired ingestion only)",
+      "pid": null,
+      "status": "stopped",
+      "log_file": null,
+      "health": { "ok": null, "checks": [] },
+      "errors": []
+    },
+    {
+      "name": "metrics_worker",
+      "start_command": "N/A — edge_windows is a view over prediction_market_spreads",
+      "pid": null,
+      "status": "unknown",
+      "log_file": null,
+      "health": { "ok": null, "checks": [] },
+      "errors": []
+    }
+  ],
+  "counts": {
+    "unique_outcomes_24h": 122,
+    "family_count": 61,
+    "edge_window_count": 301,
+    "unmatched_by_provider": {
+      "kalshi": 0,
+      "polymarket": 0
+    }
+  },
+  "overlap": {
+    "definition": "Overlapping event: canonical_event_id with >=1 market_family whose market_links include BOTH providers (kalshi AND polymarket). Non-overlapping: families linked to only one provider.",
+    "events_top": [
+      {
+        "canonical_event_id": "c8515a58-c984-46fe-ac65-25e362e68333",
+        "overlapping_family_count": 35,
+        "nonoverlapping_family_count": 0,
+        "total_family_count": 35
+      },
+      {
+        "canonical_event_id": "1679cc97-88b0-4ad4-a29c-b483ed94f6df",
+        "overlapping_family_count": 26,
+        "nonoverlapping_family_count": 0,
+        "total_family_count": 26
+      }
+    ]
+  },
+  "indicators": {
+    "overlapping_top3": [
+      {
+        "name": "overlapping_family_count_top50_sum",
+        "value": 61,
+        "note": "All 61 families are two-provider; coverage depth for seeded politics events"
+      },
+      {
+        "name": "edge_window_count",
+        "value": 301,
+        "note": "Edge view producing windows from prediction_market_spreads"
+      },
+      {
+        "name": "unique_outcomes_24h",
+        "value": 122,
+        "note": "Ingestion producing recent snapshots for 122 provider_markets"
+      }
+    ],
+    "nonoverlapping_top3": [
+      {
+        "name": "unmatched_polymarket",
+        "value": 0,
+        "note": "No active unmatched_markets rows"
+      },
+      {
+        "name": "unmatched_kalshi",
+        "value": 0,
+        "note": "No active unmatched_markets rows"
+      },
+      {
+        "name": "nonoverlapping_family_count_top50_sum",
+        "value": 0,
+        "note": "All families in dataset are overlapping"
+      }
+    ]
+  },
+  "decision": {
+    "state": "stable_monitor",
+    "reason": "Overlap and edges healthy; 61 families (2 events), 301 edge windows, 122 provider_markets with recent snapshots. No errors or backlog; political coverage limited but consistent.",
+    "next_step": "Run API + observer when needed; run pmci:ingest:politics:universe on demand; use pmci:check:poly and /v1/health/freshness for ongoing checks.",
+    "suspected_layer": null
+  }
+}
