@@ -34,7 +34,8 @@
     "pmci:status": "node scripts/pmci-projection-status.mjs",
     "pmci:check:round-trip": "node scripts/pmci-check-round-trip.mjs",
     "pmci:backfill:kalshi:typing": "node scripts/pmci-backfill-kalshi-typing.mjs",
-    "link:dry-run": "node scripts/pmci-propose-links-politics.mjs --dry-run"
+    "link:dry-run": "node scripts/pmci-propose-links-politics.mjs --dry-run",
+    "links:guard:dry-run": "node scripts/links-guard-dry-run.mjs"
   },
   "dependencies": {
     "@fastify/rate-limit": "^10.3.0",
