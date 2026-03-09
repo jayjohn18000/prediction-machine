@@ -18,26 +18,11 @@
  * missing providers, no provider_markets). Other issues are surfaced as WARN.
  */
 
-import fs from "node:fs";
-import path from "node:path";
 import pg from "pg";
 import { getProviderIds } from "../lib/pmci-ingestion.mjs";
+import { loadEnv } from "../src/platform/env.mjs";
 
 const { Client } = pg;
-
-function loadEnv() {
-  const envPath = path.join(process.cwd(), ".env");
-  try {
-    const env = fs.readFileSync(envPath, "utf8");
-    env.split("\n").forEach((line) => {
-      const m = line.match(/^([^#=]+)=(.*)$/);
-      if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, "");
-    });
-  } catch {
-    // Ignore missing .env – environment may be provided by the shell.
-  }
-}
-
 loadEnv();
 
 // CLI uses PMCI_MAX_LAG_SECONDS if set; otherwise fallback to 120 seconds.

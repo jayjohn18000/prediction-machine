@@ -2,6 +2,8 @@
 -- Source: prediction_market_spreads (same filter as executable_edges_feed).
 -- An edge event = consecutive executable rows for same (candidate, event_id)
 -- with observed_at within 120 seconds; gap > 120s starts a new event.
+-- This migration performs a historical backfill; edge_events is not kept
+-- automatically in sync with new prediction_market_spreads rows today.
 -- Do not modify prediction_market_spreads or executable_edges_feed.
 
 CREATE TABLE IF NOT EXISTS public.edge_events (

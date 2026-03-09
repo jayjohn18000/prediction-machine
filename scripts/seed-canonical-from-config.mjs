@@ -16,18 +16,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
+import { loadEnv } from '../src/platform/env.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-function loadEnv() {
-  const envPath = path.join(__dirname, '..', '.env');
-  try {
-    fs.readFileSync(envPath, 'utf8').split('\n').forEach((line) => {
-      const m = line.match(/^([^#=]+)=(.*)$/);
-      if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
-    });
-  } catch (_) {}
-}
 loadEnv();
 
 function getSupabase() {

@@ -5,22 +5,10 @@
  * Env: DATABASE_URL (Postgres connection string).
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
 import pg from 'pg';
+import { loadEnv } from '../src/platform/env.mjs';
 
 const { Client } = pg;
-
-function loadEnv() {
-  const envPath = path.join(process.cwd(), '.env');
-  try {
-    const env = fs.readFileSync(envPath, 'utf8');
-    env.split('\n').forEach((line) => {
-      const m = line.match(/^([^#=]+)=(.*)$/);
-      if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
-    });
-  } catch (_) {}
-}
 loadEnv();
 
 const PMCI_TABLES = [
@@ -38,6 +26,9 @@ const PMCI_TABLES = [
   'linker_run_metrics',
   'proposed_links',
   'review_decisions',
+  // Observer + API request log tables (low criticality but part of pmci schema).
+  'observer_heartbeats',
+  'request_log',
 ];
 
 const REQUIRED_COLUMNS = {
@@ -60,6 +51,8 @@ const REQUIRED_COLUMNS = {
     'close_time',
     'status',
     'last_seen_at',
+    'election_phase',
+    'subject_type',
   ],
   provider_market_snapshots: ['provider_market_id', 'observed_at', 'price_yes'],
 };

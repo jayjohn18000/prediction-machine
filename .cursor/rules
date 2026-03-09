@@ -1,0 +1,68 @@
+# prediction-machine — Cursor rules
+
+## Project overview
+Observation-only prediction market spread tracker + PMCI intelligence layer.
+Stack: Node.js ES modules, Supabase PostgreSQL, Fastify, Zod.
+Scope: ingestion → windows → calibration → scoring → reporting. **No execution, no trading.**
+
+## Agent system
+Agents live in `agents/`. Each has a contract type (PR plan, SQL migration, test plan, etc.)
+and an `## Execution mode` section listing pre-flight scripts and files to read.
+
+**Always start a planning session by referencing the Coordinator:**
+`@agents/COORDINATOR.md`
+
+Then reference the specific agent for your goal:
+- Ingestion / observer / event_pairs → `@agents/INGESTION_AUDITOR.md`
+- Window logic / backtest SQL → `@agents/WINDOW_SURGEON.md`
+- Score thresholds / calibration → `@agents/CALIBRATION_ENGINEER.md`
+- Missing signals / fallback → `@agents/FALLBACK_SCORING.md`
+- Metrics / report format → `@agents/REPORTER.md`
+- Acceptance tests / drift → `@agents/VALIDATION_AGENT.md`
+- Telemetry / error counters → `@agents/TELEMETRY_AGENT.md`
+- Drift detection / coverage → `@agents/DRIFT_DETECTOR.md`
+- Market link proposals → `@agents/LINKER_PROPOSER.md`
+- Cross-module dependencies → `@agents/RELATIONSHIP_MANAGER.md`
+
+## Key files
+- `observer.mjs` — main spread observation loop (writes to Supabase + PMCI schema)
+- `src/api.mjs` — Fastify PMCI API (port 8787)
+- `lib/pmci-ingestion.mjs` — PMCI write layer (upsertProviderMarket, ingestPair)
+- `lib/retry.mjs` — retry() and fetchWithTimeout() used by observer.mjs
+- `event_pairs.json` / `scripts/prediction_market_event_pairs.json` — canonical pair config
+- `supabase/migrations/` — schema evolution; push with `npx supabase db push`
+- `docs/system-state.md` — current branch, status, known risks, next actions
+
+## PMCI schema
+Tables: `pmci.provider_markets`, `pmci.provider_market_snapshots`, `pmci.canonical_events`,
+`pmci.market_families`, `pmci.market_links`, `pmci.proposed_links`
+Required view: `pmci.v_market_links_current`
+
+## Verification scripts (run after any change)
+```bash
+npm run verify:schema      # confirm pmci tables/views exist
+npm run pmci:smoke         # assert provider_markets > 0 and snapshots > 0
+npm run pmci:probe         # detailed row counts + freshness
+npm run pmci:status        # API-level health (requires api:pmci running)
+```
+
+## Pipeline startup order
+1. `npm run start` (1–2 cycles, confirm "PMCI ingestion enabled")
+2. `npm run pmci:probe` (verify counts)
+3. `npm run pmci:smoke` (assert > 0)
+4. `npm run seed:pmci` (creates families/links)
+5. `npm run api:pmci` (start API on port 8787)
+
+## Coding conventions
+- ES modules throughout (`import`/`export`, `.mjs` extension)
+- loadEnv() pattern: read `.env`, split on newlines, regex-match KEY=VALUE
+- Scripts exit 0 on success, 1 on critical failure; warn with console.warn for non-critical issues
+- DB connections: `pg.Client` with `connectionString: DATABASE_URL` for PMCI scripts
+- No hardcoded credentials; all config via environment variables
+- Append-only inserts to `prediction_market_spreads`; upserts to `pmci.provider_markets`
+
+## What NOT to do
+- No execution or trading logic anywhere
+- No changes to window/calibration/scoring from within ingestion agents (and vice versa)
+- Do not push to remote without explicit user request
+- Do not skip `npm run verify:schema` after any migration

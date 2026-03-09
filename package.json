@@ -28,19 +28,30 @@
     "pmci:propose:politics": "node scripts/pmci-propose-links-politics.mjs",
     "pmci:review": "node scripts/pmci-review-cli.mjs",
     "pmci:check:proposals": "node scripts/pmci-check-proposals.mjs",
+    "pmci:audit:series": "node scripts/pmci-audit-series-activity.mjs",
+    "pmci:discover:series": "node scripts/pmci-discover-kalshi-series.mjs",
     "pmci:discover:kalshi:politics": "node scripts/pmci-discover-kalshi-politics-series.mjs",
     "pmci:status": "node scripts/pmci-projection-status.mjs",
-    "pmci:check:round-trip": "node scripts/pmci-check-round-trip.mjs"
+    "pmci:check:round-trip": "node scripts/pmci-check-round-trip.mjs",
+    "pmci:backfill:kalshi:typing": "node scripts/pmci-backfill-kalshi-typing.mjs",
+    "link:dry-run": "node scripts/pmci-propose-links-politics.mjs --dry-run",
+    "links:guard:dry-run": "node scripts/links-guard-dry-run.mjs"
   },
   "dependencies": {
     "@fastify/rate-limit": "^10.3.0",
     "@supabase/supabase-js": "^2.91.1",
+    "dotenv": "^17.3.1",
     "fastify": "^5.x",
+    "openai": "^6.27.0",
     "pg": "^8.18.0",
     "zod": "^3.x"
   },
   "devDependencies": {
+    "@types/node": "^25.3.5",
+    "@types/pg": "^8.18.0",
     "nodemon": "^3.1.14",
-    "supabase": "^2.76.12"
+    "supabase": "^2.76.12",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }
