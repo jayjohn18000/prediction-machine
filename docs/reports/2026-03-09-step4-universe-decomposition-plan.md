@@ -31,7 +31,7 @@ Extract the monolith `universe.mjs` into focused, testable modules without chang
 
 ## Decomposition Plan (ordered by safety / dependency depth)
 
-### Slice 1 — Price-parsing primitives (this commit)
+### Slice 1 — Price-parsing primitives ✅
 **Extract A + D** into `lib/ingestion/services/price-parsers.mjs`.
 
 - Functions: `parseNum`, `clamp01`, `parseOutcomes`, `parseOutcomePrices`, `getDerivedPrice`
@@ -39,12 +39,13 @@ Extract the monolith `universe.mjs` into focused, testable modules without chang
 - Used in both Kalshi and Polymarket sections of universe.mjs
 - Add `test/ingestion/price-parsers.test.mjs` — pure unit tests, no DB, no network
 
-### Slice 2 — Market metadata inference
+### Slice 2 — Market metadata inference ✅
 **Extract C** into `lib/ingestion/services/market-metadata.mjs`.
 
 - Functions: `inferElectionPhase`, `inferSubjectType`
 - Pure, no deps
 - Called in both providers during market record construction
+- Add `test/ingestion/market-metadata.test.mjs` — 13 pure unit tests (all pass)
 
 ### Slice 3 — Shared primitives
 **Extract B** (sleep, splitCsv) into `lib/ingestion/services/utils.mjs` or merge into existing shared utility if one exists.
@@ -85,8 +86,11 @@ Extract the monolith `universe.mjs` into focused, testable modules without chang
 
 ---
 
-## Current state after Slice 1
+## Current state after Slice 2
 
-- `lib/ingestion/services/price-parsers.mjs` created (A + D)
-- `lib/ingestion/universe.mjs` imports from it; definitions removed
-- `test/ingestion/price-parsers.test.mjs` added
+- `lib/ingestion/services/price-parsers.mjs` created (A + D) ✅
+- `lib/ingestion/services/market-metadata.mjs` created (C) ✅
+- `lib/ingestion/universe.mjs` imports from both; local definitions removed
+- `test/ingestion/price-parsers.test.mjs` added (10 tests) ✅
+- `test/ingestion/market-metadata.test.mjs` added (13 tests) ✅
+- All 23 tests pass
