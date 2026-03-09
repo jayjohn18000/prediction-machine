@@ -2,7 +2,7 @@
  * /v1/providers, /v1/canonical-events, /v1/markets/unlinked, /v1/markets/new routes.
  */
 export function registerMarketsRoutes(app, deps) {
-  const { query, SQL, RATE_LIMIT_CONFIG, parseSince, z } = deps;
+  const { query, resolveProviderIdByCode, SQL, RATE_LIMIT_CONFIG, parseSince, z } = deps;
 
   app.get("/v1/providers", { rateLimit: RATE_LIMIT_CONFIG }, async () => {
     const { rows } = await query(SQL.providers);
@@ -27,11 +27,8 @@ export function registerMarketsRoutes(app, deps) {
     const parsed = schema.safeParse(req.query);
     if (!parsed.success) return { error: parsed.error.flatten() };
 
-    const provRes = await query("select id from pmci.providers where code = $1", [
-      parsed.data.provider,
-    ]);
-    if (provRes.rowCount === 0) return { error: "unknown_provider" };
-    const providerId = provRes.rows[0].id;
+    const providerId = await resolveProviderIdByCode(query, parsed.data.provider);
+    if (providerId == null) return { error: "unknown_provider" };
 
     const category = parsed.data.category ?? null;
     const sinceDate = parseSince(parsed.data.since);
@@ -71,11 +68,8 @@ export function registerMarketsRoutes(app, deps) {
     if (!sinceDate)
       return { error: "invalid_since", message: "since must be ISO date or relative e.g. 24h, 7d" };
 
-    const provRes = await query("select id from pmci.providers where code = $1", [
-      parsed.data.provider,
-    ]);
-    if (provRes.rowCount === 0) return { error: "unknown_provider" };
-    const providerId = provRes.rows[0].id;
+    const providerId = await resolveProviderIdByCode(query, parsed.data.provider);
+    if (providerId == null) return { error: "unknown_provider" };
 
     const category = parsed.data.category ?? null;
     const sinceTs = sinceDate.toISOString();

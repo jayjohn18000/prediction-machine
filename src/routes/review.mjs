@@ -2,7 +2,7 @@
  * /v1/review/queue, POST /v1/review/decision, POST /v1/resolve/link routes.
  */
 export function registerReviewRoutes(app, deps) {
-  const { query, withTransaction, SQL, RATE_LIMIT_CONFIG, z } = deps;
+  const { query, withTransaction, resolveProviderIdByCode, SQL, RATE_LIMIT_CONFIG, z } = deps;
 
   app.get("/v1/review/queue", { rateLimit: RATE_LIMIT_CONFIG }, async (req) => {
     const schema = z.object({
@@ -284,9 +284,8 @@ export function registerReviewRoutes(app, deps) {
 
     // linker_run insert + market_link upsert are atomic
     return await withTransaction(async (txQuery) => {
-      const prov = await txQuery("select id from pmci.providers where code = $1", [parsed.data.provider_code]);
-      if (prov.rowCount === 0) return { error: "unknown_provider" };
-      const providerId = prov.rows[0].id;
+      const providerId = await resolveProviderIdByCode(txQuery, parsed.data.provider_code);
+      if (providerId == null) return { error: "unknown_provider" };
 
       const next = await txQuery(SQL.next_linker_run_version);
       const version = Number(next.rows[0].next_version);

@@ -15,6 +15,7 @@ import { registerMarketsRoutes } from "./routes/markets.mjs";
 import { registerFamiliesRoutes } from "./routes/families.mjs";
 import { registerSignalsRoutes } from "./routes/signals.mjs";
 import { registerReviewRoutes } from "./routes/review.mjs";
+import { resolveProviderIdByCode } from "./repositories/providers-repo.mjs";
 
 loadEnv();
 
@@ -151,6 +152,7 @@ export async function buildApp() {
     query,
     getDbMetrics,
     withTransaction,
+    resolveProviderIdByCode,
     SQL,
     logClient,
     requestMetrics,

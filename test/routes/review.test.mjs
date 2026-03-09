@@ -12,6 +12,7 @@ import { z } from "zod";
 import { SQL } from "../../src/queries.mjs";
 import { registerReviewRoutes } from "../../src/routes/review.mjs";
 import { withTransaction } from "../../src/db.mjs";
+import { resolveProviderIdByCode } from "../../src/repositories/providers-repo.mjs";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -39,6 +40,7 @@ async function buildApp(mockWithTransaction) {
     RATE_LIMIT_CONFIG: { max: 1000, timeWindow: 1000 },
     query: async () => ({ rows: [], rowCount: 0 }),
     withTransaction: mockWithTransaction,
+    resolveProviderIdByCode,
   };
 
   registerReviewRoutes(app, deps);

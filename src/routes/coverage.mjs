@@ -2,7 +2,7 @@
  * /v1/coverage and /v1/coverage/summary routes.
  */
 export function registerCoverageRoutes(app, deps) {
-  const { query, SQL, RATE_LIMIT_CONFIG, parseSince, z } = deps;
+  const { query, resolveProviderIdByCode, SQL, RATE_LIMIT_CONFIG, parseSince, z } = deps;
 
   app.get("/v1/coverage", { rateLimit: RATE_LIMIT_CONFIG }, async (req) => {
     const schema = z.object({
@@ -12,11 +12,8 @@ export function registerCoverageRoutes(app, deps) {
     const parsed = schema.safeParse(req.query);
     if (!parsed.success) return { error: parsed.error.flatten() };
 
-    const provRes = await query("select id from pmci.providers where code = $1", [
-      parsed.data.provider,
-    ]);
-    if (provRes.rowCount === 0) return { error: "unknown_provider" };
-    const providerId = provRes.rows[0].id;
+    const providerId = await resolveProviderIdByCode(query, parsed.data.provider);
+    if (providerId == null) return { error: "unknown_provider" };
 
     const category = parsed.data.category ?? null;
     const cov = await query(SQL.coverage, [providerId, category]);
@@ -41,11 +38,8 @@ export function registerCoverageRoutes(app, deps) {
     const parsed = schema.safeParse(req.query);
     if (!parsed.success) return { error: parsed.error.flatten() };
 
-    const provRes = await query("select id from pmci.providers where code = $1", [
-      parsed.data.provider,
-    ]);
-    if (provRes.rowCount === 0) return { error: "unknown_provider" };
-    const providerId = provRes.rows[0].id;
+    const providerId = await resolveProviderIdByCode(query, parsed.data.provider);
+    if (providerId == null) return { error: "unknown_provider" };
 
     const category = parsed.data.category ?? null;
     const sinceDate = parseSince(parsed.data.since);
