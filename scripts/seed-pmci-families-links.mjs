@@ -9,22 +9,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import pg from 'pg';
+import { loadEnv } from '../src/platform/env.mjs';
 
 const { Client } = pg;
 
 const SQL_GET_PROVIDER_IDS = `
   SELECT id, code FROM pmci.providers WHERE code IN ('kalshi', 'polymarket');
 `;
-function loadEnv() {
-  const envPath = path.join(process.cwd(), '.env');
-  try {
-    const env = fs.readFileSync(envPath, 'utf8');
-    env.split('\n').forEach((line) => {
-      const m = line.match(/^([^#=]+)=(.*)$/);
-      if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
-    });
-  } catch (_) {}
-}
 loadEnv();
 
 function loadPairs() {
@@ -194,27 +185,21 @@ async function main() {
     // Seed additional canonical events for broader political universe markets.
     // These are not in event_pairs.json but exist in pmci.provider_markets from universe ingestion.
     // The proposer uses canonicalSlugs to attach canonical_event_id when auto-accepting pairs.
+    //
+    // POLICY: Only list events that have been verified to have matching provider_markets on at
+    // least one platform. Single-platform events are kept with metadata.single_platform=true.
+    // Do NOT speculatively add events here without first confirming provider_markets exist.
     const ADDITIONAL_POLITICAL_EVENTS = [
+      // Polymarket-only: 278 per-candidate election-winner markets
       ['presidential-election-winner-2028', '2028 US Presidential Election Winner'],
-      ['which-party-wins-2028-us-presidential-election', '2028 US Presidential Election - Party Winner'],
+      // Polymarket-only: 78 per-candidate Fed chair nomination markets
       ['who-will-trump-nominate-as-fed-chair', 'Federal Reserve Chair Nomination'],
-      ['texas-senate-democratic-nominee-2026', 'Texas Senate Democratic Nominee 2026'],
-      ['texas-senate-republican-nominee-2026', 'Texas Senate Republican Nominee 2026'],
-      ['tx-house-tx02-republican-nominee-2026', 'TX-02 Republican Nominee 2026'],
-      ['tx-house-tx23-republican-nominee-2026', 'TX-23 Republican Nominee 2026'],
-      ['tx-house-tx33-democratic-nominee-2026', 'TX-33 Democratic Nominee 2026'],
-      ['nc-senate-republican-nominee-2026', 'North Carolina Senate Republican Nominee 2026'],
-      ['nc-house-nc01-republican-nominee-2026', 'NC-01 Republican Nominee 2026'],
-      ['nc-house-nc04-democratic-nominee-2026', 'NC-04 Democratic Nominee 2026'],
-      ['us-government-shutdown-2026', 'US Government Shutdown 2026'],
-      ['dhs-funding-2026', 'DHS Funding 2026'],
-      ['texas-attorney-general-gop-2026', 'Texas Attorney General GOP Primary 2026'],
-      ['texas-governor-gop-primary-2026', 'Texas Governor GOP Primary 2026'],
-      ['iran-us-israel-strike-2026', 'US/Israel Strike on Iran 2026'],
+      // Polymarket-only: 6 Strait of Hormuz closure markets (event_ref: will-iran-close-the-strait-of-hormuz-by-...)
       ['iran-strait-of-hormuz-2026', 'Iran Strait of Hormuz Closure 2026'],
-      ['next-iranian-supreme-leader', 'Next Iranian Supreme Leader'],
-      ['venezuela-leadership-2026', 'Venezuela Leadership 2026'],
+      // Polymarket-only: 6 FOMC March 2026 rate decision markets (event_ref: fed-decision-in-march-885)
       ['fed-rate-decision-march-2026', 'Fed Rate Decision March 2026'],
+      // Polymarket-only: 28 TX GOP Senate primary markets (event_ref: texas-republican-senate-primary-winner)
+      ['texas-senate-republican-nominee-2026', 'Texas Senate Republican Nominee 2026'],
     ];
     let additionalSeeded = 0;
     for (const [slug, title] of ADDITIONAL_POLITICAL_EVENTS) {

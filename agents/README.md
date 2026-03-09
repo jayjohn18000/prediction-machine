@@ -69,6 +69,8 @@ Use the slash commands in `.claude/commands/`:
 | **VALIDATION_AGENT** | Acceptance tests, fail reasons, drift/cohort | Test plan, taxonomy, checks |
 | **TELEMETRY_AGENT** | Error taxonomy, alertable counters (Phase B) | Metrics spec, PR plan |
 | **DRIFT_DETECTOR** | Spread distribution drift, coverage drops | Drift check spec, SQL queries |
+| **PROPOSAL_REVIEWER** | Triage review queue: bulk-reject bad patterns, auto-accept valid pairs, surface ambiguous ones | Review report, bulk-reject SQL, accept list |
+| **AGENT_ENHANCER** | Mine data trails, propose improvements to any agent or skill | Enhancement proposals (numbered, approval-gated), decision-log entry |
 
 ---
 

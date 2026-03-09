@@ -11,23 +11,8 @@
  *   INTELLIGENCE_FEED_INTERVAL_SEC   – seconds between polls (default: 30)
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-function loadEnv() {
-  const envPath = path.join(process.cwd(), '.env');
-  try {
-    const env = fs.readFileSync(envPath, 'utf8');
-    env.split('\n').forEach((line) => {
-      const m = line.match(/^([^#=]+)=(.*)$/);
-      if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
-    });
-  } catch (_) {}
-}
+import { loadEnv } from './src/platform/env.mjs';
 loadEnv();
 
 const DEFAULT_INTERVAL_SEC = 30;

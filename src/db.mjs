@@ -1,30 +1,13 @@
-import fs from "node:fs";
-import path from "node:path";
-import pg from "pg";
+import { createPool } from "./platform/db.mjs";
 
-// Load .env from repo root so DATABASE_URL is set when running e.g. node src/api.mjs
-function loadEnv() {
-  const envPath = path.join(process.cwd(), ".env");
-  try {
-    const env = fs.readFileSync(envPath, "utf8");
-    env.split("\n").forEach((line) => {
-      const m = line.match(/^([^#=]+)=(.*)$/);
-      if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, "");
-    });
-  } catch (_) {}
+let pool = null;
+
+function getPool() {
+  if (!pool) {
+    pool = createPool();
+  }
+  return pool;
 }
-loadEnv();
-
-const { Pool } = pg;
-
-const DATABASE_URL = process.env.DATABASE_URL;
-if (!DATABASE_URL) throw new Error("Missing DATABASE_URL env var");
-
-export const pool = new Pool({
-  connectionString: DATABASE_URL,
-  max: Number(process.env.PG_POOL_MAX ?? 10),
-  idleTimeoutMillis: 30_000,
-});
 
 const dbMetrics = {
   startedAt: new Date().toISOString(),
@@ -60,10 +43,11 @@ export function getDbMetrics() {
 }
 
 export async function query(text, params) {
+  const poolInstance = getPool();
   const started = Date.now();
   dbMetrics.totalQueries += 1;
   try {
-    const result = await pool.query(text, params);
+    const result = await poolInstance.query(text, params);
     recordTiming(Date.now() - started);
     return result;
   } catch (err) {

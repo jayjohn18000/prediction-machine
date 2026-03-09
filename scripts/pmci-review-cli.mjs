@@ -7,24 +7,12 @@
  * Env: API_BASE_URL (default http://localhost:8787)
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-
-function loadEnv() {
-  const envPath = path.join(process.cwd(), '.env');
-  try {
-    const env = fs.readFileSync(envPath, 'utf8');
-    env.split('\n').forEach((line) => {
-      const m = line.match(/^([^#=]+)=(.*)$/);
-      if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
-    });
-  } catch (_) {}
-}
+import { loadEnv } from '../src/platform/env.mjs';
 loadEnv();
 
 const BASE = (process.env.API_BASE_URL || 'http://localhost:8787').replace(/\/$/, '');
 
-async function fetchQueue(limit = 1, minConfidence = 0.88) {
+async function fetchQueue(limit = 1, minConfidence = 0.87) {
   const url = `${BASE}/v1/review/queue?category=politics&limit=${limit}&min_confidence=${minConfidence}`;
   const res = await fetch(url, {
     headers: {

@@ -2,6 +2,10 @@
 /**
  * Execution intelligence API — read-only endpoints for ranked execution signals.
  *
+ * @deprecated Legacy Node HTTP server. The active PMCI HTTP API is src/api.mjs (Fastify).
+ *   Use `npm run api:pmci` to run the PMCI API. This file remains for execution-signal/routing
+ *   endpoints only; sunset milestone TBD. See docs/system-state.md and docs/decision-log.md.
+ *
  * GET /signals/top — top 20 execution signals from execution_signal_quality (by execution_score DESC).
  * GET /execution-decision?candidate={candidate} — decision-ready intelligence from execution_signal_calibrated (percentile-based).
  * GET /routing-decisions/top?min_confidence=&limit= — top rows from execution_signal_calibrated by score_percentile (filter score_percentile >= min_confidence).
@@ -10,24 +14,12 @@
  * Optional: DATABASE_URL — when set, /signals/top, /execution-decision, and /routing-decisions/top use direct SQL (avoids PostgREST schema cache issues).
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import http from 'node:http';
 import pg from 'pg';
+import { loadEnv } from './src/platform/env.mjs';
 
 const { Client } = pg;
-
-function loadEnv() {
-  const envPath = path.join(process.cwd(), '.env');
-  try {
-    const env = fs.readFileSync(envPath, 'utf8');
-    env.split('\n').forEach((line) => {
-      const m = line.match(/^([^#=]+)=(.*)$/);
-      if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
-    });
-  } catch (_) {}
-}
 loadEnv();
 
 function getSupabase() {

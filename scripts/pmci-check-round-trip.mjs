@@ -1,24 +1,9 @@
 #!/usr/bin/env node
 
-import fs from "node:fs";
-import path from "node:path";
 import pg from "pg";
+import { loadEnv } from "../src/platform/env.mjs";
 
 const { Client } = pg;
-
-function loadEnv() {
-  const envPath = path.join(process.cwd(), ".env");
-  try {
-    const env = fs.readFileSync(envPath, "utf8");
-    env.split("\n").forEach((line) => {
-      const m = line.match(/^([^#=]+)=(.*)$/);
-      if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, "");
-    });
-  } catch {
-    // ignore missing .env
-  }
-}
-
 loadEnv();
 
 const MAX_LAG_SECONDS = Number(process.env.PMCI_MAX_LAG_SECONDS ?? "180");
