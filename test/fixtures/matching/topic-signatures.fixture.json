@@ -1,0 +1,67 @@
+{
+  "_description": "Golden fixture for extractTopicSignature() — captured 2026-03-09 before Step 5 decomposition",
+  "_schema_version": 1,
+  "_note": "Re-running extractTopicSignature against these inputs must return the exact expected value. null means no election signature applies.",
+  "cases": [
+    {
+      "description": "Kalshi GOVPARTY ticker → governor_oh_2026",
+      "input": { "provider_market_ref": "GOVPARTY-OH-2026-REP" },
+      "expected": "governor_oh_2026"
+    },
+    {
+      "description": "Title with state name → governor_oh_2026",
+      "input": { "title": "ohio governor republican 2026" },
+      "expected": "governor_oh_2026"
+    },
+    {
+      "description": "Kalshi SENATE ticker → senate_tx_2026",
+      "input": { "provider_market_ref": "SENATE-TX-2026" },
+      "expected": "senate_tx_2026"
+    },
+    {
+      "description": "Title with state name → senate_tx_2026",
+      "input": { "title": "texas senate race 2026" },
+      "expected": "senate_tx_2026"
+    },
+    {
+      "description": "Kalshi HOUSE district ticker → house_tx33_2026",
+      "input": { "provider_market_ref": "HOUSE-TX-33-2026" },
+      "expected": "house_tx33_2026"
+    },
+    {
+      "description": "Title with district abbreviation → house_tx33_2026",
+      "input": { "title": "TX-33 House election 2026" },
+      "expected": "house_tx33_2026"
+    },
+    {
+      "description": "Title with ordinal district → house_tx33_2026",
+      "input": { "title": "Texas 33rd district house race 2026" },
+      "expected": "house_tx33_2026"
+    },
+    {
+      "description": "Presidential nominee 2028 via democratic + nominee pattern",
+      "input": { "title": "Who will be the Democratic presidential nominee in 2028?" },
+      "expected": "pres_nominee_us_2028"
+    },
+    {
+      "description": "Presidential nominee 2028 via republican + presidential",
+      "input": { "title": "Republican presidential nominee 2028" },
+      "expected": "pres_nominee_us_2028"
+    },
+    {
+      "description": "Mayor market via slug ref",
+      "input": { "provider_market_ref": "austin-mayor-2026" },
+      "expected": "mayor_austin_2026"
+    },
+    {
+      "description": "Policy event — no election signature",
+      "input": { "title": "Federal Reserve rate decision March 2026" },
+      "expected": null
+    },
+    {
+      "description": "Tariff market — no election signature",
+      "input": { "title": "Will government impose tariffs on China?" },
+      "expected": null
+    }
+  ]
+}

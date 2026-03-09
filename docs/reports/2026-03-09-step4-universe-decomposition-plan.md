@@ -94,3 +94,32 @@ Extract the monolith `universe.mjs` into focused, testable modules without chang
 - `test/ingestion/price-parsers.test.mjs` added (10 tests) ✅
 - `test/ingestion/market-metadata.test.mjs` added (13 tests) ✅
 - All 23 tests pass
+
+---
+
+## Step 4.5 — Golden fixture capture COMPLETE ✅
+
+**Completed:** 2026-03-09
+**Branch:** fix/review-idempotent-atomic-2026-03-08
+
+### Fixtures created
+
+| File | Content |
+|------|---------|
+| `test/fixtures/matching/topic-signatures.fixture.json` | 12 `extractTopicSignature()` input/output cases |
+| `test/fixtures/matching/normalize-topic-key.fixture.json` | 9 `normalizeTopicKey()` input/output cases |
+| `test/fixtures/matching/matching-fields.fixture.json` | 5 `extractMatchingFields()` input/output cases (adapter) |
+| `test/fixtures/matching/proposal-shape.fixture.json` | Scoring algorithm spec, 4 `scorePair()` cases, reasons/features schema, thresholds |
+
+### Test harness
+
+- `test/matching/golden-fixtures.test.mjs` — 11 deterministic tests (0 DB required)
+  - Structure validation for all 4 fixture files
+  - Live assertion against all exported function cases (`extractTopicSignature`, `normalizeTopicKey`, `extractMatchingFields`)
+  - Inline `replicateScorePair()` validates fixture score_cases are mathematically consistent with documented algorithm
+
+### Notes
+
+- All 55 tests pass (including 11 new golden-fixture tests + 44 pre-existing)
+- One known quirk documented in fixture: `detectJurisdiction` iterates US state codes before country keywords, so "Strait of Hormuz **in** 2026" resolves jurisdiction as `us-in` (Indiana) rather than `intl-iran`. Captured as-is for regression fidelity.
+- `scorePair()` is internal (not exported); algorithm replicated inline in test harness. When Step 5 decomposes and exports it, extend the harness to call the function directly.

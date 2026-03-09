@@ -1,0 +1,186 @@
+{
+  "_description": "Golden fixture documenting proposal engine output shapes — captured 2026-03-09 before Step 5 decomposition",
+  "_schema_version": 1,
+  "_note": "This fixture documents: (1) the internal scorePair() algorithm and representative outputs, (2) the reasons/features JSONB column shapes written to pmci.proposed_links.",
+
+  "score_algorithm": {
+    "_comment": "scorePair(mA, mB, meta) formula — weight vector is the regression baseline. Changes here indicate Step 5 regressed scoring.",
+    "formula": {
+      "equiv": "0.25 * titleSim + 0.20 * slugSim + 0.25 * entityScore + 0.30 * embScore",
+      "equivConf": "min(1, equiv + (entityMatch ? 0.15 : 0) + (titleSim > 0.5 ? 0.1 : 0))",
+      "proxyConf_base": "equivConf * 0.75 + kwScore * 0.15 + entityStrength * 0.1 + topicMatchBonus + timeWindowBonus",
+      "proxyConf_topic_bonus": "if sharedTopics && !entityMatch: min(0.96, proxyConf + 0.1)",
+      "proxy_confidence": "min(0.97, proxyConf)",
+      "rounding": "Math.round(value * 10000) / 10000"
+    },
+    "weights": {
+      "title_sim": 0.25,
+      "slug_sim": 0.20,
+      "entity_score": 0.25,
+      "embedding_score": 0.30,
+      "entity_match_bonus": 0.15,
+      "title_high_bonus": 0.10,
+      "proxy_base_factor": 0.75,
+      "proxy_keyword_weight": 0.15,
+      "proxy_entity_strength_weight": 0.10,
+      "proxy_topic_bonus": 0.10,
+      "proxy_max": 0.97,
+      "shared_topics_only_bonus": 0.10,
+      "shared_topics_cap": 0.96
+    }
+  },
+
+  "score_cases": [
+    {
+      "description": "High-similarity equivalent pair with embeddings — equiv conf clamps to 1.0",
+      "meta": {
+        "titleSim": 0.8,
+        "slugSim": 0.7,
+        "entityMatch": true,
+        "sharedTopics": true,
+        "kwScore": 0.6,
+        "entityStrength": 1,
+        "topicMatchBonus": 0.1,
+        "timeWindowBonus": 0.05,
+        "embeddingSim": 0.92
+      },
+      "expected": {
+        "equivalent_confidence": 1.0,
+        "proxy_confidence": 0.97
+      }
+    },
+    {
+      "description": "Low-similarity pair without embeddings — below auto-accept threshold",
+      "meta": {
+        "titleSim": 0.3,
+        "slugSim": 0.1,
+        "entityMatch": true,
+        "sharedTopics": false,
+        "kwScore": 0.4,
+        "entityStrength": 0.7,
+        "topicMatchBonus": 0.1,
+        "timeWindowBonus": 0,
+        "embeddingSim": null
+      },
+      "expected": {
+        "equivalent_confidence": 0.495,
+        "proxy_confidence": 0.6012
+      }
+    },
+    {
+      "description": "Entity mismatch but shared topics — gets proxy topic bonus",
+      "meta": {
+        "titleSim": 0.5,
+        "slugSim": 0.4,
+        "entityMatch": false,
+        "sharedTopics": true,
+        "kwScore": 0.5,
+        "entityStrength": 0,
+        "topicMatchBonus": 0.1,
+        "timeWindowBonus": 0,
+        "embeddingSim": null
+      },
+      "expected": {
+        "equivalent_confidence": 0.205,
+        "proxy_confidence": 0.4288
+      }
+    },
+    {
+      "description": "Embedding-driven match, low title/slug overlap, no entity match",
+      "meta": {
+        "titleSim": 0.6,
+        "slugSim": 0.2,
+        "entityMatch": false,
+        "sharedTopics": false,
+        "kwScore": 0.3,
+        "entityStrength": 0,
+        "topicMatchBonus": 0,
+        "timeWindowBonus": 0,
+        "embeddingSim": 0.85
+      },
+      "expected": {
+        "equivalent_confidence": 0.545,
+        "proxy_confidence": 0.4538
+      }
+    }
+  ],
+
+  "reasons_schema": {
+    "_comment": "Shape of reasons JSONB written to pmci.proposed_links.reasons by considerPair()",
+    "required_keys": [
+      "title_similarity",
+      "slug_similarity",
+      "entity_match",
+      "matched_tokens",
+      "structure_hint",
+      "keyword_overlap_score",
+      "entity_strength",
+      "topic_match_bonus",
+      "time_window_bonus",
+      "freshness_a",
+      "freshness_b",
+      "price_source_a",
+      "price_source_b",
+      "proposal_type"
+    ],
+    "optional_keys": [
+      "target_family_id",
+      "proxy_reason"
+    ],
+    "example": {
+      "title_similarity": 0.6667,
+      "slug_similarity": 0.0,
+      "entity_match": true,
+      "matched_tokens": ["trump"],
+      "structure_hint": "binary",
+      "keyword_overlap_score": 0.4,
+      "entity_strength": 1,
+      "topic_match_bonus": 0.1,
+      "time_window_bonus": 0.05,
+      "freshness_a": "2026-03-08T12:00:00.000Z",
+      "freshness_b": "2026-03-08T11:30:00.000Z",
+      "price_source_a": "orderbook",
+      "price_source_b": "clob",
+      "proposal_type": "new_pair"
+    }
+  },
+
+  "features_schema": {
+    "_comment": "Shape of features JSONB written to pmci.proposed_links.features by considerPair()",
+    "required_keys": [
+      "title_jaccard",
+      "entity_overlap",
+      "date_delta_days",
+      "price_spread",
+      "outcome_name_match",
+      "embedding_cosine_similarity",
+      "confidence_raw",
+      "template"
+    ],
+    "example": {
+      "title_jaccard": 0.6667,
+      "entity_overlap": 1,
+      "date_delta_days": 45,
+      "price_spread": 0.03,
+      "outcome_name_match": 1,
+      "embedding_cosine_similarity": 0.9123,
+      "confidence_raw": 0.8750,
+      "template": "election-winner-binary"
+    },
+    "nullable_fields": ["date_delta_days", "price_spread", "outcome_name_match", "embedding_cosine_similarity", "entity_overlap"]
+  },
+
+  "thresholds": {
+    "_comment": "Confidence thresholds that control proposal routing — regression-sensitive",
+    "equiv_auto_accept_new_pair": 0.985,
+    "equiv_auto_accept_attach": 0.92,
+    "equiv_pending_min": 0.92,
+    "proxy_pending_min": 0.86,
+    "proxy_max": 0.97,
+    "proxy_pending_max": 0.98,
+    "min_confidence_after_entity_penalty": 0.5,
+    "entity_score_zero_penalty": 0.4,
+    "entity_score_bonus_per_unit": 0.3,
+    "same_block_last_name_bonus": 0.35
+  }
+}
