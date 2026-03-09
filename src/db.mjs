@@ -56,3 +56,40 @@ export async function query(text, params) {
     throw err;
   }
 }
+
+/**
+ * Run `fn` inside a single DB transaction. `fn` receives a `txQuery(text, params)` bound
+ * to the dedicated client and tracked in dbMetrics. Commits on success, rolls back on any
+ * thrown error. Pass `_pool` in tests to inject a mock pool (test seam only).
+ *
+ * @param {(txQuery: Function) => Promise<any>} fn
+ * @param {{ _pool?: object }} [opts]
+ */
+export async function withTransaction(fn, { _pool } = {}) {
+  const poolInstance = _pool ?? getPool();
+  const client = await poolInstance.connect();
+  const txQuery = async (text, params) => {
+    const started = Date.now();
+    dbMetrics.totalQueries += 1;
+    try {
+      const result = await client.query(text, params);
+      recordTiming(Date.now() - started);
+      return result;
+    } catch (err) {
+      dbMetrics.totalErrors += 1;
+      recordTiming(Date.now() - started);
+      throw err;
+    }
+  };
+  try {
+    await client.query('BEGIN');
+    const result = await fn(txQuery);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch { /* preserve original error */ }
+    throw err;
+  } finally {
+    client.release();
+  }
+}

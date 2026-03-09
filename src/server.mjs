@@ -6,7 +6,7 @@ import Fastify from "fastify";
 import rateLimit from "@fastify/rate-limit";
 import { z } from "zod";
 import { loadEnv } from "./platform/env.mjs";
-import { query, getDbMetrics } from "./db.mjs";
+import { query, getDbMetrics, withTransaction } from "./db.mjs";
 import { SQL } from "./queries.mjs";
 import { createPmciClient } from "../lib/pmci-ingestion.mjs";
 import { registerHealthRoutes } from "./routes/health.mjs";
@@ -150,6 +150,7 @@ export async function buildApp() {
   const deps = {
     query,
     getDbMetrics,
+    withTransaction,
     SQL,
     logClient,
     requestMetrics,

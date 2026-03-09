@@ -2,7 +2,7 @@
  * /v1/review/queue, POST /v1/review/decision, POST /v1/resolve/link routes.
  */
 export function registerReviewRoutes(app, deps) {
-  const { query, SQL, RATE_LIMIT_CONFIG, z } = deps;
+  const { query, withTransaction, SQL, RATE_LIMIT_CONFIG, z } = deps;
 
   app.get("/v1/review/queue", { rateLimit: RATE_LIMIT_CONFIG }, async (req) => {
     const schema = z.object({
@@ -87,164 +87,178 @@ export function registerReviewRoutes(app, deps) {
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return { error: parsed.error.flatten() };
 
-    const propRes = await query(
-      `SELECT id, provider_market_id_a, provider_market_id_b, confidence, reasons, decision
-       FROM pmci.proposed_links WHERE id = $1 AND decision IS NULL`,
-      [parsed.data.proposed_id],
-    );
-    if (propRes.rowCount === 0) return { error: "proposal_not_found_or_already_decided" };
-    const prop = propRes.rows[0];
-    const idA = Number(prop.provider_market_id_a);
-    const idB = Number(prop.provider_market_id_b);
-    const reasons = prop.reasons ?? {};
-
     if (parsed.data.decision === "accept") {
-      const marketRes = await query(
-        `SELECT pm.id, pm.provider_id, p.code, pm.provider_market_ref, pm.event_ref
-         FROM pmci.provider_markets pm JOIN pmci.providers p ON p.id = pm.provider_id
-         WHERE pm.id IN ($1, $2)`,
-        [idA, idB],
-      );
-      const byId = new Map(marketRes.rows.map((r) => [Number(r.id), r]));
-      const ma = byId.get(idA);
-      const mb = byId.get(idB);
-      if (!ma || !mb) return { error: "market_not_found" };
-
-      const isAttach = reasons.proposal_type === "attach_to_family" && reasons.target_family_id != null;
-      let familyId = isAttach ? Number(reasons.target_family_id) : null;
-
-      if (!familyId) {
-        const topicKey = (mb.event_ref || mb.provider_market_ref || "").split("#")[0].replace(/-/g, " ").split(/\s+/)[0] || "politics";
-        const entityKey = reasons.matched_tokens?.[0] || "unknown";
-        const label = `politics::${topicKey}::::${entityKey}`;
-        const notes = `ref_a=${ma.provider_market_ref} ref_b=${mb.provider_market_ref} review-accepted`;
-
-        const famRes = await query(`SELECT id FROM pmci.market_families WHERE label = $1`, [label]);
-        familyId = famRes.rows?.[0]?.id;
-        if (!familyId) {
-          const ceRes = await query(
-            `SELECT id FROM pmci.canonical_events WHERE slug = $1 LIMIT 1`,
-            [mb.event_ref?.split("#")[0] || ""],
-          );
-          const canonicalEventId = ceRes.rows?.[0]?.id ?? null;
-          const insFam = await query(
-            `INSERT INTO pmci.market_families (label, notes, canonical_event_id) VALUES ($1, $2, $3) RETURNING id`,
-            [label, notes, canonicalEventId],
-          );
-          familyId = insFam.rows?.[0]?.id;
-        }
-      }
-
-      const nextVer = await query(SQL.next_linker_run_version);
-      const version = Number(nextVer.rows[0].next_version);
-      await query(SQL.insert_linker_run, [version, isAttach ? "review accept (attach)" : "review accept"]);
-
-      const reasonsJson = JSON.stringify(reasons);
-      if (isAttach) {
-        const linksInFamily = await query(
-          `SELECT provider_market_id FROM pmci.market_links WHERE family_id = $1 AND status = 'active'`,
-          [familyId],
+      // All accept writes execute atomically. The FOR UPDATE lock on the proposal
+      // row serializes concurrent accept requests and prevents double-accept.
+      return await withTransaction(async (txQuery) => {
+        const propRes = await txQuery(
+          `SELECT id, provider_market_id_a, provider_market_id_b, confidence, reasons, decision
+           FROM pmci.proposed_links WHERE id = $1 AND decision IS NULL FOR UPDATE`,
+          [parsed.data.proposed_id],
         );
-        const linkedIds = new Set((linksInFamily.rows || []).map((r) => Number(r.provider_market_id)));
-        const toAdd = [idA, idB].filter((id) => !linkedIds.has(id));
-        for (const marketId of toAdd) {
-          const m = byId.get(marketId);
-          if (m) {
-            await query(SQL.insert_market_link, [
-              familyId,
-              m.provider_id,
-              marketId,
-              parsed.data.relationship_type,
-              "active",
-              version,
-              Number(prop.confidence),
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              reasonsJson,
-            ]);
+        if (propRes.rowCount === 0) return { error: "proposal_not_found_or_already_decided" };
+        const prop = propRes.rows[0];
+        const idA = Number(prop.provider_market_id_a);
+        const idB = Number(prop.provider_market_id_b);
+        const reasons = prop.reasons ?? {};
+
+        const marketRes = await txQuery(
+          `SELECT pm.id, pm.provider_id, p.code, pm.provider_market_ref, pm.event_ref
+           FROM pmci.provider_markets pm JOIN pmci.providers p ON p.id = pm.provider_id
+           WHERE pm.id IN ($1, $2)`,
+          [idA, idB],
+        );
+        const byId = new Map(marketRes.rows.map((r) => [Number(r.id), r]));
+        const ma = byId.get(idA);
+        const mb = byId.get(idB);
+        if (!ma || !mb) return { error: "market_not_found" };
+
+        const isAttach = reasons.proposal_type === "attach_to_family" && reasons.target_family_id != null;
+        let familyId = isAttach ? Number(reasons.target_family_id) : null;
+
+        if (!familyId) {
+          const topicKey = (mb.event_ref || mb.provider_market_ref || "").split("#")[0].replace(/-/g, " ").split(/\s+/)[0] || "politics";
+          const entityKey = reasons.matched_tokens?.[0] || "unknown";
+          const label = `politics::${topicKey}::::${entityKey}`;
+          const notes = `ref_a=${ma.provider_market_ref} ref_b=${mb.provider_market_ref} review-accepted`;
+
+          const famRes = await txQuery(`SELECT id FROM pmci.market_families WHERE label = $1`, [label]);
+          familyId = famRes.rows?.[0]?.id;
+          if (!familyId) {
+            const ceRes = await txQuery(
+              `SELECT id FROM pmci.canonical_events WHERE slug = $1 LIMIT 1`,
+              [mb.event_ref?.split("#")[0] || ""],
+            );
+            const canonicalEventId = ceRes.rows?.[0]?.id ?? null;
+            const insFam = await txQuery(
+              `INSERT INTO pmci.market_families (label, notes, canonical_event_id) VALUES ($1, $2, $3) RETURNING id`,
+              [label, notes, canonicalEventId],
+            );
+            familyId = insFam.rows?.[0]?.id;
           }
         }
-      } else {
-        await query(SQL.insert_market_link, [
-          familyId,
-          ma.provider_id,
-          idA,
-          parsed.data.relationship_type,
-          "active",
-          version,
-          Number(prop.confidence),
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          reasonsJson,
-        ]);
-        await query(SQL.insert_market_link, [
-          familyId,
-          mb.provider_id,
-          idB,
-          parsed.data.relationship_type,
-          "active",
-          version,
-          Number(prop.confidence),
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          reasonsJson,
-        ]);
-      }
 
-      await query(
-        `UPDATE pmci.proposed_links SET decision = 'accepted', reviewed_at = now(), reviewer_note = $2,
-          accepted_family_id = $3, accepted_link_version = $4, accepted_relationship_type = $5 WHERE id = $1`,
-        [parsed.data.proposed_id, parsed.data.note ?? "accepted", familyId, version, parsed.data.relationship_type],
-      );
-      await query(
-        `INSERT INTO pmci.review_decisions (proposed_link_id, decision, relationship_type, reviewer_note) VALUES ($1, 'accepted', $2, $3)`,
-        [parsed.data.proposed_id, parsed.data.relationship_type, parsed.data.note ?? "accepted"],
-      );
-      const snapCheck = await query(
-        `SELECT COUNT(*)::int AS count
-         FROM pmci.provider_market_snapshots s
-         JOIN pmci.market_links ml ON ml.provider_market_id = s.provider_market_id
-         WHERE ml.family_id = $1
-           AND ml.status = 'active'
-           AND s.observed_at > now() - interval '1 hour'`,
-        [familyId],
-      );
-      const snapshotCount = snapCheck.rows?.[0]?.count ?? 0;
-      const divergenceAvailable = Number(snapshotCount) >= 2;
-      return {
-        ok: true,
-        decision: "accepted",
-        family_id: Number(familyId),
-        link_version: version,
-        divergence_available: divergenceAvailable,
-        divergence_note: divergenceAvailable
-          ? "Both markets have recent snapshots. Family should appear in /v1/signals/top-divergences."
-          : "No recent snapshots for one or both markets yet. Divergence signals will appear after the observer ingests this pair.",
-      };
+        const nextVer = await txQuery(SQL.next_linker_run_version);
+        const version = Number(nextVer.rows[0].next_version);
+        await txQuery(SQL.insert_linker_run, [version, isAttach ? "review accept (attach)" : "review accept"]);
+
+        const reasonsJson = JSON.stringify(reasons);
+        if (isAttach) {
+          const linksInFamily = await txQuery(
+            `SELECT provider_market_id FROM pmci.market_links WHERE family_id = $1 AND status = 'active'`,
+            [familyId],
+          );
+          const linkedIds = new Set((linksInFamily.rows || []).map((r) => Number(r.provider_market_id)));
+          const toAdd = [idA, idB].filter((id) => !linkedIds.has(id));
+          for (const marketId of toAdd) {
+            const m = byId.get(marketId);
+            if (m) {
+              await txQuery(SQL.insert_market_link, [
+                familyId,
+                m.provider_id,
+                marketId,
+                parsed.data.relationship_type,
+                "active",
+                version,
+                Number(prop.confidence),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                reasonsJson,
+              ]);
+            }
+          }
+        } else {
+          await txQuery(SQL.insert_market_link, [
+            familyId,
+            ma.provider_id,
+            idA,
+            parsed.data.relationship_type,
+            "active",
+            version,
+            Number(prop.confidence),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            reasonsJson,
+          ]);
+          await txQuery(SQL.insert_market_link, [
+            familyId,
+            mb.provider_id,
+            idB,
+            parsed.data.relationship_type,
+            "active",
+            version,
+            Number(prop.confidence),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            reasonsJson,
+          ]);
+        }
+
+        await txQuery(
+          `UPDATE pmci.proposed_links SET decision = 'accepted', reviewed_at = now(), reviewer_note = $2,
+            accepted_family_id = $3, accepted_link_version = $4, accepted_relationship_type = $5 WHERE id = $1`,
+          [parsed.data.proposed_id, parsed.data.note ?? "accepted", familyId, version, parsed.data.relationship_type],
+        );
+        await txQuery(
+          `INSERT INTO pmci.review_decisions (proposed_link_id, decision, relationship_type, reviewer_note) VALUES ($1, 'accepted', $2, $3)`,
+          [parsed.data.proposed_id, parsed.data.relationship_type, parsed.data.note ?? "accepted"],
+        );
+
+        const snapCheck = await txQuery(
+          `SELECT COUNT(*)::int AS count
+           FROM pmci.provider_market_snapshots s
+           JOIN pmci.market_links ml ON ml.provider_market_id = s.provider_market_id
+           WHERE ml.family_id = $1
+             AND ml.status = 'active'
+             AND s.observed_at > now() - interval '1 hour'`,
+          [familyId],
+        );
+        const snapshotCount = snapCheck.rows?.[0]?.count ?? 0;
+        const divergenceAvailable = Number(snapshotCount) >= 2;
+        return {
+          ok: true,
+          decision: "accepted",
+          family_id: Number(familyId),
+          link_version: version,
+          divergence_available: divergenceAvailable,
+          divergence_note: divergenceAvailable
+            ? "Both markets have recent snapshots. Family should appear in /v1/signals/top-divergences."
+            : "No recent snapshots for one or both markets yet. Divergence signals will appear after the observer ingests this pair.",
+        };
+      });
     }
 
-    const decision = parsed.data.decision === "reject" ? "rejected" : "skipped";
-    await query(
-      `UPDATE pmci.proposed_links SET decision = $2, reviewed_at = now(), reviewer_note = $3 WHERE id = $1`,
-      [parsed.data.proposed_id, decision, parsed.data.note ?? null],
-    );
-    await query(
-      `INSERT INTO pmci.review_decisions (proposed_link_id, decision, reviewer_note) VALUES ($1, $2, $3)`,
-      [parsed.data.proposed_id, decision, parsed.data.note ?? null],
-    );
-    return { ok: true, decision };
+    // reject / skip — two writes must be atomic
+    return await withTransaction(async (txQuery) => {
+      const propRes = await txQuery(
+        `SELECT id FROM pmci.proposed_links WHERE id = $1 AND decision IS NULL FOR UPDATE`,
+        [parsed.data.proposed_id],
+      );
+      if (propRes.rowCount === 0) return { error: "proposal_not_found_or_already_decided" };
+
+      const decision = parsed.data.decision === "reject" ? "rejected" : "skipped";
+      await txQuery(
+        `UPDATE pmci.proposed_links SET decision = $2, reviewed_at = now(), reviewer_note = $3 WHERE id = $1`,
+        [parsed.data.proposed_id, decision, parsed.data.note ?? null],
+      );
+      await txQuery(
+        `INSERT INTO pmci.review_decisions (proposed_link_id, decision, reviewer_note) VALUES ($1, $2, $3)`,
+        [parsed.data.proposed_id, decision, parsed.data.note ?? null],
+      );
+      return { ok: true, decision };
+    });
   });
 
   app.post("/v1/resolve/link", { rateLimit: RATE_LIMIT_CONFIG }, async (req) => {
@@ -268,32 +282,35 @@ export function registerReviewRoutes(app, deps) {
       return { error: "unauthorized" };
     }
 
-    const prov = await query("select id from pmci.providers where code = $1", [parsed.data.provider_code]);
-    if (prov.rowCount === 0) return { error: "unknown_provider" };
-    const providerId = prov.rows[0].id;
+    // linker_run insert + market_link upsert are atomic
+    return await withTransaction(async (txQuery) => {
+      const prov = await txQuery("select id from pmci.providers where code = $1", [parsed.data.provider_code]);
+      if (prov.rowCount === 0) return { error: "unknown_provider" };
+      const providerId = prov.rows[0].id;
 
-    const next = await query(SQL.next_linker_run_version);
-    const version = Number(next.rows[0].next_version);
-    await query(SQL.insert_linker_run, [version, "manual resolve/link"]);
+      const next = await txQuery(SQL.next_linker_run_version);
+      const version = Number(next.rows[0].next_version);
+      await txQuery(SQL.insert_linker_run, [version, "manual resolve/link"]);
 
-    const res = await query(SQL.insert_market_link, [
-      parsed.data.family_id,
-      providerId,
-      parsed.data.provider_market_id,
-      parsed.data.relationship_type,
-      "active",
-      version,
-      parsed.data.confidence,
-      parsed.data.correlation_window ?? null,
-      parsed.data.lag_seconds ?? null,
-      parsed.data.correlation_strength ?? null,
-      null,
-      null,
-      null,
-      JSON.stringify(parsed.data.reasons ?? {}),
-    ]);
+      const res = await txQuery(SQL.insert_market_link, [
+        parsed.data.family_id,
+        providerId,
+        parsed.data.provider_market_id,
+        parsed.data.relationship_type,
+        "active",
+        version,
+        parsed.data.confidence,
+        parsed.data.correlation_window ?? null,
+        parsed.data.lag_seconds ?? null,
+        parsed.data.correlation_strength ?? null,
+        null,
+        null,
+        null,
+        JSON.stringify(parsed.data.reasons ?? {}),
+      ]);
 
-    const row = res.rows[0];
-    return { link_id: Number(row.id), link_version: Number(row.link_version), status: row.status };
+      const row = res.rows[0];
+      return { link_id: Number(row.id), link_version: Number(row.link_version), status: row.status };
+    });
   });
 }

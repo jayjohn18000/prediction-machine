@@ -254,6 +254,20 @@ export const SQL = {
       $11, $12, $13,
       $14::jsonb
     )
+    on conflict (family_id, provider_market_id, link_version)
+    do update set
+      relationship_type    = excluded.relationship_type,
+      status               = excluded.status,
+      link_version         = excluded.link_version,
+      confidence           = excluded.confidence,
+      correlation_window   = excluded.correlation_window,
+      lag_seconds          = excluded.lag_seconds,
+      correlation_strength = excluded.correlation_strength,
+      break_rate           = excluded.break_rate,
+      last_validated_at    = excluded.last_validated_at,
+      staleness_score      = excluded.staleness_score,
+      reasons              = excluded.reasons,
+      updated_at           = now()
     returning id, family_id, link_version, status;
   `,
 };
