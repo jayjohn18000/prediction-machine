@@ -2,6 +2,14 @@
 
 Observation-only data capture for prediction market spreads (Kalshi vs Polymarket). Fetches YES prices per candidate, computes spread, inserts rows into Supabase. No trading or dashboards.
 
+## Runtime entrypoints
+
+- **Active PMCI API (Fastify):** `npm run api:pmci` (or `npm run api:pmci:dev` for nodemon).
+- **Legacy execution API (Node HTTP):** `npm run api` (or `npm run api:dev`). Deprecated for PMCI route development.
+- **Observer loop (ingestion):** `npm run start` / `npm run observe:spreads`.
+
+Use `src/api.mjs` for all PMCI `/v1/*` endpoint work. Root `api.mjs` is retained only for legacy execution-intelligence endpoints.
+
 ## Setup
 
 1. **Copy env and set keys**

@@ -1,8 +1,14 @@
 # System State
 
 ## Legacy vs active runtime surfaces
-- **Active PMCI API:** `src/api.mjs` (Fastify). Run with `npm run api:pmci`. Serves `/v1/health/*`, `/v1/coverage*`, `/v1/markets/*`, `/v1/market-families`, `/v1/market-links`, `/v1/signals/*`, `/v1/review/*`, `/v1/resolve/link`.
-- **Legacy API:** Root `api.mjs` (Node HTTP). Run with `npm run api`. Execution-intelligence endpoints only (`/signals/top`, `/execution-decision`, `/routing-decisions/top`). Deprecated in favor of `src/api.mjs` for PMCI; this file is retained for execution-signal use until a sunset milestone. Do not add new PMCI routes here.
+- **Active PMCI API:** `src/api.mjs` (Fastify). Run with `npm run api:pmci` (or `npm run api:pmci:dev`). Serves `/v1/health/*`, `/v1/coverage*`, `/v1/markets/*`, `/v1/market-families`, `/v1/market-links`, `/v1/signals/*`, `/v1/review/*`, `/v1/resolve/link`.
+- **Legacy API:** Root `api.mjs` (Node HTTP). Run with `npm run api` (or `npm run api:dev`). Execution-intelligence endpoints only (`/signals/top`, `/execution-decision`, `/routing-decisions/top`). Deprecated in favor of `src/api.mjs` for PMCI; this file is retained for execution-signal use until a sunset milestone. Do not add new PMCI routes here.
+
+## Script ownership boundaries
+- `api:pmci*` scripts own PMCI `/v1/*` runtime behavior.
+- `api*` scripts (without `:pmci`) are legacy execution API only.
+- `start` / `observe:spreads` own observer ingestion loop execution.
+- `pmci:*` scripts are PMCI operational workflows (ingest/probe/smoke/review/audit/check), not API server entrypoints.
 
 ## Branch
 - `chore/infra-hardening-baseline-2026-02-26`
