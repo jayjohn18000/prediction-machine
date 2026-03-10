@@ -139,10 +139,10 @@ async function main() {
       const code = provByCode.get(r.provider_id) ?? r.provider_id;
       console.log(`  ${r.topic} ${code}: total=${r.total} linked=${r.linked} link_rate=${r.link_rate ?? 0}`);
     }
-    const govSen = (coverageRes.rows || []).filter((r) => r.topic === 'governor' || r.topic === 'senate');
-    const belowTarget = govSen.some((r) => Number(r.link_rate ?? 0) < 0.2);
+    const govPres = (coverageRes.rows || []).filter((r) => r.topic === 'governor' || r.topic === 'president');
+    const belowTarget = govPres.some((r) => Number(r.link_rate ?? 0) < 0.2);
     if (belowTarget) {
-      console.warn('\nD6 gate: governor/senate link_rate below 0.20 — improve ingestion coverage (D0/D1).');
+      console.warn('\nD6 gate: governor/president link_rate below 0.20 — improve ingestion coverage (D0/D1).');
     }
   } finally {
     await client.end();
