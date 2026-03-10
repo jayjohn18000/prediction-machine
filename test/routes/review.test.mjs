@@ -57,7 +57,7 @@ function postDecision(app, body) {
   });
 }
 
-function postResolve(app, body, adminKey = "") {
+function postResolve(app, body, adminKey = process.env.PMCI_ADMIN_KEY ?? "") {
   return app.inject({
     method: "POST",
     url: "/v1/resolve/link",
