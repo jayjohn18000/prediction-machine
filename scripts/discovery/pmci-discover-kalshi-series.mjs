@@ -8,7 +8,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { loadEnv } from "../src/platform/env.mjs";
+import { loadEnv } from "../../src/platform/env.mjs";
 
 loadEnv();
 

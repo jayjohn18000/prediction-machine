@@ -5,8 +5,8 @@
  * Pass --reset to ignore Kalshi checkpoint and start fresh.
  */
 
-import { loadEnv } from "../src/platform/env.mjs";
-import { runUniverseIngest } from "../lib/ingestion/universe.mjs";
+import { loadEnv } from "../../src/platform/env.mjs";
+import { runUniverseIngest } from "../../lib/ingestion/universe.mjs";
 
 loadEnv();
 

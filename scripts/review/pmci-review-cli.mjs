@@ -7,7 +7,7 @@
  * Env: API_BASE_URL (default http://localhost:8787)
  */
 
-import { loadEnv } from '../src/platform/env.mjs';
+import { loadEnv } from '../../src/platform/env.mjs';
 loadEnv();
 
 const BASE = (process.env.API_BASE_URL || 'http://localhost:8787').replace(/\/$/, '');

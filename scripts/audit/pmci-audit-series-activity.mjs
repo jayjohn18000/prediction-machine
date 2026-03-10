@@ -6,7 +6,7 @@
  * Env: PMCI_POLITICS_KALSHI_SERIES_TICKERS (comma-separated)
  */
 
-import { loadEnv } from "../src/platform/env.mjs";
+import { loadEnv } from "../../src/platform/env.mjs";
 
 loadEnv();
 

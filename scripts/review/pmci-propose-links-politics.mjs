@@ -5,8 +5,8 @@
  * Env: DATABASE_URL, PMCI_MAX_PROPOSALS_EQUIV, PMCI_MAX_PROPOSALS_PROXY, PMCI_MAX_PER_BLOCK.
  */
 
-import { loadEnv } from "../src/platform/env.mjs";
-import { runProposalEngine } from "../lib/matching/proposal-engine.mjs";
+import { loadEnv } from "../../src/platform/env.mjs";
+import { runProposalEngine } from "../../lib/matching/proposal-engine.mjs";
 
 loadEnv();
 
