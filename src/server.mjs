@@ -5,7 +5,7 @@
 import Fastify from "fastify";
 import rateLimit from "@fastify/rate-limit";
 import { z } from "zod";
-import { loadEnv } from "./platform/env.mjs";
+import { getPmciApiConfig } from "./platform/config-schema.mjs";
 import { query, getDbMetrics, withTransaction } from "./db.mjs";
 import { SQL } from "./queries.mjs";
 import { createPmciClient } from "../lib/pmci-ingestion.mjs";
@@ -19,24 +19,23 @@ import { resolveProviderIdByCode } from "./repositories/providers-repo.mjs";
 import { percentile, typeFactor, computeConsensus, computeDivergence } from "./utils/metrics.mjs";
 import { parseSince } from "./utils/time.mjs";
 
-loadEnv();
-
-const MAX_LAG_SECONDS = Number(process.env.PMCI_MAX_LAG_SECONDS ?? "120");
-const INGESTION_SUCCESS_TARGET = Number(process.env.PMCI_INGESTION_SUCCESS_TARGET ?? "0.99");
-const API_P95_TARGET_MS = Number(process.env.PMCI_API_P95_TARGET_MS ?? "500");
-const RATE_LIMIT_CONFIG = {
-  max: Number(process.env.PMCI_RATE_LIMIT_MAX ?? "60"),
-  timeWindow: Number(process.env.PMCI_RATE_LIMIT_WINDOW_MS ?? "60000"),
-  keyGenerator: (req) => req.headers["x-pmci-api-key"] ?? req.ip,
-  errorResponseBuilder: () => ({
-    error: "rate_limited",
-    message: "Too many requests. See max and timeWindow in response headers.",
-  }),
-};
 const PMCI_API_VERSION = "2026-03-02";
 
-
 export async function buildApp() {
+  const config = getPmciApiConfig(process.env);
+  const MAX_LAG_SECONDS = config.maxLagSeconds;
+  const INGESTION_SUCCESS_TARGET = config.ingestionSuccessTarget;
+  const API_P95_TARGET_MS = config.apiP95TargetMs;
+  const RATE_LIMIT_CONFIG = {
+    max: config.rateLimitMax,
+    timeWindow: config.rateLimitWindowMs,
+    keyGenerator: (req) => req.headers["x-pmci-api-key"] ?? req.ip,
+    errorResponseBuilder: () => ({
+      error: "rate_limited",
+      message: "Too many requests. See max and timeWindow in response headers.",
+    }),
+  };
+
   const requestMetrics = {
     startedAt: new Date().toISOString(),
     total: 0,
@@ -112,6 +111,8 @@ export async function buildApp() {
     computeDivergence,
     parseSince,
     assertFreshness,
+    PMCI_API_KEY: config.apiKey,
+    PMCI_ADMIN_KEY: config.adminKey,
     z,
   };
 
@@ -145,7 +146,7 @@ export async function buildApp() {
   });
 
   app.addHook("onRequest", async (req, reply) => {
-    const apiKey = process.env.PMCI_API_KEY;
+    const apiKey = config.apiKey;
     if (!apiKey) return;
     if (req.url.startsWith("/v1/health/")) return;
     const provided = req.headers["x-pmci-api-key"];

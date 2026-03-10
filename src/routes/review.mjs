@@ -4,7 +4,7 @@ import { getReviewQueue, applyReviewDecision, resolveLink } from "../services/re
  * /v1/review/queue, POST /v1/review/decision, POST /v1/resolve/link routes.
  */
 export function registerReviewRoutes(app, deps) {
-  const { query, withTransaction, resolveProviderIdByCode, SQL, RATE_LIMIT_CONFIG, z } = deps;
+  const { query, withTransaction, resolveProviderIdByCode, SQL, RATE_LIMIT_CONFIG, PMCI_ADMIN_KEY, z } = deps;
 
   app.get("/v1/review/queue", { rateLimit: RATE_LIMIT_CONFIG }, async (req) => {
     const schema = z.object({
@@ -61,7 +61,7 @@ export function registerReviewRoutes(app, deps) {
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return { error: parsed.error.flatten() };
 
-    const adminKey = process.env.PMCI_ADMIN_KEY;
+    const adminKey = PMCI_ADMIN_KEY;
     if (adminKey && req.headers["x-pmci-admin-key"] !== adminKey) {
       return { error: "unauthorized" };
     }
