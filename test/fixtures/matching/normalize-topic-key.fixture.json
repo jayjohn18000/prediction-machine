@@ -1,0 +1,52 @@
+{
+  "_description": "Golden fixture for normalizeTopicKey() — captured 2026-03-09 before Step 5 decomposition",
+  "_schema_version": 1,
+  "_note": "normalizeTopicKey performs cosmetic canonicalization of gov_* aliases and full-state variants. All other keys pass through unchanged.",
+  "cases": [
+    {
+      "description": "gov_ + 2-letter state code → governor_ prefix",
+      "input": "gov_oh_2026",
+      "expected": "governor_oh_2026"
+    },
+    {
+      "description": "gov_ + full state name → governor_ + 2-letter code",
+      "input": "gov_ohio_2026",
+      "expected": "governor_oh_2026"
+    },
+    {
+      "description": "governor_ already canonical — pass through",
+      "input": "governor_tx_2026",
+      "expected": "governor_tx_2026"
+    },
+    {
+      "description": "Multi-word state name in gov_ alias",
+      "input": "gov_west_virginia_2026",
+      "expected": "governor_wv_2026"
+    },
+    {
+      "description": "Non-gov key — pass through unchanged",
+      "input": "fed_chair",
+      "expected": "fed_chair"
+    },
+    {
+      "description": "Empty string → other",
+      "input": "",
+      "expected": "other"
+    },
+    {
+      "description": "Literal other — pass through",
+      "input": "other",
+      "expected": "other"
+    },
+    {
+      "description": "Nominee key — pass through",
+      "input": "nominee",
+      "expected": "nominee"
+    },
+    {
+      "description": "senate key — pass through",
+      "input": "senate_tx_2026",
+      "expected": "senate_tx_2026"
+    }
+  ]
+}

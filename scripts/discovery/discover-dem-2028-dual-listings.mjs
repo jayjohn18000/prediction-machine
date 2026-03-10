@@ -180,7 +180,7 @@ async function main() {
   console.log('\n--- Candidates missing on Polymarket ---');
   missingPolymarket.forEach((n) => console.log(`  ${n}`));
 
-  const outputPath = path.join(__dirname, 'prediction_market_event_pairs.json');
+  const outputPath = path.join(process.cwd(), 'scripts', 'prediction_market_event_pairs.json');
   fs.writeFileSync(outputPath, JSON.stringify(foundBoth, null, 2) + '\n', 'utf8');
   console.log(`\nWrote ${foundBoth.length} entries to ${outputPath}`);
 }

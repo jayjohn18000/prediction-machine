@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { loadEnv } from '../src/platform/env.mjs';
+import { loadEnv } from '../../src/platform/env.mjs';
 import pg from 'pg';
 
 loadEnv();

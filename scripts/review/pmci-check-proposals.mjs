@@ -6,7 +6,7 @@
  */
 
 import pg from 'pg';
-import { loadEnv } from '../src/platform/env.mjs';
+import { loadEnv } from '../../src/platform/env.mjs';
 
 const { Client } = pg;
 loadEnv();
@@ -40,7 +40,7 @@ async function main() {
   }
 
   const { spawn } = await import('node:child_process');
-  const proposer = spawn('node', ['scripts/pmci-propose-links-politics.mjs'], {
+  const proposer = spawn('node', ['scripts/review/pmci-propose-links-politics.mjs'], {
     cwd: process.cwd(),
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, DATABASE_URL: databaseUrl },

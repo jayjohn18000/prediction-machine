@@ -9,7 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import pg from 'pg';
-import { loadEnv } from '../src/platform/env.mjs';
+import { loadEnv } from '../../src/platform/env.mjs';
 
 const { Client } = pg;
 

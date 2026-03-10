@@ -19,8 +19,8 @@
  */
 
 import pg from "pg";
-import { getProviderIds } from "../lib/pmci-ingestion.mjs";
-import { loadEnv } from "../src/platform/env.mjs";
+import { getProviderIds } from "../../lib/pmci-ingestion.mjs";
+import { loadEnv } from "../../src/platform/env.mjs";
 
 const { Client } = pg;
 loadEnv();

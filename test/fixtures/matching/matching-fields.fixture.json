@@ -1,0 +1,123 @@
+{
+  "_description": "Golden fixture for extractMatchingFields() from lib/pmci-matching-adapters.mjs — captured 2026-03-09 before Step 5 decomposition",
+  "_schema_version": 1,
+  "_note": "Re-running extractMatchingFields(market, venue) against these inputs must return the exact expected object. thresholdValue and thresholdAsset are always null in current implementation.",
+  "cases": [
+    {
+      "description": "Kalshi senate election market — election-winner-binary, us-federal, republican",
+      "input": {
+        "market": {
+          "provider_market_ref": "SENATE-TX-2026",
+          "title": "Will Republican win Texas Senate 2026?",
+          "event_ref": null,
+          "close_time": null,
+          "metadata": null
+        },
+        "venue": "kalshi"
+      },
+      "expected": {
+        "template": "election-winner-binary",
+        "jurisdiction": "us-federal",
+        "cycle": 2026,
+        "party": "republican",
+        "candidateName": "2026",
+        "resolutionYear": 2026,
+        "thresholdValue": null,
+        "thresholdAsset": null
+      }
+    },
+    {
+      "description": "Polymarket nominee market with named candidate",
+      "input": {
+        "market": {
+          "provider_market_ref": "democratic-2028-nominee#Pete Buttigieg",
+          "title": "Who will win the 2028 Democratic presidential primary?",
+          "event_ref": null,
+          "close_time": null,
+          "metadata": null
+        },
+        "venue": "polymarket"
+      },
+      "expected": {
+        "template": "election-winner-binary",
+        "jurisdiction": null,
+        "cycle": 2028,
+        "party": "democrat",
+        "candidateName": "Pete Buttigieg",
+        "resolutionYear": 2028,
+        "thresholdValue": null,
+        "thresholdAsset": null
+      }
+    },
+    {
+      "description": "Polymarket geopolitical event — no election fields",
+      "_quirk": "detectJurisdiction iterates US state codes before country keywords; the word 'in' (Indiana code) in 'Strait of Hormuz in 2026' triggers us-in before the Iran keyword check. This is current behaviour captured as-is.",
+      "input": {
+        "market": {
+          "provider_market_ref": "iran-strait-of-hormuz-2026",
+          "title": "Will Iran close the Strait of Hormuz in 2026?",
+          "event_ref": null,
+          "close_time": null,
+          "metadata": null
+        },
+        "venue": "polymarket"
+      },
+      "expected": {
+        "template": "geopolitical-event",
+        "jurisdiction": "us-in",
+        "cycle": 2026,
+        "party": null,
+        "candidateName": null,
+        "resolutionYear": 2026,
+        "thresholdValue": null,
+        "thresholdAsset": null
+      }
+    },
+    {
+      "description": "Kalshi policy-event — Fed rate",
+      "input": {
+        "market": {
+          "provider_market_ref": "FED-RATE-2026-MAR",
+          "title": "Will the Fed cut rates March 2026?",
+          "event_ref": null,
+          "close_time": null,
+          "metadata": null
+        },
+        "venue": "kalshi"
+      },
+      "expected": {
+        "template": "policy-event",
+        "jurisdiction": null,
+        "cycle": 2026,
+        "party": null,
+        "candidateName": null,
+        "resolutionYear": 2026,
+        "thresholdValue": null,
+        "thresholdAsset": null
+      }
+    },
+    {
+      "description": "Unknown market — no recognizable template",
+      "input": {
+        "market": {
+          "provider_market_ref": "something-random",
+          "title": "Will something random happen?",
+          "event_ref": null,
+          "close_time": null,
+          "metadata": null
+        },
+        "venue": "polymarket"
+      },
+      "expected": {
+        "template": "unknown",
+        "jurisdiction": null,
+        "cycle": null,
+        "party": null,
+        "candidateName": null,
+        "resolutionYear": null,
+        "thresholdValue": null,
+        "thresholdAsset": null
+      }
+    }
+  ]
+}

@@ -2,6 +2,14 @@
 
 Observation-only data capture for prediction market spreads (Kalshi vs Polymarket). Fetches YES prices per candidate, computes spread, inserts rows into Supabase. No trading or dashboards.
 
+## Runtime entrypoints
+
+- **Active PMCI API (Fastify):** `npm run api:pmci` (or `npm run api:pmci:dev` for nodemon).
+- **Legacy execution API (Node HTTP):** `npm run api` (or `npm run api:dev`). Deprecated for PMCI route development.
+- **Observer loop (ingestion):** `npm run start` / `npm run observe:spreads`.
+
+Use `src/api.mjs` for all PMCI `/v1/*` endpoint work. Root `api.mjs` is retained only for legacy execution-intelligence endpoints.
+
 ## Setup
 
 1. **Copy env and set keys**
@@ -90,7 +98,15 @@ The **Prediction Market Canonical Intelligence** layer lives in `src/` and uses 
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes (for PMCI) | Postgres connection string (e.g. Supabase → Settings → Database → Connection string) |
 | `PORT` | No | PMCI API port (default 8787) |
+| `PMCI_MAX_LAG_SECONDS` | No | Freshness threshold for `/v1/health/freshness` and stale-data gate (default 120) |
+| `PMCI_INGESTION_SUCCESS_TARGET` | No | SLO target used in health reporting (default 0.99) |
+| `PMCI_API_P95_TARGET_MS` | No | API latency SLO threshold (default 500) |
+| `PMCI_RATE_LIMIT_MAX` | No | Requests allowed per rate-limit window (default 60) |
+| `PMCI_RATE_LIMIT_WINDOW_MS` | No | Rate-limit window in milliseconds (default 60000) |
 | `PMCI_ADMIN_KEY` | No | If set, required header `x-pmci-admin-key` for `POST /v1/resolve/link` |
+| `PMCI_API_KEY` | No | If set, required header `x-pmci-api-key` for non-health `/v1/*` endpoints |
+| `PG_POOL_MAX` | No | pg pool max size for PMCI API DB connections (default 10) |
+| `PG_SSL` | No | `1/true` enables SSL (`rejectUnauthorized:false`), `0/false` disables |
 
 ### PMCI ingestion from observer
 

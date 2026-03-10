@@ -6,7 +6,7 @@
  */
 
 import pg from 'pg';
-import { loadEnv } from '../src/platform/env.mjs';
+import { loadEnv } from '../../src/platform/env.mjs';
 
 const { Client } = pg;
 loadEnv();
