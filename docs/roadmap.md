@@ -39,38 +39,15 @@
 - Strict audit packet generation passes.
 - Guard logic in proposer prevents recurrence of known invalid classes.
 
-**Known limitations:**
-- Governor D6 coverage threshold remains below target (0.067 vs 0.20).
-- Coverage uplift remains open as follow-on optimization, not a phase blocker.
+### D Follow-on Backlog (non-blocking carryover)
+- Governor D6 coverage threshold uplift (0.067 → target ≥ 0.20)
+- Full-universe proposer reruns for additional coverage lift
+- Observer continuity and freshness improvements
+- API p95 optimization (<500ms target)
 
 **Migration path to Phase E (sports/crypto):**
-- Use the same guard-first proposer + strict-audit packet loop.
-- Start with limited category slices, then expand once semantic drift remains zero.
-
-### D1 — Market Coverage (in progress)
-- [x] Ingestion pipeline working (universe ingest, 80 Kalshi series, Polymarket tag_id=2)
-- [x] 2,814 provider_markets (557 Kalshi, 2,257 Polymarket) across 323 distinct events
-- [x] 22 canonical political events defined
-- [ ] **All active Kalshi political markets ingested** — reset run needed; checkpoint was at 65/200 events
-- [ ] **Single-platform tracking policy defined** — events on only one platform tracked as-is; linked when counterpart appears (Option A, decided 2026-03-06)
-
-### D2 — Cross-platform Linking (not started this session)
-- [x] Proposer architecture (lib/matching/proposal-engine.mjs) working
-- [x] 2 canonical events fully linked: 2028 Dem + Rep presidential nominees (70 + 52 active links)
-- [ ] **Run proposer against all 2,814 markets** — only 9 proposals accepted to date (5.5% acceptance rate; 162 rejected)
-- [ ] **Bulk-review with Pattern E + F** (new patterns added 2026-03-06)
-- [ ] **At least 10/22 canonical events with active cross-platform links**
-- [x] **Review and prune phantom canonical events** — 22 → 7 canonical events: 15 deleted (no markets), 5 annotated poly-only (`single_platform=true`). Seed script fixed to require verified provider_markets before adding entries.
-
-### D3 — Observer Continuity
-- [x] Observer heartbeat + SLO monitoring in place
-- [ ] **Observer running continuously** — currently down 39h+ (last cycle 2026-03-05T01:00Z)
-- [ ] **Freshness SLO passing** — currently 141,694s stale (target <120s)
-- [ ] **projection_ready = true** — blocked by freshness
-
-### D4 — API Performance
-- [ ] api_p95_latency < 500ms (currently 732ms)
-- [ ] Profile and optimize `/v1/market-families` + `/v1/signals/top-divergences`
+- Use same guard-first proposer + strict-audit gate loop.
+- Start with limited category slices and expand only when semantic drift remains zero.
 
 ---
 
