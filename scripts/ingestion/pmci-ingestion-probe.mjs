@@ -118,9 +118,9 @@ async function main() {
     const coverageRes = await client.query(`
       SELECT
         CASE
-          WHEN pm.provider_market_ref ILIKE 'GOVPARTY%' OR pm.title ILIKE '%governor%' THEN 'governor'
-          WHEN pm.provider_market_ref ILIKE 'SENATE%' OR pm.title ILIKE '%senate%' THEN 'senate'
-          WHEN pm.provider_market_ref ILIKE 'PRES%' OR pm.title ILIKE '%president%' THEN 'president'
+          WHEN COALESCE(pm.metadata->>'office','')='governor' OR pm.provider_market_ref ILIKE 'GOVPARTY%' OR pm.provider_market_ref ILIKE 'KXGOV%' OR pm.title ILIKE '%governor%' THEN 'governor'
+          WHEN COALESCE(pm.metadata->>'office','')='senate' OR pm.provider_market_ref ILIKE 'SENATE%' OR pm.provider_market_ref ILIKE 'KXSENATE%' OR pm.title ILIKE '%senate%' THEN 'senate'
+          WHEN COALESCE(pm.metadata->>'office','')='president' OR pm.provider_market_ref ILIKE 'PRES%' OR pm.provider_market_ref ILIKE 'KXPRES%' OR pm.title ILIKE '%president%' OR pm.title ILIKE '%presidency%' THEN 'president'
           ELSE 'other'
         END AS topic,
         pm.provider_id,

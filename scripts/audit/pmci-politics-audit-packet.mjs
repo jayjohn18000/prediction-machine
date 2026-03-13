@@ -18,9 +18,22 @@ const strict = process.argv.includes('--strict');
 function topicCase(columnRef = 'pm.provider_market_ref', titleRef = 'pm.title') {
   return `
     CASE
-      WHEN ${columnRef} ILIKE 'GOVPARTY%' OR ${titleRef} ILIKE '%governor%' THEN 'governor'
-      WHEN ${columnRef} ILIKE 'SENATE%' OR ${titleRef} ILIKE '%senate%' THEN 'senate'
-      WHEN ${columnRef} ILIKE 'PRES%' OR ${titleRef} ILIKE '%president%' THEN 'president'
+      WHEN COALESCE(pm.metadata->>'office','')='governor'
+        OR ${columnRef} ILIKE 'GOVPARTY%'
+        OR ${columnRef} ILIKE 'KXGOV%'
+        OR ${titleRef} ILIKE '%governor%'
+      THEN 'governor'
+      WHEN COALESCE(pm.metadata->>'office','')='senate'
+        OR ${columnRef} ILIKE 'SENATE%'
+        OR ${columnRef} ILIKE 'KXSENATE%'
+        OR ${titleRef} ILIKE '%senate%'
+      THEN 'senate'
+      WHEN COALESCE(pm.metadata->>'office','')='president'
+        OR ${columnRef} ILIKE 'PRES%'
+        OR ${columnRef} ILIKE 'KXPRES%'
+        OR ${titleRef} ILIKE '%president%'
+        OR ${titleRef} ILIKE '%presidency%'
+      THEN 'president'
       ELSE 'other'
     END`;
 }

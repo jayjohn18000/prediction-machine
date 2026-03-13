@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-13T06:51:32.538Z",
+  "generatedAt": "2026-03-13T07:31:17.639Z",
   "providerStatus": [
     {
       "provider": "kalshi",
@@ -38,44 +38,44 @@
     }
   ],
   "links": {
-    "active_link_rows": 169,
-    "cross_provider_families": 71
+    "active_link_rows": 171,
+    "cross_provider_families": 72
   },
   "linkRateByTopic": [
     {
       "topic": "governor",
       "provider": "kalshi",
       "total": 15,
-      "linked": 0,
-      "link_rate": "0.000"
+      "linked": 1,
+      "link_rate": "0.067"
     },
     {
       "topic": "governor",
       "provider": "polymarket",
-      "total": 481,
+      "total": 523,
+      "linked": 1,
+      "link_rate": "0.002"
+    },
+    {
+      "topic": "other",
+      "provider": "kalshi",
+      "total": 100,
       "linked": 0,
       "link_rate": "0.000"
     },
     {
       "topic": "other",
-      "provider": "kalshi",
-      "total": 132,
-      "linked": 28,
-      "link_rate": "0.212"
-    },
-    {
-      "topic": "other",
       "provider": "polymarket",
-      "total": 1210,
+      "total": 1146,
       "linked": 4,
       "link_rate": "0.003"
     },
     {
       "topic": "president",
       "provider": "kalshi",
-      "total": 12,
-      "linked": 0,
-      "link_rate": "0.000"
+      "total": 44,
+      "linked": 28,
+      "link_rate": "0.636"
     },
     {
       "topic": "president",
@@ -94,9 +94,9 @@
     {
       "topic": "senate",
       "provider": "polymarket",
-      "total": 362,
+      "total": 384,
       "linked": 12,
-      "link_rate": "0.033"
+      "link_rate": "0.031"
     }
   ],
   "eventsPerSeries": [
@@ -506,11 +506,11 @@
   "orphans": [
     {
       "provider": "kalshi",
-      "orphaned": 143
+      "orphaned": 142
     },
     {
       "provider": "polymarket",
-      "orphaned": 2446
+      "orphaned": 2445
     }
   ],
   "reviewBuckets": [
@@ -520,7 +520,7 @@
     },
     {
       "decision": "accepted",
-      "count": 30
+      "count": 31
     },
     {
       "decision": "skipped",
@@ -540,6 +540,13 @@
     }
   },
   "sampleLinks": [
+    {
+      "family_id": "72",
+      "kalshi_ref": "GOVPARTYRI-26-R",
+      "kalshi_title": "Will the Republican party win the governorship in Rhode Island",
+      "poly_ref": "rhode-island-governor-winner-2026#No",
+      "poly_title": "Will the Republicans win the Rhode Island governor race in 2026?"
+    },
     {
       "family_id": "71",
       "kalshi_ref": "SENATEWV-26-D",
@@ -672,13 +679,6 @@
       "kalshi_title": "Wil Dan Kleban be the Democratic nominee for the Senate in Maine?",
       "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
       "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
-    },
-    {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-CP",
-      "kalshi_title": "Wil Chellie Pingree be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Graham Platner",
-      "poly_title": "Will Graham Platner be the Democratic nominee for Senate in Maine?"
     }
   ]
 }
