@@ -1,0 +1,684 @@
+{
+  "generatedAt": "2026-03-13T07:57:29.444Z",
+  "providerStatus": [
+    {
+      "provider": "kalshi",
+      "status": "active",
+      "count": 183
+    },
+    {
+      "provider": "kalshi",
+      "status": "closed",
+      "count": 3
+    },
+    {
+      "provider": "kalshi",
+      "status": "finalized",
+      "count": 336
+    },
+    {
+      "provider": "polymarket",
+      "status": "(null)",
+      "count": 1661
+    },
+    {
+      "provider": "polymarket",
+      "status": "open",
+      "count": 2535
+    }
+  ],
+  "activeByProvider": [
+    {
+      "provider": "kalshi",
+      "active_markets": 183
+    },
+    {
+      "provider": "polymarket",
+      "active_markets": 2535
+    }
+  ],
+  "links": {
+    "active_link_rows": 139,
+    "cross_provider_families": 60
+  },
+  "linkRateByTopic": [
+    {
+      "topic": "governor",
+      "provider": "kalshi",
+      "total": 15,
+      "linked": 0,
+      "link_rate": "0.000"
+    },
+    {
+      "topic": "governor",
+      "provider": "polymarket",
+      "total": 523,
+      "linked": 0,
+      "link_rate": "0.000"
+    },
+    {
+      "topic": "other",
+      "provider": "kalshi",
+      "total": 100,
+      "linked": 0,
+      "link_rate": "0.000"
+    },
+    {
+      "topic": "other",
+      "provider": "polymarket",
+      "total": 1146,
+      "linked": 4,
+      "link_rate": "0.003"
+    },
+    {
+      "topic": "president",
+      "provider": "kalshi",
+      "total": 44,
+      "linked": 17,
+      "link_rate": "0.386"
+    },
+    {
+      "topic": "president",
+      "provider": "polymarket",
+      "total": 482,
+      "linked": 54,
+      "link_rate": "0.112"
+    },
+    {
+      "topic": "senate",
+      "provider": "kalshi",
+      "total": 24,
+      "linked": 13,
+      "link_rate": "0.542"
+    },
+    {
+      "topic": "senate",
+      "provider": "polymarket",
+      "total": 384,
+      "linked": 12,
+      "link_rate": "0.031"
+    }
+  ],
+  "eventsPerSeries": [
+    {
+      "series_family": "SENATEKS",
+      "events": 2,
+      "markets": 4
+    },
+    {
+      "series_family": "GOVPARTYMS",
+      "events": 1,
+      "markets": 2
+    },
+    {
+      "series_family": "GOVPARTYRI",
+      "events": 1,
+      "markets": 2
+    },
+    {
+      "series_family": "HOUSEAZ1",
+      "events": 1,
+      "markets": 2
+    },
+    {
+      "series_family": "HOUSECA22",
+      "events": 1,
+      "markets": 2
+    },
+    {
+      "series_family": "HOUSEMI10",
+      "events": 1,
+      "markets": 2
+    },
+    {
+      "series_family": "HOUSEPA17",
+      "events": 1,
+      "markets": 2
+    },
+    {
+      "series_family": "HOUSETX15",
+      "events": 1,
+      "markets": 2
+    },
+    {
+      "series_family": "KX250DOLLARBILL",
+      "events": 1,
+      "markets": 1
+    },
+    {
+      "series_family": "KXACTORAWARDSATTEND",
+      "events": 1,
+      "markets": 10
+    },
+    {
+      "series_family": "KXAGENCIES",
+      "events": 1,
+      "markets": 7
+    },
+    {
+      "series_family": "KXANNARBORMAYORD",
+      "events": 1,
+      "markets": 2
+    },
+    {
+      "series_family": "KXAUSTRALIASENATE",
+      "events": 1,
+      "markets": 4
+    },
+    {
+      "series_family": "KXBIDENAMBIEN",
+      "events": 1,
+      "markets": 1
+    },
+    {
+      "series_family": "KXCAFRAUD",
+      "events": 1,
+      "markets": 2
+    },
+    {
+      "series_family": "KXCAWEALTHTAX",
+      "events": 1,
+      "markets": 1
+    },
+    {
+      "series_family": "KXDOMINICANREPUBLICSENATE",
+      "events": 1,
+      "markets": 3
+    },
+    {
+      "series_family": "KXGA14S",
+      "events": 1,
+      "markets": 29
+    },
+    {
+      "series_family": "KXGHANAPARLI",
+      "events": 1,
+      "markets": 2
+    },
+    {
+      "series_family": "KXGOVALNOMR",
+      "events": 1,
+      "markets": 2
+    },
+    {
+      "series_family": "KXGOVIANOMR",
+      "events": 1,
+      "markets": 7
+    },
+    {
+      "series_family": "KXNYCTAXMILLIONS",
+      "events": 1,
+      "markets": 1
+    },
+    {
+      "series_family": "KXPRESNOMD",
+      "events": 1,
+      "markets": 4
+    },
+    {
+      "series_family": "KXPRESNOMR",
+      "events": 1,
+      "markets": 30
+    },
+    {
+      "series_family": "KXRUNBYMIDTERM",
+      "events": 1,
+      "markets": 8
+    },
+    {
+      "series_family": "KXSENATEMED",
+      "events": 1,
+      "markets": 7
+    },
+    {
+      "series_family": "KXSENATENHR",
+      "events": 1,
+      "markets": 4
+    },
+    {
+      "series_family": "KXSNAPELECTIONFR",
+      "events": 1,
+      "markets": 1
+    },
+    {
+      "series_family": "KXSUPERSONIC",
+      "events": 1,
+      "markets": 1
+    },
+    {
+      "series_family": "KXTORONTOMAYOR",
+      "events": 1,
+      "markets": 4
+    }
+  ],
+  "staleSeries": [
+    {
+      "series_prefix": "KXPRESNOMD-28",
+      "last_seen": "2026-03-01T20:26:04.956Z",
+      "markets": 4
+    },
+    {
+      "series_prefix": "RECLAW-21NOV14",
+      "last_seen": "2026-03-01T22:18:55.121Z",
+      "markets": 2
+    },
+    {
+      "series_prefix": "KXDAYLIGHT-25DEC31",
+      "last_seen": "2026-03-01T22:18:55.880Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "DAYLIGHT-23JAN03",
+      "last_seen": "2026-03-01T22:18:56.327Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXCARRIED-26",
+      "last_seen": "2026-03-01T22:18:57.084Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXGOVIANOMR-26",
+      "last_seen": "2026-03-01T22:18:58.614Z",
+      "markets": 7
+    },
+    {
+      "series_prefix": "KXTRUMPBULLCASECOMBO-27DEC",
+      "last_seen": "2026-03-01T22:18:59.417Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXMEETPTZ-25",
+      "last_seen": "2026-03-01T22:19:00.174Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXSNAPELECTIONJPN-26JAN01",
+      "last_seen": "2026-03-01T22:19:00.931Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXSNAPELECTIONJPN-27JAN01",
+      "last_seen": "2026-03-01T22:19:01.061Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXTURKEYPRES-28",
+      "last_seen": "2026-03-01T22:19:02.974Z",
+      "markets": 10
+    },
+    {
+      "series_prefix": "KXHIGHMOVDJT-WY",
+      "last_seen": "2026-03-01T22:19:04.033Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXHIGHMOVDJT-ID",
+      "last_seen": "2026-03-01T22:19:04.158Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXHIGHMOVDJT-AR",
+      "last_seen": "2026-03-01T22:19:04.295Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXHIGHMOVDJT-WV",
+      "last_seen": "2026-03-01T22:19:04.421Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXHIGHMOVDJT-OK",
+      "last_seen": "2026-03-01T22:19:04.546Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXHIGHMOVDJT-ND",
+      "last_seen": "2026-03-01T22:19:04.672Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXTRUMPMEETING-27JAN01",
+      "last_seen": "2026-03-01T22:19:09.192Z",
+      "markets": 28
+    },
+    {
+      "series_prefix": "HOUSEMI10-26",
+      "last_seen": "2026-03-01T22:19:10.194Z",
+      "markets": 2
+    },
+    {
+      "series_prefix": "KXPRESTURKEY-28",
+      "last_seen": "2026-03-01T22:19:11.194Z",
+      "markets": 3
+    },
+    {
+      "series_prefix": "PRESPARTYMN-24",
+      "last_seen": "2026-03-01T22:19:12.372Z",
+      "markets": 2
+    },
+    {
+      "series_prefix": "HOUSETX15-26",
+      "last_seen": "2026-03-01T22:19:13.282Z",
+      "markets": 2
+    },
+    {
+      "series_prefix": "KXIRELANDPARTY-SF",
+      "last_seen": "2026-03-01T22:19:14.032Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXIRELANDPARTY-SD",
+      "last_seen": "2026-03-01T22:19:14.159Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXIRELANDPARTY-PBP",
+      "last_seen": "2026-03-01T22:19:14.284Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXIRELANDPARTY-L",
+      "last_seen": "2026-03-01T22:19:14.405Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXIRELANDPARTY-II",
+      "last_seen": "2026-03-01T22:19:14.531Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXIRELANDPARTY-G",
+      "last_seen": "2026-03-01T22:19:14.659Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXIRELANDPARTY-FG",
+      "last_seen": "2026-03-01T22:19:14.784Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXIRELANDPARTY-FF",
+      "last_seen": "2026-03-01T22:19:14.917Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXHOUSENY21-26",
+      "last_seen": "2026-03-01T22:19:16.090Z",
+      "markets": 2
+    },
+    {
+      "series_prefix": "KXELONDJTSAY-25JUL",
+      "last_seen": "2026-03-01T22:19:17.591Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXCAWEALTHTAX-26",
+      "last_seen": "2026-03-01T22:19:18.339Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXACTORAWARDSATTEND-SEL",
+      "last_seen": "2026-03-01T22:19:19.094Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXACTORAWARDSATTEND-ARI",
+      "last_seen": "2026-03-01T22:19:19.218Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXACTORAWARDSATTEND-GRA",
+      "last_seen": "2026-03-01T22:19:19.342Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXACTORAWARDSATTEND-JOS",
+      "last_seen": "2026-03-01T22:19:19.469Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXACTORAWARDSATTEND-OSC",
+      "last_seen": "2026-03-01T22:19:19.592Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXACTORAWARDSATTEND-LEO",
+      "last_seen": "2026-03-01T22:19:19.722Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXACTORAWARDSATTEND-MIC",
+      "last_seen": "2026-03-01T22:19:19.851Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXACTORAWARDSATTEND-GWE",
+      "last_seen": "2026-03-01T22:19:19.975Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXACTORAWARDSATTEND-EMM",
+      "last_seen": "2026-03-01T22:19:20.103Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXACTORAWARDSATTEND-TEY",
+      "last_seen": "2026-03-01T22:19:20.235Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "KXDJTATTACKACB-25JUL",
+      "last_seen": "2026-03-01T22:19:20.992Z",
+      "markets": 1
+    },
+    {
+      "series_prefix": "PRESPARTYME2-24",
+      "last_seen": "2026-03-01T22:19:23.148Z",
+      "markets": 2
+    },
+    {
+      "series_prefix": "HARVARD-25MAR31",
+      "last_seen": "2026-03-01T22:19:24.158Z",
+      "markets": 3
+    },
+    {
+      "series_prefix": "HARVARD-24MAR30",
+      "last_seen": "2026-03-01T22:19:25.102Z",
+      "markets": 5
+    },
+    {
+      "series_prefix": "KXDJTCANG7-25DEC31",
+      "last_seen": "2026-03-01T22:19:29.324Z",
+      "markets": 26
+    },
+    {
+      "series_prefix": "KXDJTCANG7-25JUN17",
+      "last_seen": "2026-03-01T22:19:32.187Z",
+      "markets": 20
+    },
+    {
+      "series_prefix": "VCHAIR-23DEC31",
+      "last_seen": "2026-03-01T22:19:34.642Z",
+      "markets": 9
+    }
+  ],
+  "orphans": [
+    {
+      "provider": "kalshi",
+      "orphaned": 154
+    },
+    {
+      "provider": "polymarket",
+      "orphaned": 2465
+    }
+  ],
+  "reviewBuckets": [
+    {
+      "decision": "rejected",
+      "count": 162
+    },
+    {
+      "decision": "accepted",
+      "count": 36
+    },
+    {
+      "decision": "(none)",
+      "count": 5
+    },
+    {
+      "decision": "skipped",
+      "count": 2
+    }
+  ],
+  "integrityWarnings": {
+    "poly_only_pres_party_with_plausible_kalshi": [],
+    "tx33_or_house_tx33_unlinked_risk": {
+      "kalshi_rows": 0,
+      "poly_rows": 0,
+      "link_rows": 0
+    }
+  },
+  "sampleLinks": [
+    {
+      "family_id": "71",
+      "kalshi_ref": "SENATEWV-26-D",
+      "kalshi_title": "Will Democratics win the Senate race in West Virginia?",
+      "poly_ref": "west-virginia-senate-election-winner#Democrat",
+      "poly_title": "Will the Democrats win the West Virginia Senate race in 2026?"
+    },
+    {
+      "family_id": "68",
+      "kalshi_ref": "KXCOLLINSSENATERUN-26NOV03",
+      "kalshi_title": "Will Susan Collins run for reelection to the U.S. Senate in 2026?",
+      "poly_ref": "who-will-trump-endorse#Susan Collins - ME-Sen",
+      "poly_title": "Will Trump endorse Susan Collins for ME-Sen by Nov 2 2026 ET?"
+    },
+    {
+      "family_id": "67",
+      "kalshi_ref": "KXSNAPELECTIONJPN-27JAN01",
+      "kalshi_title": "Will Japan announce a snap election before Jan 1, 2027?",
+      "poly_ref": "which-countries-will-recognize-palestine-before-2027#Japan",
+      "poly_title": "Will Japan recognize Palestine before 2027?"
+    },
+    {
+      "family_id": "66",
+      "kalshi_ref": "KXONTPARTY-25-GREEN",
+      "kalshi_title": "Will Green win the most seats in the Ontario parliamentary election?",
+      "poly_ref": "colombia-chamber-of-representatives-election-winner#Green Alliance",
+      "poly_title": "Will Green Alliance win the most seats in the 2026 Colombian Chamber of Representatives election?"
+    },
+    {
+      "family_id": "66",
+      "kalshi_ref": "KXONTPARTY-25-GREEN",
+      "kalshi_title": "Will Green win the most seats in the Ontario parliamentary election?",
+      "poly_ref": "colombia-chamber-of-representatives-election-winner#569314",
+      "poly_title": "Will Green Alliance win the most seats in the 2026 Colombian Chamber of Representatives election?"
+    },
+    {
+      "family_id": "65",
+      "kalshi_ref": "SENATEKS-26-R",
+      "kalshi_title": "Will Republicans win the Senate race in Kansas?",
+      "poly_ref": "kansas-senate-election-winner#Republican",
+      "poly_title": "Will the Republicans win the Kansas Senate race in 2026?"
+    },
+    {
+      "family_id": "65",
+      "kalshi_ref": "SENATEKS-28-R",
+      "kalshi_title": "Will Republicans win the Senate race in Kansas?",
+      "poly_ref": "kansas-senate-election-winner#Republican",
+      "poly_title": "Will the Republicans win the Kansas Senate race in 2026?"
+    },
+    {
+      "family_id": "64",
+      "kalshi_ref": "SENATEWV-26-R",
+      "kalshi_title": "Will Republicans win the Senate race in West Virginia?",
+      "poly_ref": "west-virginia-senate-election-winner#Republican",
+      "poly_title": "Will the Republicans win the West Virginia Senate race in 2026?"
+    },
+    {
+      "family_id": "64",
+      "kalshi_ref": "SENATEWV-26-R",
+      "kalshi_title": "Will Republicans win the Senate race in West Virginia?",
+      "poly_ref": "west-virginia-senate-election-winner#No",
+      "poly_title": "Will the Republicans win the West Virginia Senate race in 2026?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-DKLEB",
+      "kalshi_title": "Wil Dan Kleban be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Graham Platner",
+      "poly_title": "Will Graham Platner be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-JWOO",
+      "kalshi_title": "Wil Jordan Wood be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Chellie Pingree",
+      "poly_title": "Will Chellie Pingree be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-DKLEB",
+      "kalshi_title": "Wil Dan Kleban be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
+      "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-TJ",
+      "kalshi_title": "Wil Troy Jackson be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
+      "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-GRA",
+      "kalshi_title": "Wil Graham Platner be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
+      "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-CP",
+      "kalshi_title": "Wil Chellie Pingree be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Graham Platner",
+      "poly_title": "Will Graham Platner be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-GRA",
+      "kalshi_title": "Wil Graham Platner be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Graham Platner",
+      "poly_title": "Will Graham Platner be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-GRA",
+      "kalshi_title": "Wil Graham Platner be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Chellie Pingree",
+      "poly_title": "Will Chellie Pingree be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-JG",
+      "kalshi_title": "Wil Jared Golden be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Chellie Pingree",
+      "poly_title": "Will Chellie Pingree be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-CP",
+      "kalshi_title": "Wil Chellie Pingree be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
+      "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-JG",
+      "kalshi_title": "Wil Jared Golden be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
+      "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
+    }
+  ]
+}

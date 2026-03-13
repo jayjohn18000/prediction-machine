@@ -174,7 +174,9 @@ npm run pmci:ingest:politics:universe
 
 This script requires `DATABASE_URL` and uses optional env vars:
 
-- `PMCI_POLITICS_KALSHI_SERIES_TICKERS` — comma-separated series tickers to crawl on Kalshi. Discover: `npm run pmci:discover:kalshi:politics`.
+- `PMCI_POLITICS_KALSHI_SERIES_TICKERS` — comma-separated series tickers to crawl on Kalshi.
+  - Derive a maintainable live set: `npm run pmci:refresh:series-config` (writes `config/pmci-politics-series.generated.json` + `config/pmci-politics-series.env`)
+  - Alternative discovery sweep: `npm run pmci:discover:kalshi:politics`
 - `PMCI_POLITICS_POLY_TAG_ID` — Polymarket tag id for politics events.
 - `PMCI_POLITICS_MAX_EVENTS_PER_PROVIDER` — limit crawl size (default 50).
 - `PMCI_POLITICS_REQUEST_DELAY_MS` — delay between Kalshi request chunks (default 250; increase if you hit 429).

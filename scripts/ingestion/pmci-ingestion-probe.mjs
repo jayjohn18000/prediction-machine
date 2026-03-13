@@ -118,9 +118,9 @@ async function main() {
     const coverageRes = await client.query(`
       SELECT
         CASE
-          WHEN pm.provider_market_ref ILIKE 'GOVPARTY%' OR pm.title ILIKE '%governor%' THEN 'governor'
-          WHEN pm.provider_market_ref ILIKE 'SENATE%' OR pm.title ILIKE '%senate%' THEN 'senate'
-          WHEN pm.provider_market_ref ILIKE 'PRES%' OR pm.title ILIKE '%president%' THEN 'president'
+          WHEN COALESCE(pm.metadata->>'office','')='governor' OR pm.provider_market_ref ILIKE 'GOVPARTY%' OR pm.provider_market_ref ILIKE 'KXGOV%' OR pm.title ILIKE '%governor%' THEN 'governor'
+          WHEN COALESCE(pm.metadata->>'office','')='senate' OR pm.provider_market_ref ILIKE 'SENATE%' OR pm.provider_market_ref ILIKE 'KXSENATE%' OR pm.title ILIKE '%senate%' THEN 'senate'
+          WHEN COALESCE(pm.metadata->>'office','')='president' OR pm.provider_market_ref ILIKE 'PRES%' OR pm.provider_market_ref ILIKE 'KXPRES%' OR pm.title ILIKE '%president%' OR pm.title ILIKE '%presidency%' THEN 'president'
           ELSE 'other'
         END AS topic,
         pm.provider_id,
@@ -139,10 +139,10 @@ async function main() {
       const code = provByCode.get(r.provider_id) ?? r.provider_id;
       console.log(`  ${r.topic} ${code}: total=${r.total} linked=${r.linked} link_rate=${r.link_rate ?? 0}`);
     }
-    const govSen = (coverageRes.rows || []).filter((r) => r.topic === 'governor' || r.topic === 'senate');
-    const belowTarget = govSen.some((r) => Number(r.link_rate ?? 0) < 0.2);
+    const govPres = (coverageRes.rows || []).filter((r) => r.topic === 'governor' || r.topic === 'president');
+    const belowTarget = govPres.some((r) => Number(r.link_rate ?? 0) < 0.2);
     if (belowTarget) {
-      console.warn('\nD6 gate: governor/senate link_rate below 0.20 — improve ingestion coverage (D0/D1).');
+      console.warn('\nD6 gate: governor/president link_rate below 0.20 — improve ingestion coverage (D0/D1).');
     }
   } finally {
     await client.end();
