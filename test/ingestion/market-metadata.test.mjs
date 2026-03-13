@@ -1,68 +1,26 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import {
-  inferElectionPhase,
-  inferSubjectType,
-} from "../../lib/ingestion/services/market-metadata.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { inferPoliticalMetadata } from '../../lib/ingestion/services/market-metadata.mjs';
 
-// inferElectionPhase
-
-test("inferElectionPhase — defaults to general", () => {
-  assert.equal(inferElectionPhase("PRES-2028", "Who will win?"), "general");
+test('inferPoliticalMetadata: president nominee slug', () => {
+  const m = inferPoliticalMetadata('democratic-presidential-nominee-2028', 'Who will win?');
+  assert.equal(m.office, 'president');
+  assert.equal(m.normalizedEventKey, 'president_us_2028');
+  assert.equal(m.jurisdiction, 'us_federal');
+  assert.equal(m.subjectType, 'candidate');
 });
 
-test("inferElectionPhase — detects primary via title", () => {
-  assert.equal(inferElectionPhase("PRES-2028", "Who wins the primary?"), "primary");
+test('inferPoliticalMetadata: senate state/year extraction', () => {
+  const m = inferPoliticalMetadata('senate-ohio-2026', 'Ohio Senate Election 2026');
+  assert.equal(m.office, 'senate');
+  assert.equal(m.normalizedEventKey, 'senate_ohio_2026');
+  assert.equal(m.jurisdiction, 'us_state_oh');
+  assert.equal(m.year, 2026);
 });
 
-test("inferElectionPhase — detects primary via ticker -PRI- segment", () => {
-  assert.equal(inferElectionPhase("PRES-PRI-2028", "Some title"), "primary");
-});
-
-test("inferElectionPhase — detects runoff", () => {
-  assert.equal(inferElectionPhase("SENATE-2026", "Senate runoff winner"), "runoff");
-});
-
-test("inferElectionPhase — detects special", () => {
-  assert.equal(inferElectionPhase("SEN-2026", "Special election winner"), "special");
-});
-
-test("inferElectionPhase — handles null/empty inputs", () => {
-  assert.equal(inferElectionPhase(null, null), "general");
-  assert.equal(inferElectionPhase("", ""), "general");
-});
-
-// inferSubjectType
-
-test("inferSubjectType — defaults to candidate", () => {
-  assert.equal(inferSubjectType("PRES-2028", "Who wins?"), "candidate");
-});
-
-test("inferSubjectType — detects party via GOVPARTY ticker prefix", () => {
-  assert.equal(inferSubjectType("GOVPARTY-2026", "Which party wins?"), "party");
-});
-
-test("inferSubjectType — detects party via SENATE-*-REP ticker", () => {
-  assert.equal(inferSubjectType("SENATE-OH-REP", "Ohio Senate"), "party");
-});
-
-test("inferSubjectType — detects party via SENATE-*-DEM ticker", () => {
-  assert.equal(inferSubjectType("SENATE-TX-DEM", "Texas Senate"), "party");
-});
-
-test("inferSubjectType — detects appointment via title", () => {
-  assert.equal(inferSubjectType("FED-CHAIR", "Who will Trump nominate as Fed Chair?"), "appointment");
-  assert.equal(inferSubjectType("FED-CHAIR", "Fed appointment decision"), "appointment");
-  assert.equal(inferSubjectType("FED-CHAIR", "Who will be appointed?"), "appointment");
-});
-
-test("inferSubjectType — detects policy via title keywords", () => {
-  assert.equal(inferSubjectType("FED-RATE", "Fed rate decision March 2026"), "policy");
-  assert.equal(inferSubjectType("POLICY-01", "Will the bill pass?"), "policy");
-  assert.equal(inferSubjectType("POLICY-01", "Will the act pass?"), "policy");
-});
-
-test("inferSubjectType — handles null/empty inputs", () => {
-  assert.equal(inferSubjectType(null, null), "candidate");
-  assert.equal(inferSubjectType("", ""), "candidate");
+test('inferPoliticalMetadata: governor title with state name', () => {
+  const m = inferPoliticalMetadata('random', 'North Carolina Governor race 2024');
+  assert.equal(m.office, 'governor');
+  assert.equal(m.normalizedEventKey, 'gov_north_carolina_2024');
+  assert.equal(m.jurisdiction, 'us_state_nc');
 });

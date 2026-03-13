@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-13T07:31:17.639Z",
+  "generatedAt": "2026-03-13T07:57:29.444Z",
   "providerStatus": [
     {
       "provider": "kalshi",
@@ -38,23 +38,23 @@
     }
   ],
   "links": {
-    "active_link_rows": 171,
-    "cross_provider_families": 72
+    "active_link_rows": 139,
+    "cross_provider_families": 60
   },
   "linkRateByTopic": [
     {
       "topic": "governor",
       "provider": "kalshi",
       "total": 15,
-      "linked": 1,
-      "link_rate": "0.067"
+      "linked": 0,
+      "link_rate": "0.000"
     },
     {
       "topic": "governor",
       "provider": "polymarket",
       "total": 523,
-      "linked": 1,
-      "link_rate": "0.002"
+      "linked": 0,
+      "link_rate": "0.000"
     },
     {
       "topic": "other",
@@ -74,15 +74,15 @@
       "topic": "president",
       "provider": "kalshi",
       "total": 44,
-      "linked": 28,
-      "link_rate": "0.636"
+      "linked": 17,
+      "link_rate": "0.386"
     },
     {
       "topic": "president",
       "provider": "polymarket",
       "total": 482,
-      "linked": 73,
-      "link_rate": "0.151"
+      "linked": 54,
+      "link_rate": "0.112"
     },
     {
       "topic": "senate",
@@ -506,11 +506,11 @@
   "orphans": [
     {
       "provider": "kalshi",
-      "orphaned": 142
+      "orphaned": 154
     },
     {
       "provider": "polymarket",
-      "orphaned": 2445
+      "orphaned": 2465
     }
   ],
   "reviewBuckets": [
@@ -520,14 +520,14 @@
     },
     {
       "decision": "accepted",
-      "count": 31
-    },
-    {
-      "decision": "skipped",
-      "count": 2
+      "count": 36
     },
     {
       "decision": "(none)",
+      "count": 5
+    },
+    {
+      "decision": "skipped",
       "count": 2
     }
   ],
@@ -541,46 +541,11 @@
   },
   "sampleLinks": [
     {
-      "family_id": "72",
-      "kalshi_ref": "GOVPARTYRI-26-R",
-      "kalshi_title": "Will the Republican party win the governorship in Rhode Island",
-      "poly_ref": "rhode-island-governor-winner-2026#No",
-      "poly_title": "Will the Republicans win the Rhode Island governor race in 2026?"
-    },
-    {
       "family_id": "71",
       "kalshi_ref": "SENATEWV-26-D",
       "kalshi_title": "Will Democratics win the Senate race in West Virginia?",
       "poly_ref": "west-virginia-senate-election-winner#Democrat",
       "poly_title": "Will the Democrats win the West Virginia Senate race in 2026?"
-    },
-    {
-      "family_id": "70",
-      "kalshi_ref": "KXPRESNOMD-28-DJOH",
-      "kalshi_title": "Will Dwayne Johnson be the nominee for the Presidency for the Democratic party?",
-      "poly_ref": "presidential-election-winner-2028#561252",
-      "poly_title": "Will Dwayne 'The Rock' Johnson win the 2028 US Presidential Election?"
-    },
-    {
-      "family_id": "70",
-      "kalshi_ref": "KXPRESNOMD-28-DJOH",
-      "kalshi_title": "Will Dwayne Johnson be the nominee for the Presidency for the Democratic party?",
-      "poly_ref": "presidential-election-winner-2028#Dwayne 'The Rock' Johnson",
-      "poly_title": "Will Dwayne 'The Rock' Johnson win the 2028 US Presidential Election?"
-    },
-    {
-      "family_id": "69",
-      "kalshi_ref": "KXPRESNOMR-28-DJTJR",
-      "kalshi_title": "Will Donald J. Trump Jr. be the nominee for the Presidency for the Republican party?",
-      "poly_ref": "presidential-election-winner-2028#Donald Trump Jr.",
-      "poly_title": "Will Donald Trump Jr. win the 2028 US Presidential Election?"
-    },
-    {
-      "family_id": "69",
-      "kalshi_ref": "KXPRESNOMR-28-DJTJR",
-      "kalshi_title": "Will Donald J. Trump Jr. be the nominee for the Presidency for the Republican party?",
-      "poly_ref": "presidential-election-winner-2028#561244",
-      "poly_title": "Will Donald Trump Jr. win the 2028 US Presidential Election?"
     },
     {
       "family_id": "68",
@@ -600,14 +565,14 @@
       "family_id": "66",
       "kalshi_ref": "KXONTPARTY-25-GREEN",
       "kalshi_title": "Will Green win the most seats in the Ontario parliamentary election?",
-      "poly_ref": "colombia-chamber-of-representatives-election-winner#569314",
+      "poly_ref": "colombia-chamber-of-representatives-election-winner#Green Alliance",
       "poly_title": "Will Green Alliance win the most seats in the 2026 Colombian Chamber of Representatives election?"
     },
     {
       "family_id": "66",
       "kalshi_ref": "KXONTPARTY-25-GREEN",
       "kalshi_title": "Will Green win the most seats in the Ontario parliamentary election?",
-      "poly_ref": "colombia-chamber-of-representatives-election-winner#Green Alliance",
+      "poly_ref": "colombia-chamber-of-representatives-election-winner#569314",
       "poly_title": "Will Green Alliance win the most seats in the 2026 Colombian Chamber of Representatives election?"
     },
     {
@@ -642,13 +607,62 @@
       "family_id": "63",
       "kalshi_ref": "KXSENATEMED-26-DKLEB",
       "kalshi_title": "Wil Dan Kleban be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Chellie Pingree",
-      "poly_title": "Will Chellie Pingree be the Democratic nominee for Senate in Maine?"
+      "poly_ref": "maine-democratic-senate-primary-winner#Graham Platner",
+      "poly_title": "Will Graham Platner be the Democratic nominee for Senate in Maine?"
     },
     {
       "family_id": "63",
       "kalshi_ref": "KXSENATEMED-26-JWOO",
       "kalshi_title": "Wil Jordan Wood be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Chellie Pingree",
+      "poly_title": "Will Chellie Pingree be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-DKLEB",
+      "kalshi_title": "Wil Dan Kleban be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
+      "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-TJ",
+      "kalshi_title": "Wil Troy Jackson be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
+      "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-GRA",
+      "kalshi_title": "Wil Graham Platner be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
+      "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-CP",
+      "kalshi_title": "Wil Chellie Pingree be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Graham Platner",
+      "poly_title": "Will Graham Platner be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-GRA",
+      "kalshi_title": "Wil Graham Platner be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Graham Platner",
+      "poly_title": "Will Graham Platner be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-GRA",
+      "kalshi_title": "Wil Graham Platner be the Democratic nominee for the Senate in Maine?",
+      "poly_ref": "maine-democratic-senate-primary-winner#Chellie Pingree",
+      "poly_title": "Will Chellie Pingree be the Democratic nominee for Senate in Maine?"
+    },
+    {
+      "family_id": "63",
+      "kalshi_ref": "KXSENATEMED-26-JG",
+      "kalshi_title": "Wil Jared Golden be the Democratic nominee for the Senate in Maine?",
       "poly_ref": "maine-democratic-senate-primary-winner#Chellie Pingree",
       "poly_title": "Will Chellie Pingree be the Democratic nominee for Senate in Maine?"
     },
@@ -661,22 +675,8 @@
     },
     {
       "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-TJ",
-      "kalshi_title": "Wil Troy Jackson be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Chellie Pingree",
-      "poly_title": "Will Chellie Pingree be the Democratic nominee for Senate in Maine?"
-    },
-    {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-CP",
-      "kalshi_title": "Wil Chellie Pingree be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Chellie Pingree",
-      "poly_title": "Will Chellie Pingree be the Democratic nominee for Senate in Maine?"
-    },
-    {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-DKLEB",
-      "kalshi_title": "Wil Dan Kleban be the Democratic nominee for the Senate in Maine?",
+      "kalshi_ref": "KXSENATEMED-26-JG",
+      "kalshi_title": "Wil Jared Golden be the Democratic nominee for the Senate in Maine?",
       "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
       "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
     }
