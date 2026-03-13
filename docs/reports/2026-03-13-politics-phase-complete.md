@@ -1,5 +1,7 @@
 # Politics Phase Closeout — 2026-03-13
 
+> Canonical closeout doc. API route contract details are maintained in `2026-03-13-politics-api-readiness-checklist.md`; strict machine artifact is `latest-politics-audit-packet.json`.
+
 ## Executive Summary
 Politics remediation is complete under the agreed **semantic-correctness-first** standard.
 

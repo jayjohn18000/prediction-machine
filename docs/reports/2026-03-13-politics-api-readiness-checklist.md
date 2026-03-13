@@ -3,27 +3,34 @@
 ## Scope
 Pilot-readiness verification for politics after semantic remediation closeout.
 
+## Route Contract Clarification
+
+The PMCI service implements routes under **`/v1/*`** (see `src/routes/*`).
+If an external gateway exposes **`/api/v1/*`**, that must be treated as an explicit prefix alias at the gateway layer.
+
+**Canonical service examples (repo-native):**
+- `GET /v1/markets?topic=politics&linked=true`
+- `GET /v1/signals/top-divergences?topic=politics`
+- `GET /v1/health/projection-ready`
+
 ## Contract Checklist
 
 - [x] **Linked politics markets endpoint**
-  - Contract: `GET /api/v1/markets?topic=politics&linked=true`
-  - Backing data state: **139 active clean linked rows** (post-cleanup).
-  - Notes: if deployed service uses `/v1/*` internally, expose this via `/api/v1/*` gateway prefix mapping.
+  - Contract (service): `GET /v1/markets?topic=politics&linked=true`
+  - Data state: **139 active clean linked rows** post-cleanup.
 
-- [x] **Politics spreads endpoint**
-  - Contract: `GET /api/v1/spreads?topic=politics`
-  - Behavior: returns cross-provider spread/arbitrage opportunities over linked politics pairs.
-  - Notes: freshness/SLO guards remain enforced by API health policy.
+- [x] **Politics spread/signal endpoint**
+  - Contract (service): `GET /v1/signals/top-divergences?topic=politics`
+  - Behavior: returns cross-provider opportunities over linked politics pairs.
 
-- [x] **Latest strict audit endpoint**
-  - Contract: `GET /api/v1/audit/latest`
-  - Behavior: returns strict packet JSON from latest politics audit run.
-  - Notes: payload should include coverage metrics, integrity warnings, and link counters.
+- [x] **Latest strict audit artifact**
+  - Artifact path: `docs/reports/latest-politics-audit-packet.json`
+  - Behavior: strict packet includes coverage, integrity warnings, and link counters.
 
 ## Acceptance Snapshot
 - Semantic residual violations: **0**
 - Governor/president guard classes blocked: **party↔yes/no**, **nominee/primary↔general**, **runoff↔general**
-- D6 governor threshold remains below 0.20 and is treated as a business/coverage tuning item.
+- D6 governor threshold remains below 0.20 and is treated as follow-on coverage/business tuning.
 
 ## Final Sign-off
-**POLITICS PHASE COMPLETE: Semantic integrity = 100%, infrastructure gates = green, M2M API ready for pilot customers. Coverage thresholds are business decisions, not technical blockers.**
+**POLITICS PHASE COMPLETE: semantic integrity gates are green and service-level API paths are internally consistent.**
