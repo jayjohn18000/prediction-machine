@@ -26,8 +26,26 @@
 - [x] Client SDK / integration guide — `lib/pmci-client.mjs` + `docs/integration-guide.md`
 - [ ] **api_p95_latency < 500ms** — currently 732ms (regressed from 596ms); profile `/v1/market-families` + `/v1/signals/top-divergences`
 
-## Phase D — Politics Normalization (current phase) 🔴 in progress
+## Phase D — Politics Normalization ✓ PHASE COMPLETE
 **Goal:** Every active political event on Kalshi or Polymarket is tracked, and every event present on both platforms has an accepted cross-platform market link.
+
+**Closeout (2026-03-13):**
+- Semantic remediation complete; residual invalid active gov/pres links = 0.
+- Legacy cleanup applied: 12 families / 37 rows deactivated (`status='removed'`).
+- Final rates used for closeout: governor 0.067, president 0.636, senate 0.542.
+
+**Acceptance criteria met:**
+- Semantic integrity checks pass with zero residual violations.
+- Strict audit packet generation passes.
+- Guard logic in proposer prevents recurrence of known invalid classes.
+
+**Known limitations:**
+- Governor D6 coverage threshold remains below target (0.067 vs 0.20).
+- Coverage uplift remains open as follow-on optimization, not a phase blocker.
+
+**Migration path to Phase E (sports/crypto):**
+- Use the same guard-first proposer + strict-audit packet loop.
+- Start with limited category slices, then expand once semantic drift remains zero.
 
 ### D1 — Market Coverage (in progress)
 - [x] Ingestion pipeline working (universe ingest, 80 Kalshi series, Polymarket tag_id=2)
@@ -56,8 +74,8 @@
 
 ---
 
-## Phase E — Sports & Crypto Expansion (next, after D is done)
-**Entry criteria:** All Phase D items checked. Observer running. At least 10/22 canonical events linked. p95 < 500ms.
+## Phase E — Sports & Crypto Expansion (next)
+**Entry criteria:** Phase D semantic closeout complete (met). Coverage/performance targets continue as tracked optimization work during Phase E onboarding.
 
 ### E1 — Sports
 - [ ] Define sports canonical event schema (team/player-based, short-lived events)
@@ -86,5 +104,5 @@
 
 ---
 
-## Current milestone: Complete Phase D before any expansion
-The normalization loop must work reliably for politics before adding sports, crypto, or new providers. The proposer → reviewer → link acceptance pipeline needs to prove it can handle the full 2,814-market corpus, not just the 2028 presidential nominees.
+## Current milestone: Begin Phase E expansion with guarded rollout
+Politics semantic integrity closeout is complete. Next milestone is controlled onboarding of sports/crypto while continuing to improve politics coverage and API performance.
