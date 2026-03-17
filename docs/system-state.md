@@ -13,6 +13,12 @@
 ## Branch
 - `chore/infra-hardening-baseline-2026-02-26`
 
+## Current Status (2026-03-17 refresh)
+
+- Historical links API route is now live in the PMCI surface: `GET /v1/links` (active + removed status history with pagination/filtering).
+- API contract/docs now include `/v1/links` in both OpenAPI and API reference.
+- Phase C perf gate re-validated on local runtime: `/v1/health/slo` reports `api_p95_latency_ms.actual=124` with `sample_size=129` (pass vs 500ms target).
+
 ## Current Status (2026-03-06)
 
 ### Phases A + B + C (infrastructure) — Complete ✓

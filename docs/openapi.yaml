@@ -318,6 +318,88 @@ components:
           type: string
           nullable: true
 
+    HistoricalLink:
+      type: object
+      required:
+        [id, family_id, provider_market_id, provider, status, relationship_type, link_version, confidence, reasons, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+        family_id:
+          type: integer
+        provider_market_id:
+          type: integer
+        provider:
+          type: string
+        provider_market_ref:
+          type: string
+          nullable: true
+        market_title:
+          type: string
+          nullable: true
+        event_slug:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [active, removed]
+        relationship_type:
+          type: string
+          enum: [identical, equivalent, proxy, correlated]
+        link_version:
+          type: integer
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        reasons:
+          type: object
+          additionalProperties: true
+        removed_at:
+          type: string
+          format: date-time
+          nullable: true
+        removed_reason:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    LinksHistoryResponse:
+      type: object
+      required: [links, total, limit, offset, filters]
+      properties:
+        links:
+          type: array
+          items:
+            $ref: "#/components/schemas/HistoricalLink"
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        filters:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [active, removed, any]
+            topic:
+              type: string
+              nullable: true
+            after:
+              type: string
+              format: date-time
+              nullable: true
+
     DivergenceSignal:
       type: object
       properties:
@@ -1276,6 +1358,68 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/MarketLink"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/links:
+    get:
+      summary: Historical and current links
+      description: |
+        Returns link rows across active and removed states with pagination.
+        Use `status=any` to include removed rows and their `removed_at` / `removed_reason` fields.
+      operationId: getLinksHistory
+      tags: [Families]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, removed, any]
+            default: active
+        - name: topic
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Category filter (e.g. `politics`).
+        - name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Include rows where `created_at >= after`.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: Historical links response
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinksHistoryResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "429":

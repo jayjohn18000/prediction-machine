@@ -37,6 +37,7 @@ When neither env var is set the API is fully open (useful for local dev).
 | GET    | `/v1/canonical-events`       | Standard | —                            | List canonical events; filter by `category` |
 | GET    | `/v1/market-families`        | Standard | `event_id` (UUID)            | Families under a canonical event       |
 | GET    | `/v1/market-links`           | Standard | `family_id` (int)            | Links in a family with price/divergence|
+| GET    | `/v1/links`                  | Standard | —                            | Historical/current links with filters  |
 | GET    | `/v1/signals/divergence`     | Standard | `family_id` (int)            | **503 if stale.** Per-link divergence  |
 | GET    | `/v1/signals/top-divergences`| Standard | `event_id` (UUID)            | **503 if stale.** Top divergences      |
 | GET    | `/v1/review/queue`           | Standard | —                            | Pending proposals above confidence     |
@@ -57,6 +58,16 @@ When neither env var is set the API is fully open (useful for local dev).
 | `limit`    | integer (1–100) | No          | Default 20                                          |
 
 `since` is **required** on `/v1/markets/new`, optional on `/v1/markets/unlinked` and `/v1/coverage/summary`.
+
+### `/v1/links`
+
+| Param    | Type               | Default   | Notes |
+|----------|--------------------|-----------|-------|
+| `status` | `active\|removed\|any` | `active` | Use `any` to include removed links/history |
+| `topic`  | string             | —         | Category filter (e.g. `politics`) |
+| `after`  | ISO 8601 datetime  | —         | Filters on `created_at >= after` |
+| `limit`  | integer 1–200      | `50`      | Page size |
+| `offset` | integer >=0        | `0`       | Pagination offset |
 
 ### `/v1/review/queue`
 
@@ -111,6 +122,17 @@ When neither env var is set the API is fully open (useful for local dev).
 | `correlation_window`  | string                                            | No       |
 | `lag_seconds`         | integer                                           | No       |
 | `correlation_strength`| number (−1 to 1)                                  | No       |
+
+---
+
+## Usage Examples
+
+### Historical links with `status=any`, filters, and pagination
+
+```bash
+curl -s "http://localhost:8787/v1/links?status=any&topic=politics&after=2026-03-01T00:00:00Z&limit=25&offset=25" \
+  -H "x-pmci-api-key: $PMCI_API_KEY" | jq '{total, limit, offset, filters, sample: .links[0]}'
+```
 
 ---
 

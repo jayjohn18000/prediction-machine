@@ -24,7 +24,7 @@
 - [x] Per-endpoint request logging (pmci.request_log) + /v1/health/usage endpoint
 - [x] Stable API contracts documented (OpenAPI or equivalent) — `docs/openapi.yaml` + `docs/api-reference.md`
 - [x] Client SDK / integration guide — `lib/pmci-client.mjs` + `docs/integration-guide.md`
-- [ ] **api_p95_latency < 500ms** — currently 732ms (regressed from 596ms); profile `/v1/market-families` + `/v1/signals/top-divergences`
+- [x] **api_p95_latency < 500ms** — validated 2026-03-17 at **124ms p95** (`/v1/health/slo`, sample_size=129)
 
 ## Phase D — Politics Normalization ✓ PHASE COMPLETE
 **Goal:** Every active political event on Kalshi or Polymarket is tracked, and every event present on both platforms has an accepted cross-platform market link.
