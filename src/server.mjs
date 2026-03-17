@@ -15,6 +15,7 @@ import { registerMarketsRoutes } from "./routes/markets.mjs";
 import { registerFamiliesRoutes } from "./routes/families.mjs";
 import { registerSignalsRoutes } from "./routes/signals.mjs";
 import { registerReviewRoutes } from "./routes/review.mjs";
+import { registerLinksRoutes } from "./routes/links.mjs";
 import { resolveProviderIdByCode } from "./repositories/providers-repo.mjs";
 import { percentile, typeFactor, computeConsensus, computeDivergence } from "./utils/metrics.mjs";
 import { parseSince } from "./utils/time.mjs";
@@ -166,6 +167,7 @@ export async function buildApp() {
   registerFamiliesRoutes(app, deps);
   registerSignalsRoutes(app, deps);
   registerReviewRoutes(app, deps);
+  registerLinksRoutes(app, deps);
 
   return app;
 }

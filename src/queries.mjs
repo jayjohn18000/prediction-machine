@@ -270,4 +270,48 @@ export const SQL = {
       updated_at           = now()
     returning id, family_id, link_version, status;
   `,
+
+  links_history: `
+    select
+      ml.id,
+      ml.family_id,
+      ml.provider_market_id,
+      ml.status,
+      ml.relationship_type,
+      ml.link_version,
+      ml.confidence,
+      ml.reasons,
+      ml.removed_at,
+      ml.removed_reason,
+      ml.created_at,
+      ml.updated_at,
+      p.code  as provider,
+      pm.title as market_title,
+      pm.provider_market_ref,
+      ce.slug  as event_slug,
+      ce.category
+    from pmci.market_links ml
+    join pmci.providers p          on p.id  = ml.provider_id
+    join pmci.provider_markets pm  on pm.id = ml.provider_market_id
+    join pmci.market_families mf   on mf.id = ml.family_id
+    join pmci.canonical_events ce  on ce.id = mf.canonical_event_id
+    where
+      ($1::text is null or ml.status  = $1)
+      and ($2::text is null or ce.category = $2)
+      and ($3::timestamptz is null or ml.created_at >= $3)
+    order by ml.updated_at desc
+    limit $4
+    offset $5;
+  `,
+
+  links_history_count: `
+    select count(*)::int as total
+    from pmci.market_links ml
+    join pmci.market_families mf   on mf.id = ml.family_id
+    join pmci.canonical_events ce  on ce.id = mf.canonical_event_id
+    where
+      ($1::text is null or ml.status  = $1)
+      and ($2::text is null or ce.category = $2)
+      and ($3::timestamptz is null or ml.created_at >= $3);
+  `,
 };
