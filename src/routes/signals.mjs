@@ -1,6 +1,18 @@
 /**
- * /v1/signals/divergence and /v1/signals/top-divergences routes.
+ * /v1/signals/divergence, /v1/signals/top-divergences, and /v1/snapshots routes.
  */
+
+// Maps API interval param → postgres date_trunc field (whitelist prevents injection)
+const INTERVAL_MAP = { "1h": "hour", "1d": "day" };
+
+// Maps API since param → postgres interval string
+function parseSinceInterval(since) {
+  const m = /^(\d+)(h|d)$/.exec(since);
+  if (!m) return null;
+  const [, n, unit] = m;
+  return unit === "h" ? `${n} hours` : `${n} days`;
+}
+
 export function registerSignalsRoutes(app, deps) {
   const { query, SQL, assertFreshness, computeConsensus, computeDivergence, RATE_LIMIT_CONFIG, z } = deps;
 
@@ -102,5 +114,41 @@ export function registerSignalsRoutes(app, deps) {
 
     const top = results.slice(0, parsed.data.limit);
     return top;
+  });
+
+  app.get("/v1/snapshots", { rateLimit: RATE_LIMIT_CONFIG }, async (req, reply) => {
+    const schema = z.object({
+      family_id: z.coerce.number().int().positive(),
+      since: z.string().regex(/^\d+(h|d)$/).default("7d"),
+      interval: z.enum(["1h", "1d"]).default("1h"),
+    });
+    const parsed = schema.safeParse(req.query);
+    if (!parsed.success) {
+      reply.code(400);
+      return { error: parsed.error.flatten() };
+    }
+
+    const { family_id, since, interval } = parsed.data;
+    const truncField = INTERVAL_MAP[interval];
+    const pgInterval = parseSinceInterval(since);
+
+    const { rows } = await query(SQL.snapshot_history, [family_id, truncField, pgInterval]);
+
+    // Group rows by provider → series
+    const byProvider = new Map();
+    for (const row of rows) {
+      if (!byProvider.has(row.provider)) byProvider.set(row.provider, []);
+      byProvider.get(row.provider).push({
+        bucket: row.bucket,
+        price_yes: Number(row.price_yes_avg),
+      });
+    }
+
+    return {
+      family_id,
+      interval,
+      since,
+      providers: [...byProvider.entries()].map(([provider, series]) => ({ provider, series })),
+    };
   });
 }

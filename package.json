@@ -25,6 +25,7 @@
     "pmci:check-top-divergences": "node scripts/checks/check-top-divergences.mjs",
     "pmci:check-coverage": "node scripts/checks/check-coverage.mjs",
     "pmci:watch": "node scripts/checks/pmci-watch.mjs",
+    "log:divergences": "node scripts/log-divergences.mjs",
     "pmci:validate:politics": "node scripts/validation/pmci-validate-politics.mjs",
     "health:politics:snapshot": "node scripts/checks/health-politics-snapshot.mjs --json",
     "pmci:propose:politics": "node scripts/review/pmci-propose-links-politics.mjs",

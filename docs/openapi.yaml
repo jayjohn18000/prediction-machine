@@ -1509,6 +1509,101 @@ paths:
         "503":
           $ref: "#/components/responses/Stale"
 
+  /v1/snapshots:
+    get:
+      summary: Price history for a market family
+      description: |
+        Returns bucketed average `price_yes` per provider for all active links in a family.
+        Use to draw sparklines on the candidate detail view. No freshness gate — returns
+        historical data even if the observer is temporarily stale.
+      operationId: getSnapshots
+      tags: [Signals]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      parameters:
+        - name: family_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: since
+          in: query
+          required: false
+          description: How far back to look. Format `{N}h` or `{N}d` (e.g. `7d`, `24h`).
+          schema:
+            type: string
+            default: 7d
+            example: 7d
+        - name: interval
+          in: query
+          required: false
+          description: Bucket size for time-series aggregation.
+          schema:
+            type: string
+            enum: [1h, 1d]
+            default: 1h
+      responses:
+        "200":
+          description: Bucketed price history grouped by provider
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  family_id:
+                    type: integer
+                  interval:
+                    type: string
+                    enum: [1h, 1d]
+                  since:
+                    type: string
+                  providers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        provider:
+                          type: string
+                          example: kalshi
+                        series:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              bucket:
+                                type: string
+                                format: date-time
+                              price_yes:
+                                type: number
+                                format: float
+              example:
+                family_id: 42
+                interval: 1h
+                since: 7d
+                providers:
+                  - provider: kalshi
+                    series:
+                      - bucket: "2026-03-10T00:00:00Z"
+                        price_yes: 0.54
+                      - bucket: "2026-03-10T01:00:00Z"
+                        price_yes: 0.55
+                  - provider: polymarket
+                    series:
+                      - bucket: "2026-03-10T00:00:00Z"
+                        price_yes: 0.46
+                      - bucket: "2026-03-10T01:00:00Z"
+                        price_yes: 0.47
+        "400":
+          description: Invalid parameters
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
   # ── Review ─────────────────────────────────────────────────────────────────
 
   /v1/review/queue:

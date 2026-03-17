@@ -314,4 +314,24 @@ export const SQL = {
       and ($2::text is null or ce.category = $2)
       and ($3::timestamptz is null or ml.created_at >= $3);
   `,
+
+  // $1 = family_id (int), $2 = date_trunc field ('hour'|'day'), $3 = interval string ('7 days' etc.)
+  snapshot_history: `
+    with family_markets as (
+      select l.provider_market_id, p.code as provider
+      from pmci.v_market_links_current l
+      join pmci.providers p on p.id = l.provider_id
+      where l.family_id = $1
+        and l.status = 'active'
+    )
+    select
+      fm.provider,
+      date_trunc($2, s.observed_at) as bucket,
+      avg(s.price_yes)::numeric(6,4) as price_yes_avg
+    from pmci.provider_market_snapshots s
+    join family_markets fm on fm.provider_market_id = s.provider_market_id
+    where s.observed_at >= now() - $3::interval
+    group by fm.provider, date_trunc($2, s.observed_at)
+    order by bucket asc, fm.provider asc;
+  `,
 };
