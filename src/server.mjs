@@ -146,6 +146,28 @@ export async function buildApp() {
     req.raw._pmciStartMs = Date.now();
   });
 
+  const LOCAL_CORS_ORIGINS = new Set([
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "http://127.0.0.1:4173",
+    "http://localhost:4173",
+  ]);
+
+  app.addHook("onRequest", async (req, reply) => {
+    const origin = req.headers.origin;
+    if (origin && LOCAL_CORS_ORIGINS.has(origin)) {
+      reply.header("Access-Control-Allow-Origin", origin);
+      reply.header("Vary", "Origin");
+      reply.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+      reply.header("Access-Control-Allow-Headers", "Content-Type, x-pmci-api-key");
+    }
+
+    if (req.method === "OPTIONS") {
+      reply.code(204);
+      return reply.send();
+    }
+  });
+
   app.addHook("onRequest", async (req, reply) => {
     const apiKey = config.apiKey;
     if (!apiKey) return;

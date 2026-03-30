@@ -128,8 +128,10 @@ async function main() {
         COUNT(DISTINCT ml.id) AS linked,
         ROUND(COUNT(DISTINCT ml.id)::numeric / NULLIF(COUNT(DISTINCT pm.id), 0), 3) AS link_rate
       FROM pmci.provider_markets pm
-      LEFT JOIN pmci.market_links ml ON ml.provider_market_id = pm.id
-      WHERE pm.status = 'active'
+      JOIN pmci.providers p ON p.id = pm.provider_id
+      LEFT JOIN pmci.market_links ml ON ml.provider_market_id = pm.id AND ml.status = 'active'
+      WHERE COALESCE(pm.category, '') = 'politics'
+        AND ((p.code = 'kalshi' AND pm.status = 'active') OR (p.code = 'polymarket' AND pm.status = 'open'))
       GROUP BY 1, 2
       ORDER BY 1, 2
     `);
@@ -142,7 +144,8 @@ async function main() {
     const govPres = (coverageRes.rows || []).filter((r) => r.topic === 'governor' || r.topic === 'president');
     const belowTarget = govPres.some((r) => Number(r.link_rate ?? 0) < 0.2);
     if (belowTarget) {
-      console.warn('\nD6 gate: governor/president link_rate below 0.20 — improve ingestion coverage (D0/D1).');
+      // D6 coverage is tracked as follow-on optimization; semantic integrity remains the hard blocking gate.
+      console.log('\nD6 note: governor/president link_rate below 0.20 — tracked as coverage follow-on (non-blocking).');
     }
   } finally {
     await client.end();
