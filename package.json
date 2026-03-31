@@ -38,6 +38,7 @@
     "pmci:discover:kalshi:politics": "node scripts/discovery/pmci-discover-kalshi-politics-series.mjs",
     "pmci:discover:sports:kalshi": "node scripts/discovery/pmci-discover-kalshi-sports-series.mjs",
     "pmci:discover:sports:poly": "node scripts/discovery/pmci-discover-polymarket-sports-tags.mjs",
+    "pmci:ingest:sports": "node lib/ingestion/sports-universe.mjs",
     "pmci:status": "node scripts/checks/pmci-projection-status.mjs",
     "pmci:check:round-trip": "node scripts/checks/pmci-check-round-trip.mjs",
     "pmci:backfill:kalshi:typing": "node scripts/ingestion/pmci-backfill-kalshi-typing.mjs",
