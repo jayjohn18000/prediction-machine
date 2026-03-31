@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-03-13T07:57:29.444Z",
+  "generatedAt": "2026-03-18T18:24:26.749Z",
   "providerStatus": [
     {
       "provider": "kalshi",
       "status": "active",
-      "count": 183
+      "count": 157
     },
     {
       "provider": "kalshi",
@@ -19,27 +19,27 @@
     {
       "provider": "polymarket",
       "status": "(null)",
-      "count": 1661
+      "count": 1660
     },
     {
       "provider": "polymarket",
       "status": "open",
-      "count": 2535
+      "count": 2475
     }
   ],
   "activeByProvider": [
     {
       "provider": "kalshi",
-      "active_markets": 183
+      "active_markets": 157
     },
     {
       "provider": "polymarket",
-      "active_markets": 2535
+      "active_markets": 2475
     }
   ],
   "links": {
-    "active_link_rows": 139,
-    "cross_provider_families": 60
+    "active_link_rows": 124,
+    "cross_provider_families": 59
   },
   "linkRateByTopic": [
     {
@@ -73,30 +73,30 @@
     {
       "topic": "president",
       "provider": "kalshi",
-      "total": 44,
-      "linked": 17,
-      "link_rate": "0.386"
+      "total": 18,
+      "linked": 0,
+      "link_rate": "0.000"
     },
     {
       "topic": "president",
       "provider": "polymarket",
-      "total": 482,
-      "linked": 54,
-      "link_rate": "0.112"
+      "total": 422,
+      "linked": 3,
+      "link_rate": "0.007"
     },
     {
       "topic": "senate",
       "provider": "kalshi",
       "total": 24,
-      "linked": 13,
-      "link_rate": "0.542"
+      "linked": 5,
+      "link_rate": "0.208"
     },
     {
       "topic": "senate",
       "provider": "polymarket",
       "total": 384,
-      "linked": 12,
-      "link_rate": "0.031"
+      "linked": 5,
+      "link_rate": "0.013"
     }
   ],
   "eventsPerSeries": [
@@ -218,7 +218,7 @@
     {
       "series_family": "KXPRESNOMR",
       "events": 1,
-      "markets": 30
+      "markets": 4
     },
     {
       "series_family": "KXRUNBYMIDTERM",
@@ -506,11 +506,11 @@
   "orphans": [
     {
       "provider": "kalshi",
-      "orphaned": 154
+      "orphaned": 152
     },
     {
       "provider": "polymarket",
-      "orphaned": 2465
+      "orphaned": 2463
     }
   ],
   "reviewBuckets": [
@@ -565,26 +565,26 @@
       "family_id": "66",
       "kalshi_ref": "KXONTPARTY-25-GREEN",
       "kalshi_title": "Will Green win the most seats in the Ontario parliamentary election?",
-      "poly_ref": "colombia-chamber-of-representatives-election-winner#Green Alliance",
+      "poly_ref": "colombia-chamber-of-representatives-election-winner#569314",
       "poly_title": "Will Green Alliance win the most seats in the 2026 Colombian Chamber of Representatives election?"
     },
     {
       "family_id": "66",
       "kalshi_ref": "KXONTPARTY-25-GREEN",
       "kalshi_title": "Will Green win the most seats in the Ontario parliamentary election?",
-      "poly_ref": "colombia-chamber-of-representatives-election-winner#569314",
+      "poly_ref": "colombia-chamber-of-representatives-election-winner#Green Alliance",
       "poly_title": "Will Green Alliance win the most seats in the 2026 Colombian Chamber of Representatives election?"
     },
     {
       "family_id": "65",
-      "kalshi_ref": "SENATEKS-26-R",
+      "kalshi_ref": "SENATEKS-28-R",
       "kalshi_title": "Will Republicans win the Senate race in Kansas?",
       "poly_ref": "kansas-senate-election-winner#Republican",
       "poly_title": "Will the Republicans win the Kansas Senate race in 2026?"
     },
     {
       "family_id": "65",
-      "kalshi_ref": "SENATEKS-28-R",
+      "kalshi_ref": "SENATEKS-26-R",
       "kalshi_title": "Will Republicans win the Senate race in Kansas?",
       "poly_ref": "kansas-senate-election-winner#Republican",
       "poly_title": "Will the Republicans win the Kansas Senate race in 2026?"
@@ -604,81 +604,81 @@
       "poly_title": "Will the Republicans win the West Virginia Senate race in 2026?"
     },
     {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-DKLEB",
-      "kalshi_title": "Wil Dan Kleban be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Graham Platner",
-      "poly_title": "Will Graham Platner be the Democratic nominee for Senate in Maine?"
+      "family_id": "62",
+      "kalshi_ref": "SENATEKS-26-D",
+      "kalshi_title": "Will Democratics win the Senate race in Kansas?",
+      "poly_ref": "kansas-senate-election-winner#Democrat",
+      "poly_title": "Will the Democrats win the Kansas Senate race in 2026?"
     },
     {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-JWOO",
-      "kalshi_title": "Wil Jordan Wood be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Chellie Pingree",
-      "poly_title": "Will Chellie Pingree be the Democratic nominee for Senate in Maine?"
+      "family_id": "61",
+      "kalshi_ref": "KXPRESNOMR-28-JT",
+      "kalshi_title": "Republican nominee 2028 - John Thune",
+      "poly_ref": "republican-presidential-nominee-2028#John Thune",
+      "poly_title": "John Thune"
     },
     {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-DKLEB",
-      "kalshi_title": "Wil Dan Kleban be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
-      "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
+      "family_id": "60",
+      "kalshi_ref": "KXPRESNOMR-28-MPEN",
+      "kalshi_title": "Republican nominee 2028 - Mike Pence",
+      "poly_ref": "republican-presidential-nominee-2028#Mike Pence",
+      "poly_title": "Mike Pence"
     },
     {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-TJ",
-      "kalshi_title": "Wil Troy Jackson be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
-      "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
+      "family_id": "59",
+      "kalshi_ref": "KXPRESNOMR-28-EKIR",
+      "kalshi_title": "Republican nominee 2028 - Erika Kirk",
+      "poly_ref": "republican-presidential-nominee-2028#Erika Kirk",
+      "poly_title": "Erika Kirk"
     },
     {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-GRA",
-      "kalshi_title": "Wil Graham Platner be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
-      "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
+      "family_id": "58",
+      "kalshi_ref": "KXPRESNOMR-28-KB",
+      "kalshi_title": "Republican nominee 2028 - Katie Britt",
+      "poly_ref": "republican-presidential-nominee-2028#Katie Britt",
+      "poly_title": "Katie Britt"
     },
     {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-CP",
-      "kalshi_title": "Wil Chellie Pingree be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Graham Platner",
-      "poly_title": "Will Graham Platner be the Democratic nominee for Senate in Maine?"
+      "family_id": "56",
+      "kalshi_ref": "KXPRESNOMR-28-MTG",
+      "kalshi_title": "Republican nominee 2028 - Marjorie Taylor Greene",
+      "poly_ref": "republican-presidential-nominee-2028#Marjorie Taylor Greene",
+      "poly_title": "Marjorie Taylor Greene"
     },
     {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-GRA",
-      "kalshi_title": "Wil Graham Platner be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Graham Platner",
-      "poly_title": "Will Graham Platner be the Democratic nominee for Senate in Maine?"
+      "family_id": "55",
+      "kalshi_ref": "KXPRESNOMR-28-STE",
+      "kalshi_title": "Republican nominee 2028 - Steve Bannon",
+      "poly_ref": "republican-presidential-nominee-2028#Steve Bannon",
+      "poly_title": "Steve Bannon"
     },
     {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-GRA",
-      "kalshi_title": "Wil Graham Platner be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Chellie Pingree",
-      "poly_title": "Will Chellie Pingree be the Democratic nominee for Senate in Maine?"
+      "family_id": "53",
+      "kalshi_ref": "KXPRESNOMR-28-ES",
+      "kalshi_title": "Republican nominee 2028 - Elise Stefanik",
+      "poly_ref": "republican-presidential-nominee-2028#Elise Stefanik",
+      "poly_title": "Elise Stefanik"
     },
     {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-JG",
-      "kalshi_title": "Wil Jared Golden be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Chellie Pingree",
-      "poly_title": "Will Chellie Pingree be the Democratic nominee for Senate in Maine?"
+      "family_id": "51",
+      "kalshi_ref": "KXPRESNOMR-28-KNOE",
+      "kalshi_title": "Republican nominee 2028 - Kristi Noem",
+      "poly_ref": "republican-presidential-nominee-2028#Kristi Noem",
+      "poly_title": "Kristi Noem"
     },
     {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-CP",
-      "kalshi_title": "Wil Chellie Pingree be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
-      "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
+      "family_id": "51",
+      "kalshi_ref": "KXPRESNOMR-28-KNOE",
+      "kalshi_title": "Republican nominee 2028 - Kristi Noem",
+      "poly_ref": "who-will-announce-presidential-run-before-2027#Kristi Noem",
+      "poly_title": "Will Kristi Noem announce a presidential run before 2027?"
     },
     {
-      "family_id": "63",
-      "kalshi_ref": "KXSENATEMED-26-JG",
-      "kalshi_title": "Wil Jared Golden be the Democratic nominee for the Senate in Maine?",
-      "poly_ref": "maine-democratic-senate-primary-winner#Dan Kleban",
-      "poly_title": "Will Dan Kleban be the Democratic nominee for Senate in Maine?"
+      "family_id": "48",
+      "kalshi_ref": "KXPRESNOMR-28-TC",
+      "kalshi_title": "Republican nominee 2028 - Ted Cruz",
+      "poly_ref": "republican-presidential-nominee-2028#Ted Cruz",
+      "poly_title": "Ted Cruz"
     }
   ]
 }

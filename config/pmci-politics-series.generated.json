@@ -1,89 +1,79 @@
 {
-  "generatedAt": "2026-03-13T06:51:18.996Z",
+  "generatedAt": "2026-03-18T18:23:59.368Z",
   "source": {
     "endpoint": "https://api.elections.kalshi.com/trade-api/v2/series + https://api.elections.kalshi.com/trade-api/v2/events?status=open&limit=1",
     "maxSeriesScanned": 220
   },
   "summary": {
     "politicsCandidates": 220,
-    "liveCandidates": 68,
-    "selectedTickers": 68,
-    "highValueLive": 29
+    "liveCandidates": 58,
+    "selectedTickers": 58,
+    "highValueLive": 27
   },
   "selectedTickers": [
-    "GOVPARTYCT",
-    "GOVPARTYTX",
-    "GOVPARTYWY",
-    "HOUSEIN1",
-    "HOUSEMI3",
-    "HOUSEMI8",
-    "HOUSENY17",
-    "KXAGNOMILR",
-    "KXDCDELD",
-    "KXDEMPROGRESSIVESENATESWEEP",
-    "KXDEMSWINGSTATEGOVSWEEP",
+    "GOVPARTYPA",
+    "HOUSENY18",
+    "HOUSENY22",
+    "HOUSENY3",
+    "HOUSENY4",
+    "HOUSEVA2",
+    "KXAUSTRALIAHOUSE",
+    "KXCARDPRESENCEUFCWH",
+    "KXDEFAPPROP",
+    "KXGOPPOLICYCHAIR",
     "KXGOVALNOMR",
+    "KXGOVGANOMR",
     "KXGOVKSNOMR",
-    "KXGOVNHNOMD",
-    "KXHOUSETURNOUT",
-    "KXIMPEACH",
-    "KXMURKOWSKIENDORSE",
-    "KXNJ07D",
-    "KXPHILIPPINESHOUSE",
-    "KXSENATECOR",
-    "KXSENATELA",
-    "KXSENATEMID",
-    "KXSENATENYD",
-    "KXSENATEOKD",
-    "KXSENATEVAD",
-    "KXTRUMPPRES",
-    "SENATEMS",
-    "SENATEMT",
-    "SENATEWI",
-    "KXAMERICAPARTY2028",
-    "KXANYDEMWINTEXAS",
+    "KXIA03D",
+    "KXLAIOUT",
+    "KXLOSEPRIMARYSENATED",
+    "KXNY4R",
+    "KXNY8D",
+    "KXPRESENDORSEMUSKD",
+    "KXSENATEORD",
+    "KXSENATESDR",
+    "KXSENATEWVR",
+    "KXTRUMPOUT27",
+    "KXZELENSKYYOUT",
+    "SENATEAR",
+    "SENATEMN",
+    "SENATESC",
     "KXATF",
-    "KXATTYGENNE",
-    "KXATTYGENOH",
-    "KXATTYGENSD",
-    "KXATTYGENWI",
-    "KXBALANCEPOWERCOMBO",
-    "KXBALLOTAMERICAPARTY",
-    "KXCA04PRIMARY",
-    "KXCAFRAUD",
-    "KXCAPCONTROL",
-    "KXCOLOMBIACHAMBER",
-    "KXDEMOCRACYUS",
-    "KXDOMINICANREPUBLICDEPUTIES",
-    "KXFEDERALCHARGE",
-    "KXFEDLEADJUNE",
-    "KXFESTIVALEVENTDNCMIDTERMS",
-    "KXFLPRIMARY",
-    "KXG7LEADEROUT",
-    "KXHFHOUSING",
-    "KXICEREFORM",
-    "KXKANYEISRAEL",
-    "KXMARALAGO",
-    "KXMAYORLA",
-    "KXNOEMOUT",
-    "KXOBERGEFELL",
-    "KXRELEASEMAXWELL",
-    "KXREPRODUCTIVEMEASURES",
-    "KXRUNBYMIDTERM",
-    "KXSAVEAMERICACLOTURE",
-    "KXSECSTATEGA",
-    "KXSECSTATEVISIT",
-    "KXTARIFFRATEPRC",
-    "KXTRUMPDOLLAR",
-    "KXTRUMPTARIFFHEAR",
-    "KXUSAEXPANDTERRITORY",
-    "KXVETOOVERRIDE",
-    "POWER"
+    "KXATTYGENFL",
+    "KXATTYGENMD",
+    "KXATTYGENNM",
+    "KXATTYGENVT",
+    "KXCONGRESSTRADES",
+    "KXCRYPTOCAPGAIN",
+    "KXDCEILEND",
+    "KXDENMARK2ND",
+    "KXDOJPARDONS",
+    "KXEUEXITCOUNTRY",
+    "KXFEDCHAIRCONFIRM",
+    "KXFESTIVALEVENTRNCMIDTERMS",
+    "KXFREEBUSES",
+    "KXGUATEMALACONGRESS",
+    "KXJOINTRUMPADMIN",
+    "KXMALAYSIAPARLI-2",
+    "KXMARSEILLEMAYOR",
+    "KXNETANYAHUPARDON",
+    "KXNGUARDCITY",
+    "KXNYAIBILL",
+    "KXOHPRIMARY",
+    "KXPERUPRES",
+    "KXRETIREMM",
+    "KXSCOTPARLIAMENT",
+    "KXSTATE",
+    "KXSWISS10MILLION",
+    "KXTAIWANLVL4",
+    "KXTNPRIMARY",
+    "KXTRUMPAPPROVALYEAR",
+    "KXTRUMPBEARCASECOMBO"
   ],
   "liveSeries": [
     {
-      "ticker": "GOVPARTYCT",
-      "title": "Connecticut Governor",
+      "ticker": "GOVPARTYPA",
+      "title": "Pennsylvania Governor",
       "category": "Politics",
       "tags": [
         "US Elections"
@@ -92,28 +82,8 @@
       "openEvents": 1
     },
     {
-      "ticker": "GOVPARTYTX",
-      "title": "Texas Governor",
-      "category": "Politics",
-      "tags": [
-        "US Elections"
-      ],
-      "highValue": true,
-      "openEvents": 1
-    },
-    {
-      "ticker": "GOVPARTYWY",
-      "title": "Wyoming Governor",
-      "category": "Politics",
-      "tags": [
-        "US Elections"
-      ],
-      "highValue": true,
-      "openEvents": 1
-    },
-    {
-      "ticker": "HOUSEIN1",
-      "title": "House IN's 1st",
+      "ticker": "HOUSENY18",
+      "title": "House NY's 18th",
       "category": "Politics",
       "tags": [
         "House"
@@ -122,7 +92,37 @@
       "openEvents": 1
     },
     {
-      "ticker": "HOUSEMI3",
+      "ticker": "HOUSENY22",
+      "title": "House NY's 22nd",
+      "category": "Politics",
+      "tags": [
+        "House"
+      ],
+      "highValue": true,
+      "openEvents": 1
+    },
+    {
+      "ticker": "HOUSENY3",
+      "title": "House NY 3",
+      "category": "Politics",
+      "tags": [
+        "House"
+      ],
+      "highValue": true,
+      "openEvents": 1
+    },
+    {
+      "ticker": "HOUSENY4",
+      "title": "House New York 4th",
+      "category": "Politics",
+      "tags": [
+        "House"
+      ],
+      "highValue": true,
+      "openEvents": 1
+    },
+    {
+      "ticker": "HOUSEVA2",
       "title": "x",
       "category": "Politics",
       "tags": [
@@ -132,62 +132,39 @@
       "openEvents": 1
     },
     {
-      "ticker": "HOUSEMI8",
-      "title": "House Michigan 8th",
+      "ticker": "KXAUSTRALIAHOUSE",
+      "title": "Australia House elections",
       "category": "Politics",
       "tags": [
-        "House"
+        "Foreign Elections"
       ],
       "highValue": true,
       "openEvents": 1
     },
     {
-      "ticker": "HOUSENY17",
-      "title": "House NY 17",
+      "ticker": "KXCARDPRESENCEUFCWH",
+      "title": "UFC White House event",
+      "category": "Sports",
+      "tags": [],
+      "highValue": true,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXDEFAPPROP",
+      "title": "Will the House pass additional defense funding?",
       "category": "Politics",
       "tags": [
-        "House"
+        "Congress"
       ],
       "highValue": true,
       "openEvents": 1
     },
     {
-      "ticker": "KXAGNOMILR",
-      "title": "Illinois Republican Attorney General nominee?",
+      "ticker": "KXGOPPOLICYCHAIR",
+      "title": "Who will win the House Republican Policy Committee chair election?",
       "category": "Politics",
       "tags": [
-        "US Elections"
-      ],
-      "highValue": true,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXDCDELD",
-      "title": "Who will win the Democratic primary for DC's House delegate?",
-      "category": "Elections",
-      "tags": [
-        "Primaries",
-        "US Elections"
-      ],
-      "highValue": true,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXDEMPROGRESSIVESENATESWEEP",
-      "title": "Progressives sweep Dem Senate Primaries?",
-      "category": "Politics",
-      "tags": [
-        "US Elections"
-      ],
-      "highValue": true,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXDEMSWINGSTATEGOVSWEEP",
-      "title": "Democrats sweep swing state governor races?",
-      "category": "Politics",
-      "tags": [
-        "US Elections"
+        "Foreign Elections"
       ],
       "highValue": true,
       "openEvents": 1
@@ -195,6 +172,16 @@
     {
       "ticker": "KXGOVALNOMR",
       "title": "Gov AL Nom R",
+      "category": "Politics",
+      "tags": [
+        "Primaries"
+      ],
+      "highValue": true,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXGOVGANOMR",
+      "title": "Georgia Governor Republican nominee",
       "category": "Politics",
       "tags": [
         "Primaries"
@@ -213,48 +200,8 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXGOVNHNOMD",
-      "title": "Gov NH Nom D",
-      "category": "Politics",
-      "tags": [
-        "Primaries"
-      ],
-      "highValue": true,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXHOUSETURNOUT",
-      "title": "Voter turnout in the national House popular vote?",
-      "category": "Elections",
-      "tags": [
-        "US Elections"
-      ],
-      "highValue": true,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXIMPEACH",
-      "title": "President impeached",
-      "category": "Politics",
-      "tags": [
-        "Trump"
-      ],
-      "highValue": true,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXMURKOWSKIENDORSE",
-      "title": "Who will Murkowski endorse in Alaska senate?",
-      "category": "Elections",
-      "tags": [
-        "US Elections"
-      ],
-      "highValue": true,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXNJ07D",
-      "title": "Democratic nominee for NJ-07?",
+      "ticker": "KXIA03D",
+      "title": "IA-03 Democratic nominee",
       "category": "Elections",
       "tags": [
         "Primaries",
@@ -264,28 +211,51 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXPHILIPPINESHOUSE",
-      "title": "Philippines House",
+      "ticker": "KXLAIOUT",
+      "title": "Wiliam Lai out as President of Taiwan",
       "category": "Politics",
       "tags": [
-        "Foreign Elections"
+        "International"
       ],
       "highValue": true,
       "openEvents": 1
     },
     {
-      "ticker": "KXSENATECOR",
-      "title": "COR",
+      "ticker": "KXLOSEPRIMARYSENATED",
+      "title": "How many Senate Democrats will lose their primary?",
       "category": "Politics",
       "tags": [
-        "Primaries"
+        "Primaries",
+        "US Elections"
       ],
       "highValue": true,
       "openEvents": 1
     },
     {
-      "ticker": "KXSENATELA",
-      "title": "Who will win the Senate race in Louisiana?",
+      "ticker": "KXNY4R",
+      "title": "ny-4 republic nominee",
+      "category": "Elections",
+      "tags": [
+        "Primaries",
+        "US Elections"
+      ],
+      "highValue": true,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXNY8D",
+      "title": "democratic nominee for ny-8",
+      "category": "Elections",
+      "tags": [
+        "Primaries",
+        "US Elections"
+      ],
+      "highValue": true,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXPRESENDORSEMUSKD",
+      "title": "Musk endorses Democrat for President",
       "category": "Politics",
       "tags": [
         "US Elections"
@@ -294,8 +264,8 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXSENATEMID",
-      "title": "MID",
+      "ticker": "KXSENATEORD",
+      "title": "ord",
       "category": "Politics",
       "tags": [
         "Primaries"
@@ -304,8 +274,19 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXSENATENYD",
-      "title": "Democratic nominee for New York Senate",
+      "ticker": "KXSENATESDR",
+      "title": "South Dakora Republican Senate nominee?",
+      "category": "Politics",
+      "tags": [
+        "Primaries",
+        "US Elections"
+      ],
+      "highValue": true,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXSENATEWVR",
+      "title": "WVR",
       "category": "Politics",
       "tags": [
         "Primaries"
@@ -314,28 +295,8 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXSENATEOKD",
-      "title": "Democratic nominee for Senate in Oklahoma?",
-      "category": "Politics",
-      "tags": [
-        "Primaries"
-      ],
-      "highValue": true,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXSENATEVAD",
-      "title": "VAD",
-      "category": "Politics",
-      "tags": [
-        "Primaries"
-      ],
-      "highValue": true,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXTRUMPPRES",
-      "title": "Trump family nominee in 2028",
+      "ticker": "KXTRUMPOUT27",
+      "title": "Trump out as President?",
       "category": "Politics",
       "tags": [
         "Trump"
@@ -344,8 +305,18 @@
       "openEvents": 1
     },
     {
-      "ticker": "SENATEMS",
-      "title": "Mississippi Senate race",
+      "ticker": "KXZELENSKYYOUT",
+      "title": "Volodymyr Zelenskyy out as President of Ukraine?",
+      "category": "Politics",
+      "tags": [
+        "International"
+      ],
+      "highValue": true,
+      "openEvents": 1
+    },
+    {
+      "ticker": "SENATEAR",
+      "title": "Arkansas Senate race",
       "category": "Politics",
       "tags": [
         "US Elections"
@@ -354,8 +325,8 @@
       "openEvents": 1
     },
     {
-      "ticker": "SENATEMT",
-      "title": "Montana Senate race",
+      "ticker": "SENATEMN",
+      "title": "Minnesota Senate race",
       "category": "Politics",
       "tags": [
         "US Elections"
@@ -364,31 +335,13 @@
       "openEvents": 1
     },
     {
-      "ticker": "SENATEWI",
-      "title": "Wisconsin Senate race",
+      "ticker": "SENATESC",
+      "title": "South Carolina Senate race",
       "category": "Politics",
       "tags": [
         "US Elections"
       ],
       "highValue": true,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXAMERICAPARTY2028",
-      "title": "America party 2028",
-      "category": "Elections",
-      "tags": [],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXANYDEMWINTEXAS",
-      "title": "Will any Democrat win a statewide race in Texas?",
-      "category": "Politics",
-      "tags": [
-        "US Elections"
-      ],
-      "highValue": false,
       "openEvents": 1
     },
     {
@@ -402,8 +355,8 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXATTYGENNE",
-      "title": "AG race Nebraska",
+      "ticker": "KXATTYGENFL",
+      "title": "AG race FL",
       "category": "Elections",
       "tags": [
         "US Elections"
@@ -412,8 +365,8 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXATTYGENOH",
-      "title": "AG race OH",
+      "ticker": "KXATTYGENMD",
+      "title": "AG race MD",
       "category": "Elections",
       "tags": [
         "US Elections"
@@ -422,8 +375,8 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXATTYGENSD",
-      "title": "AG race SD",
+      "ticker": "KXATTYGENNM",
+      "title": "AG race NM",
       "category": "Elections",
       "tags": [
         "US Elections"
@@ -432,8 +385,8 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXATTYGENWI",
-      "title": "AG race WI",
+      "ticker": "KXATTYGENVT",
+      "title": "AG race VT",
       "category": "Elections",
       "tags": [
         "US Elections"
@@ -442,36 +395,88 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXBALANCEPOWERCOMBO",
-      "title": "Congress balance of power combo",
+      "ticker": "KXCONGRESSTRADES",
+      "title": "Congress trades",
       "category": "Politics",
       "tags": [
-        "US Elections"
+        "Congress"
       ],
       "highValue": false,
       "openEvents": 1
     },
     {
-      "ticker": "KXBALLOTAMERICAPARTY",
-      "title": "America Party on the ballot",
+      "ticker": "KXCRYPTOCAPGAIN",
+      "title": "Crypto cap gains",
+      "category": "Politics",
+      "tags": [
+        "Congress"
+      ],
+      "highValue": false,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXDCEILEND",
+      "title": "Debt ceiling abolished",
+      "category": "Politics",
+      "tags": [
+        "Congress"
+      ],
+      "highValue": false,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXDENMARK2ND",
+      "title": "Denmark general election: second place",
       "category": "Elections",
       "tags": [],
       "highValue": false,
       "openEvents": 1
     },
     {
-      "ticker": "KXCA04PRIMARY",
-      "title": "CA-04 primary",
+      "ticker": "KXDOJPARDONS",
+      "title": "DOJ pardon claim",
       "category": "Politics",
       "tags": [
-        "Primaries"
+        "SCOTUS & courts",
+        "Trump"
       ],
       "highValue": false,
       "openEvents": 1
     },
     {
-      "ticker": "KXCAFRAUD",
-      "title": "Will any CA state executive be federally charged with fraud?",
+      "ticker": "KXEUEXITCOUNTRY",
+      "title": "EU countries exiting",
+      "category": "Politics",
+      "tags": [
+        "International"
+      ],
+      "highValue": false,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXFEDCHAIRCONFIRM",
+      "title": "Who will be confirmed as fed chair?",
+      "category": "Politics",
+      "tags": [
+        "Congress"
+      ],
+      "highValue": false,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXFESTIVALEVENTRNCMIDTERMS",
+      "title": "republic convention midterms",
+      "category": "Politics",
+      "tags": [
+        "Elections",
+        "US Elections"
+      ],
+      "highValue": false,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXFREEBUSES",
+      "title": "Will NYC buses become free before 2027?",
       "category": "Politics",
       "tags": [
         "Local"
@@ -480,18 +485,8 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXCAPCONTROL",
-      "title": "Capital controls",
-      "category": "Elections",
-      "tags": [
-        "Trump"
-      ],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXCOLOMBIACHAMBER",
-      "title": "Colombia Chamber of Representatives",
+      "ticker": "KXGUATEMALACONGRESS",
+      "title": "Guatemala Congress",
       "category": "Politics",
       "tags": [
         "Foreign Elections"
@@ -500,8 +495,8 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXDEMOCRACYUS",
-      "title": "US democratic backsliding",
+      "ticker": "KXJOINTRUMPADMIN",
+      "title": "Who will join the Trump administration?",
       "category": "Politics",
       "tags": [
         "Trump"
@@ -510,8 +505,8 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXDOMINICANREPUBLICDEPUTIES",
-      "title": "Dominican Republic Chamber of Deputies",
+      "ticker": "KXMALAYSIAPARLI-2",
+      "title": "Malaysia parliament",
       "category": "Politics",
       "tags": [
         "Foreign Elections"
@@ -520,37 +515,45 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXFEDERALCHARGE",
-      "title": "Who will be charged with a federal crime",
+      "ticker": "KXMARSEILLEMAYOR",
+      "title": "Who will win the Marseille mayoral election?",
       "category": "Politics",
       "tags": [
-        "SCOTUS & courts"
+        "Foreign Elections",
+        "International elections"
       ],
       "highValue": false,
       "openEvents": 1
     },
     {
-      "ticker": "KXFEDLEADJUNE",
-      "title": "Who will chair the June FOMC meeting?",
+      "ticker": "KXNETANYAHUPARDON",
+      "title": "Will Benjamin Netanyahu be pardoned?",
       "category": "Politics",
       "tags": [],
       "highValue": false,
       "openEvents": 1
     },
     {
-      "ticker": "KXFESTIVALEVENTDNCMIDTERMS",
-      "title": "DNC hold pre midterm convention",
+      "ticker": "KXNGUARDCITY",
+      "title": "Which Cities will Trump deploy the national guard in",
       "category": "Politics",
       "tags": [
-        "Policy",
-        "US Elections"
+        "Trump"
       ],
       "highValue": false,
       "openEvents": 1
     },
     {
-      "ticker": "KXFLPRIMARY",
-      "title": "Florida Primary Winners",
+      "ticker": "KXNYAIBILL",
+      "title": "Will an AI professional-impersonation bill become law in New York?",
+      "category": "Politics",
+      "tags": [],
+      "highValue": false,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXOHPRIMARY",
+      "title": "Ohio Primary Winners",
       "category": "Elections",
       "tags": [
         "Primaries"
@@ -559,28 +562,18 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXG7LEADEROUT",
-      "title": "Next G7 leader out",
+      "ticker": "KXPERUPRES",
+      "title": "Peru Presidency",
       "category": "Politics",
       "tags": [
-        "International"
+        "Foreign Elections"
       ],
       "highValue": false,
       "openEvents": 1
     },
     {
-      "ticker": "KXHFHOUSING",
-      "title": "Bill taxing/banning hedge funds owning single-family homes",
-      "category": "Politics",
-      "tags": [
-        "Trump"
-      ],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXICEREFORM",
-      "title": "Which ICE reforms will become law?",
+      "ticker": "KXRETIREMM",
+      "title": "Mitch McConnell resigning",
       "category": "Politics",
       "tags": [
         "Congress"
@@ -589,8 +582,38 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXKANYEISRAEL",
-      "title": "WILL KANYE VISIT AREA?",
+      "ticker": "KXSCOTPARLIAMENT",
+      "title": "Who will win the Scottish Parliament election?",
+      "category": "Politics",
+      "tags": [
+        "Foreign Elections"
+      ],
+      "highValue": false,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXSTATE",
+      "title": "51st US state",
+      "category": "Politics",
+      "tags": [
+        "Trump"
+      ],
+      "highValue": false,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXSWISS10MILLION",
+      "title": "Will the \"No to 10 millionSwitzerland! Sustainability Initiative\" pass?",
+      "category": "Politics",
+      "tags": [
+        "Foreign Elections"
+      ],
+      "highValue": false,
+      "openEvents": 1
+    },
+    {
+      "ticker": "KXTAIWANLVL4",
+      "title": "Will Taiwan be issued a Level 4 travel warning?",
       "category": "Politics",
       "tags": [
         "International"
@@ -599,115 +622,18 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXMARALAGO",
-      "title": "Who will visit Mar-a-Lago this year? ",
-      "category": "Politics",
-      "tags": [
-        "Trump"
-      ],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXMAYORLA",
-      "title": "LA",
-      "category": "Politics",
-      "tags": [
-        "US Elections"
-      ],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXNOEMOUT",
-      "title": "Kristi Noem out as DHS secretary?",
-      "category": "Politics",
-      "tags": [
-        "Trump"
-      ],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXOBERGEFELL",
-      "title": "Obergefell",
-      "category": "Politics",
-      "tags": [
-        "SCOTUS & courts"
-      ],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXRELEASEMAXWELL",
-      "title": "Ghislaine",
-      "category": "Politics",
-      "tags": [
-        "SCOTUS & courts"
-      ],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXREPRODUCTIVEMEASURES",
-      "title": "Which reproductive rights measures will pass in 2026?",
-      "category": "Politics",
-      "tags": [],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXRUNBYMIDTERM",
-      "title": "who will run for office before the midterms",
-      "category": "Politics",
-      "tags": [
-        "US Elections"
-      ],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXSAVEAMERICACLOTURE",
-      "title": "Which Senators will vote to invoke cloture on the SAVE America Act?",
-      "category": "Politics",
-      "tags": [
-        "Congress"
-      ],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXSECSTATEGA",
-      "title": "GA Sec State",
+      "ticker": "KXTNPRIMARY",
+      "title": "Tennessee Primary Winners",
       "category": "Elections",
       "tags": [
-        "US Elections"
+        "Primaries"
       ],
       "highValue": false,
       "openEvents": 1
     },
     {
-      "ticker": "KXSECSTATEVISIT",
-      "title": "Secretary of State visits",
-      "category": "Politics",
-      "tags": [],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXTARIFFRATEPRC",
-      "title": "Tariff rate China",
-      "category": "Politics",
-      "tags": [
-        "International",
-        "Trump"
-      ],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXTRUMPDOLLAR",
-      "title": "Will the US Mint finalize a design for the Trump dollar?",
+      "ticker": "KXTRUMPAPPROVALYEAR",
+      "title": "How high will Trump's approval get this year?",
       "category": "Politics",
       "tags": [
         "Trump"
@@ -716,42 +642,11 @@
       "openEvents": 1
     },
     {
-      "ticker": "KXTRUMPTARIFFHEAR",
-      "title": "Will the Supreme Court hear a case on Trump's tariffs?",
+      "ticker": "KXTRUMPBEARCASECOMBO",
+      "title": "Trump's year: Bear (nightmare) case?",
       "category": "Politics",
       "tags": [
-        "SCOTUS & courts"
-      ],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXUSAEXPANDTERRITORY",
-      "title": "Will the US acquire new territory?",
-      "category": "Politics",
-      "tags": [
-        "International",
         "Trump"
-      ],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "KXVETOOVERRIDE",
-      "title": "Veto override",
-      "category": "Politics",
-      "tags": [
-        "Congress"
-      ],
-      "highValue": false,
-      "openEvents": 1
-    },
-    {
-      "ticker": "POWER",
-      "title": "Party power",
-      "category": "Politics",
-      "tags": [
-        "US Elections"
       ],
       "highValue": false,
       "openEvents": 1
