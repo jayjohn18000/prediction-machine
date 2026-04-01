@@ -44,7 +44,8 @@
     "pmci:backfill:kalshi:typing": "node scripts/ingestion/pmci-backfill-kalshi-typing.mjs",
     "pmci:backfill:politics:normalization": "node scripts/ingestion/pmci-backfill-politics-normalization.mjs",
     "link:dry-run": "node scripts/review/pmci-propose-links-politics.mjs --dry-run",
-    "links:guard:dry-run": "node scripts/review/links-guard-dry-run.mjs"
+    "links:guard:dry-run": "node scripts/review/links-guard-dry-run.mjs",
+    "pmci:clear:stale": "node scripts/review/pmci-clear-stale-proposals.mjs"
   },
   "dependencies": {
     "@fastify/rate-limit": "^10.3.0",
