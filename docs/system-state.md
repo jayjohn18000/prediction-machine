@@ -11,7 +11,24 @@
 - `pmci:*` scripts are PMCI operational workflows (ingest/probe/smoke/review/audit/check), not API server entrypoints.
 
 ## Branch
-- `chore/infra-hardening-baseline-2026-02-26`
+- `main` (all E1 work merged to main)
+
+## Current Status (2026-04-01 — Phase E1 active)
+
+### Phase E1 — Sports Expansion (in progress)
+- **E1.1 schema applied:** `sport`, `event_type`, `game_date`, `home_team`, `away_team` on `provider_markets`; `lifecycle`, `resolves_at` on `canonical_events`. Snapshot retention pg_cron live (3am UTC, 30-day TTL).
+- **E1.2 ingestion wired:** `lib/ingestion/sports-universe.mjs` + `lib/ingestion/services/sport-inference.mjs`. Both committed to main.
+- **Sports markets in DB:** NBA 304 | MLB 110 | Tennis 22 | Boxing 18 | NCAAB 18 | Unknown 158 | MMA 0
+- **Scheduled ingest:** Cowork task "pmci-sports-ingest" every 4 hours (`0 */4 * * *`)
+- **Observer:** restarted 2026-04-01, logging to `/tmp/observer.log`, picking up politics spreads
+- **UFC:** MMA=0 expected; UFC 314 is April 12 — markets appear ~April 9
+
+### Known issues / next actions for E1
+1. Unknown 158 = Japanese B.League + Turkish soccer — add patterns to `sport-inference.mjs`
+2. Run proposer for sports cross-platform pairs after ~1 week of data accumulation
+3. Define canonical event lifecycle for game markets (auto-archive after settle)
+
+---
 
 ## Current Status (2026-03-17 refresh)
 

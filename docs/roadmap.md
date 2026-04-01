@@ -51,18 +51,31 @@
 
 ---
 
-## Phase E — Sports & Crypto Expansion (next)
+## Phase E — Sports & Crypto Expansion (active)
 **Entry criteria:** Phase D semantic closeout complete (met). Coverage/performance targets continue as tracked optimization work during Phase E onboarding.
 
-### E1 — Sports
-- [ ] Define sports canonical event schema (team/player-based, short-lived events)
-- [ ] Identify sports series tickers on Kalshi (NFL, NBA, MLB game markets)
-- [ ] Identify Polymarket sports tag_ids
-- [ ] Adapt ingestion for rapid event turnover (game-day settle = market gone next day)
-- [ ] Run proposer + reviewer for sports cross-platform pairs
-- [ ] Define canonical event lifecycle (closed game markets auto-archive vs. delete)
+### E1 — Sports ✅ ACTIVE (schema + ingestion complete, data accumulating)
 
-### E2 — Crypto
+**Completed (2026-03-31 — 2026-04-01):**
+- [x] **E1.1 — Schema migration** (`20260331000001_sports_market_fields.sql`): added `sport`, `event_type`, `game_date`, `home_team`, `away_team` to `provider_markets`; added `lifecycle`, `resolves_at` to `canonical_events`
+- [x] **E1.1 — Snapshot retention** (`20260331000002_snapshot_retention.sql`): pg_cron job deletes snapshots >30 days at 3am UTC nightly (confirmed live)
+- [x] **E1.2 — Sports ingestion wiring**: `lib/ingestion/sports-universe.mjs` fetches Kalshi sports series (by `category='Sports'`, one-shot) + Polymarket sports tags (dynamic keyword match); upserts to `provider_markets` with `category='sports'`
+- [x] **E1.2 — Sport inference**: `lib/ingestion/services/sport-inference.mjs` — word-boundary patterns on series title (handles KX-prefixed tickers); covers NFL, NBA, MLB, NHL, NCAAF, NCAAB, MMA, soccer leagues, ATP/WTA tennis, golf, F1, boxing, NASCAR, wrestling, esports
+- [x] **E1.2 — Bug fixes** (commit `d0defc5`): fixed Kalshi series filter (prefix→category), market status filter (open→active|open), ATP/WTA inference, Polymarket static slugs→dynamic keyword match
+- [x] **Scheduled ingest**: Cowork task "pmci-sports-ingest" runs every 4 hours
+
+**Current DB state (2026-04-01):**
+- NBA: 304 | MLB: 110 | Tennis: 22 | Boxing: 18 | NCAAB: 18 | Unknown: 158 | MMA: 0
+- Unknown 158 = Japanese B.League + Turkish Super Liga (not yet mapped in sport-inference)
+- MMA 0 = expected (UFC 314 is April 12; markets appear ~1 week before fight)
+
+**E1 remaining work:**
+- [ ] Add B.League / Turkish league patterns to sport-inference (reduce unknown count)
+- [ ] Run proposer + reviewer for sports cross-platform pairs (after ~1 week of data)
+- [ ] Define canonical event lifecycle for game markets (auto-archive on settle vs. delete)
+- [ ] E1 acceptance gate: ≥5 confirmed cross-platform sports pairs with semantic integrity = 0
+
+### E2 — Crypto (pending E1 proposer gate)
 - [ ] Define crypto canonical event schema (price-based, continuous, no binary Yes/No)
 - [ ] Identify crypto markets on Kalshi + Polymarket (BTC price targets, ETH events)
 - [ ] Adapt ingestion for continuous price events vs. binary elections
@@ -81,5 +94,5 @@
 
 ---
 
-## Current milestone: Begin Phase E expansion with guarded rollout
-Politics semantic integrity closeout is complete. Next milestone is controlled onboarding of sports/crypto while continuing to improve politics coverage and API performance.
+## Current milestone: Phase E1 sports data accumulation → proposer run
+E1.1 schema and E1.2 ingestion are complete and running. Sports markets ingest every 4 hours. Next milestone: after ~1 week of sports data, run the proposal engine to identify cross-platform sports pairs. UFC 314 (April 12) will bring first MMA markets. E2 (crypto) begins after E1 proposer gate passes.

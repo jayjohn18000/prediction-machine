@@ -40,6 +40,22 @@
 - Conclusion: genuine high-confidence cross-platform overlap in active US politics is concentrated in 2028 presidential nominees. TX/NC/Iran/Venezuela/shutdown events are single-platform by nature for now (Kalshi does not currently list equivalent active markets).
 - Decision: accept current state (138 links, 2/22 canonical events), apply Option A (single-platform tracking), move toward Phase E planning.
 
+## 2026-04-01 — Phase E1 sports ingestion: category filter over ticker prefix
+- Decision: filter Kalshi sports series by `series.category === 'Sports'` rather than ticker prefix matching.
+- Rationale: Kalshi tickers are KX-prefixed (e.g. `KXNFLWINS-ATL`). Start-of-string prefix matching against `NFL`, `NBA`, etc. silently rejects everything. Category field is the reliable signal. API returns all 9306 series in one shot with `limit=10000` — no cursor pagination needed.
+- Also: Kalshi market status is `'active'` not `'open'`; fixed filter to accept `['active', 'open']`.
+- Affects: `lib/ingestion/sports-universe.mjs`
+
+## 2026-04-01 — Sport inference uses series title, not ticker
+- Decision: pass human-readable series title to `inferSportFromKalshiTicker()`, not the KX-prefixed ticker string.
+- Rationale: titles like "Pro football exact wins SF" are more reliable than `KXNFLWINS-SF`. Patterns changed from `^NFL` (start-of-string) to `\bNFL\b` (word-boundary anywhere) so they work on both titles and tickers.
+- Affects: `lib/ingestion/services/sport-inference.mjs`
+
+## 2026-04-01 — Polymarket sports: dynamic tag discovery over hardcoded slugs
+- Decision: fetch all Polymarket tags with pagination and keyword-match against sport patterns rather than hardcoding slugs like `"nfl"`, `"nba"`.
+- Rationale: Polymarket's tags are event-specific (e.g. `madrid-open`, `nba-playoffs-2026`, `connor-mcdavid`). Hardcoded slugs miss nearly all sports markets. Dynamic discovery via regex against tag labels/slugs captures the full sports surface area.
+- Affects: `lib/ingestion/sports-universe.mjs` (`fetchPolymarketSportsTags`)
+
 ## 2026-03-06 — Roadmap updated to include Phase D, E, F
 - Decision: formally document the expansion roadmap beyond Phase C.
 - Phase D: complete politics normalization (cross-platform links for all active political events).
