@@ -36,7 +36,11 @@ export function createPool(options = {}) {
     config.ssl = ssl;
   }
 
-  return new Pool(config);
+  const pool = new Pool(config);
+  pool.on('error', (err) => {
+    console.error('[pmci-pool] idle client error:', err.message);
+  });
+  return pool;
 }
 
 export function createClient(options = {}) {
