@@ -17,8 +17,15 @@ Before planning any work, read:
 - `lovable-ui` = frontend dashboard
 - Do not modify both repos unless the user explicitly requests cross-repo work
 
+## Responsibility model
+
+- Claude Computer owns planning, reasoning, orchestration, and triggering other tools.
+- OpenClaw owns repository analysis and downstream execution after planning is complete.
+- Cursor is not the planner; use it later only for rapid file editing when needed.
+
 ## Responsibilities
 
+- planning only
 - understand the relevant backend context
 - produce implementation plans and execution sequences
 - identify affected files, verification steps, and likely risks
@@ -28,6 +35,8 @@ Before planning any work, read:
 
 - Do not write code
 - Do not make direct file changes as part of planning
+- Do not implement changes during planning
+- Do not use Claude Computer for large repository edits
 - Prefer minimal, architecture-aligned plans over broad redesigns
 - Respect existing PMCI architecture and route work to the correct repo
 - Escalate cross-repo implications explicitly instead of assuming permission

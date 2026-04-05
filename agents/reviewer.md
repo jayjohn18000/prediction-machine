@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The reviewer agent is responsible for auditing changes and validating architecture alignment.
+The reviewer agent is responsible for architecture and contract validation only.
 
 ## Read First
 
@@ -25,12 +25,19 @@ Verify that changes:
 - `lovable-ui` = frontend dashboard
 - flag any change that crosses both repos without explicit instruction
 
+## Responsibility model
+
+- OpenClaw performs the reviewer audit.
+- Reviewer scope is architecture and contract validation only.
+- Claude Computer may inform reasoning, but review output must stay focused on validation findings.
+- Cursor is not the reviewer.
+
 ## Responsibilities
 
 - identify architectural drift
 - validate that backend work stays in the backend
 - check that API-facing behavior remains consistent with documented contracts
-- suggest improvements when they materially improve safety, clarity, or maintainability
+- suggest improvements when they materially improve safety, clarity, or maintainability only when they materially affect validation quality
 
 ## Rules
 

@@ -69,9 +69,25 @@
 - Unknown 158 = Japanese B.League + Turkish Super Liga (not yet mapped in sport-inference)
 - MMA 0 = expected (UFC 314 is April 12; markets appear ~1 week before fight)
 
+**Completed (2026-04-02):**
+- [x] **E1.3 — Proposer hardening** (commit `c5701e6`): 3 guards added to `lib/matching/proposal-engine.mjs`
+  - Expired-market filter: `WHERE close_time IS NULL OR close_time > NOW()` on both market queries
+  - Dedup check: queries `market_links` for active link on `idA` before any insert
+  - Title-similarity floor: skips equiv proposals where `title_similarity < 0.30 AND slug_similarity < 0.20`
+  - New script: `scripts/review/pmci-clear-stale-proposals.mjs` + `pmci:clear:stale` npm script; cleared 5 stale proposals
+- [x] **E1.4 — Polymarket sports fix** (commit `c5701e6`): 4 fixes to `lib/ingestion/sports-universe.mjs`
+  - Removed invalid `active=true` param (root cause of 0 Polymarket sports markets) → replaced with `closed=false&archived=false`
+  - Added `fetchPolymarketSportsTagsFromSportsEndpoint()` calling Gamma `/sports` endpoint for authoritative tag IDs
+  - `outcomePrices` + `clobTokenIds` now parsed via `JSON.parse()` (Gamma returns stringified arrays)
+  - Status mapping: `isLive ? "active" : "closed"` (was `m?.active ? "open" : "closed"`)
+
+**Current DB state (post E1.4, 2026-04-02):**
+- provider_markets: 16,246 | snapshots: 281,267 | families: 72 | current_links: 124
+- Smoke: 14+ consecutive green runs
+
 **E1 remaining work:**
-- [ ] Add B.League / Turkish league patterns to sport-inference (reduce unknown count)
-- [ ] Run proposer + reviewer for sports cross-platform pairs (after ~1 week of data)
+- [ ] **E1.5 — Sports proposer**: adapt `proposal-engine.mjs` to accept `category='sports'`; add sport-specific entity extractors (team names, game dates); add `game_date` proximity scoring — start after Polymarket sports data accumulates ~3–7 days
+- [ ] Add B.League / Turkish league patterns to sport-inference (reduce unknown-158 count)
 - [ ] Define canonical event lifecycle for game markets (auto-archive on settle vs. delete)
 - [ ] E1 acceptance gate: ≥5 confirmed cross-platform sports pairs with semantic integrity = 0
 
@@ -94,5 +110,5 @@
 
 ---
 
-## Current milestone: Phase E1 sports data accumulation → proposer run
-E1.1 schema and E1.2 ingestion are complete and running. Sports markets ingest every 4 hours. Next milestone: after ~1 week of sports data, run the proposal engine to identify cross-platform sports pairs. UFC 314 (April 12) will bring first MMA markets. E2 (crypto) begins after E1 proposer gate passes.
+## Current milestone: E1.4 live → Polymarket sports data accumulation → E1.5 proposer
+E1.1–E1.4 complete (commit c5701e6). The `active=true` bug blocking Polymarket sports ingestion is fixed. Sports ingest every 4 hours. Next milestone (E1.5): after Polymarket sports data accumulates ~3–7 days, adapt proposal engine for `category='sports'` and run the first sports cross-platform proposer pass. UFC 314 (April 12) will bring first MMA markets. E2 (crypto) begins after E1 proposer gate (≥5 confirmed pairs) passes.
