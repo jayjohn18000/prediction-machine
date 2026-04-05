@@ -19,6 +19,7 @@ import { registerLinksRoutes } from "./routes/links.mjs";
 import { resolveProviderIdByCode } from "./repositories/providers-repo.mjs";
 import { percentile, typeFactor, computeConsensus, computeDivergence } from "./utils/metrics.mjs";
 import { parseSince } from "./utils/time.mjs";
+import { enqueueRequestLog, startRequestLogFlusher } from "./services/request-log-buffer.mjs";
 
 const PMCI_API_VERSION = "2026-03-02";
 
@@ -56,6 +57,8 @@ export async function buildApp() {
   } catch (_) {
     logClient = null;
   }
+
+  startRequestLogFlusher(logClient);
 
   // 5-second TTL cache for freshness lag — eliminates repeated max(observed_at) scans
   // when assertFreshness fires on every /v1/signals/* hit and /v1/health/slo polls.
@@ -128,18 +131,20 @@ export async function buildApp() {
     requestMetrics.total += 1;
     if (reply.statusCode >= 500) requestMetrics.errors += 1;
     recordLatency(latency);
-    if (logClient) {
-      const provided = req.headers["x-pmci-api-key"];
-      const hint = provided ? String(provided).slice(-4) : null;
-      const path = req.url.split("?")[0];
-      logClient
-        .query(
-          `INSERT INTO pmci.request_log (method, path, status, latency_ms, api_key_hint)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [req.method, path, reply.statusCode, latency, hint]
-        )
-        .catch(() => {});
-    }
+
+    const path = req.url.split("?")[0];
+    if (path.startsWith("/v1/health")) return;
+
+    const provided = req.headers["x-pmci-api-key"];
+    const hint = provided ? String(provided).slice(-4) : null;
+    enqueueRequestLog({
+      method: req.method,
+      path,
+      status: reply.statusCode,
+      latency_ms: latency,
+      api_key_hint: hint,
+      timestamp: new Date(),
+    });
   });
 
   app.addHook("onRequest", async (req) => {
