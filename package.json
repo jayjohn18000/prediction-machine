@@ -40,6 +40,7 @@
     "pmci:check:round-trip": "node scripts/checks/pmci-check-round-trip.mjs",
     "pmci:backfill:kalshi:typing": "node scripts/ingestion/pmci-backfill-kalshi-typing.mjs",
     "pmci:backfill:politics:normalization": "node scripts/ingestion/pmci-backfill-politics-normalization.mjs",
+    "pmci:backfill:sport-codes": "node scripts/ingestion/pmci-backfill-sport-codes.mjs",
     "link:dry-run": "node scripts/review/pmci-propose-links-politics.mjs --dry-run",
     "links:guard:dry-run": "node scripts/review/links-guard-dry-run.mjs"
   },
