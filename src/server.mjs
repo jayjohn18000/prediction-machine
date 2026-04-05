@@ -53,10 +53,22 @@ export async function buildApp() {
   let logClient = null;
   try {
     logClient = createPmciClient();
-    if (logClient) await logClient.connect();
+    if (logClient) {
+      await logClient.connect();
+      // Prevent unhandled ETIMEDOUT / ECONNRESET on the raw pg.Client from
+      // crashing the API process. Disable log writes and let queries no-op.
+      logClient.on('error', (err) => {
+        console.error('[pmci-logclient] connection error — disabling log writes:', err.message);
+        logClient = null;
+      });
+    }
   } catch (_) {
     logClient = null;
   }
+
+  // Sports ingestion runs every 4 hours — use a much higher lag threshold for sports routes.
+  // Politics observer runs every 60s so MAX_LAG_SECONDS (default 120s) remains appropriate there.
+  const SPORTS_MAX_LAG_SECONDS = Number(process.env.PMCI_SPORTS_MAX_LAG_SECONDS ?? 18000); // 5 hours
 
   startRequestLogFlusher(logClient);
 
@@ -78,16 +90,49 @@ export async function buildApp() {
     return freshnessCache.lag;
   }
 
+  // 60-second TTL cache: event_id (uuid string) → category string.
+  // Avoids a DB round-trip per request when assertFreshness resolves the threshold.
+  const eventCategoryCache = new Map(); // key: event_id, value: { category, fetchedAt }
+  const EVENT_CATEGORY_TTL_MS = 60_000;
+
+  async function getEventCategory(eventId) {
+    const cached = eventCategoryCache.get(eventId);
+    if (cached && Date.now() - cached.fetchedAt < EVENT_CATEGORY_TTL_MS) {
+      return cached.category;
+    }
+    try {
+      const { rows } = await query(
+        `select category from pmci.canonical_events where id = $1 limit 1`,
+        [eventId]
+      );
+      const category = rows[0]?.category ?? null;
+      eventCategoryCache.set(eventId, { category, fetchedAt: Date.now() });
+      return category;
+    } catch {
+      return null;
+    }
+  }
+
   async function assertFreshness(req, reply) {
     try {
       const lag = await getCachedLag();
-      if (lag == null || lag > MAX_LAG_SECONDS) {
+
+      // Resolve per-category threshold when an event_id is present on the request.
+      // Sports canonical events tolerate higher lag (4-hour ingest cycle).
+      let maxLag = MAX_LAG_SECONDS;
+      const eventId = req.query?.event_id;
+      if (eventId) {
+        const category = await getEventCategory(eventId);
+        if (category === 'sports') maxLag = SPORTS_MAX_LAG_SECONDS;
+      }
+
+      if (lag == null || lag > maxLag) {
         reply.code(503);
         return reply.send({
           error: "stale_data",
           lag_seconds: lag,
-          max_lag_seconds: MAX_LAG_SECONDS,
-          message: `Data is stale (${lag}s ago, max ${MAX_LAG_SECONDS}s). Observer may be down.`,
+          max_lag_seconds: maxLag,
+          message: `Data is stale (${lag}s ago, max ${maxLag}s). Observer may be down.`,
         });
       }
     } catch (err) {
@@ -156,11 +201,22 @@ export async function buildApp() {
     "http://localhost:5173",
     "http://127.0.0.1:4173",
     "http://localhost:4173",
+    "https://lovable.dev",
   ]);
+
+  const CORS_ORIGIN_PATTERNS = [
+    /^https:\/\/[a-z0-9-]+\.lovable\.app$/,
+    /^https:\/\/[a-z0-9-]+\.lovableproject\.com$/,
+    /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/,
+  ];
 
   app.addHook("onRequest", async (req, reply) => {
     const origin = req.headers.origin;
-    if (origin && LOCAL_CORS_ORIGINS.has(origin)) {
+    const originAllowed =
+      origin &&
+      (LOCAL_CORS_ORIGINS.has(origin) ||
+        CORS_ORIGIN_PATTERNS.some((p) => p.test(origin)));
+    if (originAllowed) {
       reply.header("Access-Control-Allow-Origin", origin);
       reply.header("Vary", "Origin");
       reply.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
@@ -168,6 +224,8 @@ export async function buildApp() {
     }
 
     if (req.method === "OPTIONS") {
+      // Chrome Private Network Access: allow HTTPS pages to call HTTP localhost
+      reply.header("Access-Control-Allow-Private-Network", "true");
       reply.code(204);
       return reply.send();
     }
