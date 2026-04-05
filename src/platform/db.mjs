@@ -36,7 +36,14 @@ export function createPool(options = {}) {
     config.ssl = ssl;
   }
 
-  return new Pool(config);
+  const pool = new Pool(config);
+  // Prevent unhandled 'error' events on idle pool clients from crashing the process.
+  // Transient ETIMEDOUT / ECONNRESET on idle connections are expected; the pool
+  // will reconnect automatically on the next query.
+  pool.on('error', (err) => {
+    console.error('[pmci-pool] idle client error (pool will reconnect):', err.message);
+  });
+  return pool;
 }
 
 export function createClient(options = {}) {
