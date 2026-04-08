@@ -1,0 +1,175 @@
+{
+  "generatedAt": "2026-04-08T20:50:48.157Z",
+  "providerCoverage": [
+    {
+      "sport": "basketball",
+      "provider": "kalshi",
+      "total": 76,
+      "active": 76,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "boxing",
+      "provider": "kalshi",
+      "total": 151,
+      "active": 151,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "cricket",
+      "provider": "kalshi",
+      "total": 10,
+      "active": 10,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "esports",
+      "provider": "kalshi",
+      "total": 700,
+      "active": 700,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "f1",
+      "provider": "kalshi",
+      "total": 128,
+      "active": 128,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "golf",
+      "provider": "kalshi",
+      "total": 1972,
+      "active": 1972,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "mlb",
+      "provider": "kalshi",
+      "total": 8533,
+      "active": 8533,
+      "stale_active": 5732,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "mma",
+      "provider": "kalshi",
+      "total": 108,
+      "active": 108,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "motorsport",
+      "provider": "kalshi",
+      "total": 319,
+      "active": 319,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "nba",
+      "provider": "kalshi",
+      "total": 4296,
+      "active": 4296,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "ncaa",
+      "provider": "kalshi",
+      "total": 55,
+      "active": 55,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "ncaab",
+      "provider": "kalshi",
+      "total": 628,
+      "active": 628,
+      "stale_active": 48,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "ncaaf",
+      "provider": "kalshi",
+      "total": 212,
+      "active": 212,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "nfl",
+      "provider": "kalshi",
+      "total": 2668,
+      "active": 2668,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "nhl",
+      "provider": "kalshi",
+      "total": 1382,
+      "active": 1382,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "olympics",
+      "provider": "kalshi",
+      "total": 23,
+      "active": 23,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "rugby",
+      "provider": "kalshi",
+      "total": 91,
+      "active": 91,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "soccer",
+      "provider": "kalshi",
+      "total": 3648,
+      "active": 3648,
+      "stale_active": 12,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "tennis",
+      "provider": "kalshi",
+      "total": 381,
+      "active": 381,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "unknown",
+      "provider": "kalshi",
+      "total": 4072,
+      "active": 4072,
+      "stale_active": 831,
+      "unknown_sport": 4072
+    },
+    {
+      "sport": "unknown",
+      "provider": "polymarket",
+      "total": 34007,
+      "active": 34007,
+      "stale_active": 11969,
+      "unknown_sport": 34007
+    }
+  ],
+  "proposalBuckets": [],
+  "semanticViolations": 0
+}

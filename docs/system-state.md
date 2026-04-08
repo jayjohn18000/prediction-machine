@@ -13,20 +13,23 @@
 ## Branch
 - `main` (all E1 work merged to main)
 
-## Current Status (2026-04-01 — Phase E1 active)
+## Current Status (2026-04-08 — Phase E1 active)
 
 ### Phase E1 — Sports Expansion (in progress)
 - **E1.1 schema applied:** `sport`, `event_type`, `game_date`, `home_team`, `away_team` on `provider_markets`; `lifecycle`, `resolves_at` on `canonical_events`. Snapshot retention pg_cron live (3am UTC, 30-day TTL).
-- **E1.2 ingestion wired:** `lib/ingestion/sports-universe.mjs` + `lib/ingestion/services/sport-inference.mjs`. Both committed to main.
-- **Sports markets in DB:** NBA 304 | MLB 110 | Tennis 22 | Boxing 18 | NCAAB 18 | Unknown 158 | MMA 0
-- **Scheduled ingest:** Cowork task "pmci-sports-ingest" every 4 hours (`0 */4 * * *`)
-- **Observer:** restarted 2026-04-01, logging to `/tmp/observer.log`, picking up politics spreads
-- **UFC:** MMA=0 expected; UFC 314 is April 12 — markets appear ~April 9
+- **E1.2 ingestion wired:** `lib/ingestion/sports-universe.mjs` + `lib/ingestion/services/sport-inference.mjs` are in repo and active.
+- **Current runtime-facing counts:** provider_markets **16,246** | snapshots **281,267** | families **72** | current_links **124**.
+- **Why current_links is 124, not 138:** live runtime status (`src/services/runtime-status.mjs`), smoke/probe scripts, and recent audit artifacts all read `pmci.v_market_links_current` / `pmci_runtime_status.current_links_count` and now agree on **124**. The older **138** figure is stale documentation from the politics closeout period, not the current runtime state.
+- **Sports scripts present today:** `pmci:ingest:sports` exists. `seed:sports:pmci`, `pmci:propose:sports`, and `pmci:audit:sports:packet` are still planned but not yet implemented in the repo.
+- **Scheduled ingest:** Cowork task "pmci-sports-ingest" every 4 hours (`0 */4 * * *`).
+- **Observer:** sports ingest is active; politics runtime remains the canonical linked surface.
+- **Sports proposer status:** E1.5 is the next real roadmap task, now treated as active implementation work rather than a future placeholder.
 
 ### Known issues / next actions for E1
-1. Unknown 158 = Japanese B.League + Turkish soccer — add patterns to `sport-inference.mjs`
-2. Run proposer for sports cross-platform pairs after ~1 week of data accumulation
-3. Define canonical event lifecycle for game markets (auto-archive after settle)
+1. Unknown-sport mappings still need expansion for leagues like Japanese B.League and Turkish soccer.
+2. Implement the missing sports PMCI workflow scripts: `seed:sports:pmci`, `pmci:propose:sports`, `pmci:audit:sports:packet`.
+3. Extend proposer logic for `category='sports'`, sport/team/game-date extraction, and game-date proximity scoring.
+4. Run the actual sports proposer validation loop after implementation and verify semantic integrity / audit output.
 
 ---
 
@@ -82,4 +85,4 @@
 3. **[done 2026-03-06]** Universe ingest reset — Kalshi 65 events / 245 markets, Polymarket 200 events / 1,247 snapshots. 0 missing prices. No net-new provider_markets (all upserts)
 4. **[done 2026-03-06]** Proposer re-run — 0 new proposals. 28,508 pairs below 0.88 confidence. Best pair: 0.86 (cross-geography noise). Confirms: genuine Kalshi×Polymarket overlap in politics is concentrated in 2028 presidential nominees only
 5. **[done 2026-03-06]** Phantom canonical event triage — 22 → 7 canonical events. 15 deleted (no markets), 5 annotated poly-only, seed script fixed.
-6. **Phase E planning** — politics normalization is complete given current Kalshi×Polymarket overlap. Observer running, all SLOs green, 138 active links across 2 canonical events. Next: plan sports + crypto expansion. Run `/project-status` to confirm Phase D exit criteria
+6. **Phase E planning** — politics normalization remains complete as historical closeout context, but the current runtime-facing active link count is **124**. Next: implement and validate the sports proposer loop (E1.5), then continue toward sports/crypto expansion.
