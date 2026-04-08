@@ -99,8 +99,98 @@
 
 ---
 
-## Phase F — Provider Expansion (future)
-**Entry criteria:** E1 + E2 complete. Normalization loop battle-tested across 3 categories.
+## Phase F — Execution-Readiness Layer (next after E-category onboarding)
+**Goal:** Bridge PMCI from intelligence substrate to execution-ready relative-value infrastructure.
+
+**Principle:** PMCI remains the intelligence / canonicalization layer. A downstream execution service should own order placement, inventory, fills, and capital allocation.
+
+### F1 — Tradability & Net-Edge Modeling
+- [ ] Add family / venue-pair tradability model including:
+  - mapping confidence
+  - relationship type (`identical`, `equivalent`, `proxy`, `correlated`)
+  - freshness eligibility
+  - market status / lifecycle eligibility
+  - liquidity / depth estimate
+  - fee estimate
+  - slippage estimate
+  - latency / stale-risk buffer
+  - net edge after execution costs
+- [ ] Restrict early tradeable universe to `identical` / `equivalent` relationships only
+- [ ] Add `tradeable=true|false` gating and family-level execution score
+
+### F2 — Execution-Readiness Metrics
+- [ ] Add canonical metrics for:
+  - fee-adjusted edge
+  - slippage-adjusted edge
+  - opportunity persistence / edge half-life
+  - stale-read rate
+  - estimated fillable size
+  - false-opportunity rate
+  - consensus price per family
+  - routing score / best-venue score
+- [ ] Define deterministic computation and versioning rules for execution-facing metrics
+
+### F3 — Execution-Facing API Surface
+- [ ] Expose execution-readiness surfaces from the active PMCI API (`src/api.mjs`) for ranked, machine-facing consumption
+- [ ] Prefer PMCI-aligned endpoints such as:
+  - `/v1/signals/ranked`
+  - `/v1/signals/divergence`
+  - `/v1/market-families`
+  - `/v1/market-links`
+  - `/v1/router/best-venue`
+- [ ] Keep schema contracts strict and versioned; no silent breaking changes
+
+### Phase F exit criteria
+- [ ] PMCI can rank opportunities by **net executable edge**, not just raw divergence
+- [ ] Fee/slippage assumptions are explicit, reviewable, and reproducible
+- [ ] Early deployment universe is restricted to structurally valid families
+- [ ] Opportunity quality is comparable across regimes and venue pairs
+
+## Phase G — Paper Trader / Shadow Execution
+**Goal:** Validate whether PMCI opportunities survive realistic execution assumptions before live capital deployment.
+
+- [ ] Build paper execution service consuming PMCI execution candidates
+- [ ] Simulate maker/taker behavior, latency delay, partial fills, missed fills, and cancels
+- [ ] Track synthetic portfolio, venue inventory, expected vs realized edge, PnL, drawdown, and capital utilization
+- [ ] Add audit log of why each simulated trade was entered, skipped, or exited
+
+### Phase G exit criteria
+- [ ] At least one narrow family set shows repeatable positive **net paper edge** after fees/slippage assumptions
+- [ ] Fill assumptions and opportunity decay are measured rather than guessed
+- [ ] False-positive trade candidates are attributable by family, venue pair, and relationship type
+- [ ] Paper results justify a small-capital live pilot
+
+## Phase H — Guarded Live Pilot
+**Goal:** Deploy small-capital live execution with strict operational and risk guardrails.
+
+- [ ] Restrict scope to highest-confidence `identical` / `equivalent` linked markets only
+- [ ] Limit initial live deployment to 1–2 categories
+- [ ] Build order-intent model and venue-specific execution adapters
+- [ ] Add hard kill switches for stale data, venue instability, and mapping-confidence degradation
+- [ ] Add exposure caps by family, venue, and day
+- [ ] Add order-state reconciliation and idempotent signal-to-order handling
+- [ ] Monitor live expected-vs-realized edge with replayable audit logs
+
+### Phase H exit criteria
+- [ ] Live execution behaves within defined risk limits
+- [ ] Signal-to-fill and expected-vs-realized edge remain within tolerance
+- [ ] Operational incidents are understood and recoverable
+- [ ] Strategy shows repeatable fee-aware execution quality on a narrow universe
+
+## Phase I — Full Execution Layer & Capital Strategy
+**Goal:** Scale from validated pilot to a full relative-value execution platform and associated monetization paths.
+
+- [ ] Add portfolio / risk engine for capital allocation and exposure management
+- [ ] Add multi-strategy routing across family types and venue pairs
+- [ ] Add real-time execution monitoring, replay, and anomaly detection
+- [ ] Add venue-pair performance ranking and allocator logic
+- [ ] Evaluate monetization layers:
+  - proprietary execution
+  - signal / divergence / execution-readiness data products
+  - partner integrations using canonical IDs and execution intelligence
+
+## Phase J — Provider Expansion (future)
+**Entry criteria:** E-category onboarding complete and execution-readiness loop battle-tested.
 
 - [ ] Add Metaculus (long-range forecasts, different resolution model)
 - [ ] Add Manifold Markets (play-money, research use case)
