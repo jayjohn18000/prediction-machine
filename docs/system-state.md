@@ -14,23 +14,26 @@
 - Active audited branch on 2026-04-09: `fix/e1-5-sports-proposer-2026-04-08`
 - Important: current repo reality may be ahead of `main`; do not assume all E1.5 work is merged until verified on the target branch.
 
-## Current Status (2026-04-09 — Phase E1 active, docs refreshed from live audit)
+## Current Status (2026-04-09 — Phase E1 active, refreshed from verified acceptance rerun)
 
 ### Phase E1 — Sports Expansion (in progress)
 - **E1.1 schema applied:** `sport`, `event_type`, `game_date`, `home_team`, `away_team` on `provider_markets`; `lifecycle`, `resolves_at` on `canonical_events`. Snapshot retention pg_cron live (3am UTC, 30-day TTL).
 - **E1.2 ingestion wired:** `lib/ingestion/sports-universe.mjs` + `lib/ingestion/services/sport-inference.mjs` are in repo and active.
-- **Current live smoke counts:** provider_markets **71,639** | snapshots **407,909** | families **3,119** | current_links **124**.
+- **Current live smoke counts (2026-04-09 18:30 UTC):** provider_markets **71,750** | snapshots **415,249** | families **3,119** | current_links **124**.
 - **Why current_links is 124, not 138:** live smoke/runtime surfaces still agree on **124** current links; **138** is historical politics-closeout context, not the present runtime count.
 - **Sports scripts present in repo today:** `pmci:ingest:sports`, `seed:sports:pmci`, `pmci:propose:sports`, and `pmci:audit:sports:packet` are all wired in `package.json`.
+- **Verified acceptance run (rerun 2026-04-09 18:27 UTC):** `npm run pmci:propose:sports` completed successfully but reported `considered=0 inserted=0 rejected=0 limit=250`.
+- **Verified strict audit packet (rerun 2026-04-09 18:28 UTC):** `npm run pmci:audit:sports:packet` generated `docs/reports/latest-sports-audit-packet.json` with `semantic_violations=0`, `stale_active=19222`, and `unknown_sport=38707`.
+- **Interpretation:** the semantic integrity gate passes, but the proposer acceptance gate does **not**. E1.5 remains incomplete because the current branch still yields zero candidate insertions and a very large unknown-sport backlog.
 - **Scheduled ingest:** Cowork task "pmci-sports-ingest" every 4 hours (`0 */4 * * *`).
-- **Observer:** observer/watchdog and smoke checks are healthy, but the PMCI API health probe has been intermittently unreachable on port 3001 during the same period.
-- **Sports proposer status:** active branch work indicates E1.5 progress beyond older validation docs, including `52b413f` (`fix(pmci): add bounded sports e1.5 subset workflow`), but end-to-end proposer acceptance is still not verified in this document.
+- **Observer:** observer/watchdog and smoke checks are healthy.
+- **API reachability note:** prior port 3001 intermittency remains a historical risk item and was not re-probed in this doc-only audit run.
 
 ### Known issues / next actions for E1
-1. Run the actual sports proposer validation loop on the active branch: `npm run pmci:propose:sports` then `npm run pmci:audit:sports:packet`.
-2. Resolve branch-versus-main ambiguity for E1.5 and document merged status explicitly.
-3. Expand unknown-sport mappings only after the current branch reality is validated.
-4. Investigate the PMCI API process or port binding on port 3001, since observer/ingest health is green while API health checks are intermittently unreachable.
+1. Fix sports normalization and proposer inputs so `pmci:propose:sports` evaluates real candidate pairs instead of returning `considered=0`.
+2. Reduce the verified unknown-sport backlog from **38,707** and investigate the verified **19,222** stale-active rows surfaced by the strict audit packet.
+3. Resolve branch-versus-main ambiguity for E1.5 only after a passing proposer acceptance run exists (active branch is 2 commits ahead of `main` as of this audit).
+4. Re-probe PMCI API process/port 3001 separately before making fresh API availability claims.
 
 ---
 

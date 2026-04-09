@@ -11,7 +11,7 @@ Repo: `~/prediction-machine`
 - **Runtime health right now:** ingestion/freshness are healthy, but **API p95 latency is degraded**
 - **Repo state:** there are uncommitted local modifications, so current file state may be ahead of last documented checkpoints
 
-> Historical note added 2026-04-09: this document is an April 4 validation snapshot, not the current source of truth. Later live audit evidence showed the repo had advanced, including wired `seed:sports:pmci`, `pmci:propose:sports`, and `pmci:audit:sports:packet` scripts plus branch-local E1.5 work on `fix/e1-5-sports-proposer-2026-04-08`. Use `docs/roadmap.md` and `docs/system-state.md` for refreshed current-state claims.
+> Historical note added 2026-04-09: this document is an April 4 validation snapshot, not the current source of truth. Later live audit evidence showed the repo had advanced, including wired `seed:sports:pmci`, `pmci:propose:sports`, and `pmci:audit:sports:packet` scripts plus branch-local E1.5 work on `fix/e1-5-sports-proposer-2026-04-08`. A same-day rerun at 18:27-18:28 UTC reconfirmed proposer `considered=0 inserted=0` and strict-audit `semantic_violations=0 / stale_active=19222 / unknown_sport=38707`. Use `docs/roadmap.md` and `docs/system-state.md` for refreshed current-state claims.
 
 ---
 

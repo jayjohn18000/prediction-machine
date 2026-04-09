@@ -81,20 +81,24 @@
   - `outcomePrices` + `clobTokenIds` now parsed via `JSON.parse()` (Gamma returns stringified arrays)
   - Status mapping: `isLive ? "active" : "closed"` (was `m?.active ? "open" : "closed"`)
 
-**Current DB state (live smoke, 2026-04-09):**
-- provider_markets: 71,639 | snapshots: 407,909 | families: 3,119 | current_links: 124
+**Current DB state (live smoke, 2026-04-09 18:30 UTC):**
+- provider_markets: 71,750 | snapshots: 415,249 | families: 3,119 | current_links: 124
 - `npm run verify:schema` passes
 - `npm run pmci:smoke` passes
 
-**Current implementation reality (2026-04-09 audit):**
-- `seed:sports:pmci`, `pmci:propose:sports`, and `pmci:audit:sports:packet` now exist in `package.json` and are wired to repo scripts.
+**Current implementation reality (verified 2026-04-09 acceptance run):**
+- `seed:sports:pmci`, `pmci:propose:sports`, and `pmci:audit:sports:packet` exist in `package.json` and are wired to repo scripts.
 - Recent branch-local work indicates active E1.5 progress on `fix/e1-5-sports-proposer-2026-04-08`, including `52b413f` (`fix(pmci): add bounded sports e1.5 subset workflow`).
-- This is stronger than the older 2026-04-04 validation snapshot, but does **not** yet prove full E1.5 acceptance on `main`.
+- Branch-local differs from `main` by 2 commits (`52b413f`, `452a784`); E1.5 conclusions below are from the active branch, not `main`.
+- Verified run result on this branch (rerun 2026-04-09 18:27 UTC): `npm run pmci:propose:sports` succeeded but returned `considered=0 inserted=0 rejected=0 limit=250`.
+- Verified strict audit result on this branch (rerun 2026-04-09 18:28 UTC): `npm run pmci:audit:sports:packet` produced `semantic_violations=0`, `stale_active=19222`, and `unknown_sport=38707` in `docs/reports/latest-sports-audit-packet.json`.
+- Conclusion: semantic integrity is clean, but proposer acceptance is still failing. This does **not** justify marking E1.5 complete or merging as a completed acceptance milestone.
 
 **E1 remaining work:**
-- [ ] **E1.5 — Sports proposer acceptance**: verify the actual sports proposer loop end to end on current repo state (`pmci:propose:sports` + `pmci:audit:sports:packet`) and confirm semantic integrity / acceptance gate output
-- [ ] Clarify branch-versus-main status for current E1.5 work and merge/document accordingly
-- [ ] Add B.League / Turkish league patterns to sport-inference if still needed after current branch work is verified
+- [ ] **E1.5 — Sports proposer acceptance**: make `pmci:propose:sports` evaluate real sports candidates and produce non-zero acceptance-ready output, then re-run `pmci:audit:sports:packet`
+- [ ] Resolve the verified unknown-sport backlog (**38,707**) and stale-active backlog (**19,222**) blocking useful proposer coverage
+- [ ] Clarify branch-versus-main status for current E1.5 work after a passing acceptance run exists
+- [ ] Add B.League / Turkish league patterns to sport-inference if still needed after normalization fixes
 - [ ] Define canonical event lifecycle for game markets (auto-archive on settle vs. delete)
 - [ ] E1 acceptance gate: ≥5 confirmed cross-platform sports pairs with semantic integrity = 0
 
@@ -207,5 +211,5 @@
 
 ---
 
-## Current milestone: E1.5 branch validation and documentation catch-up
-E1.1–E1.4 are complete. As of the 2026-04-09 live audit, the repo also contains branch-local E1.5 workflow progress, including wired sports seed/propose/audit scripts and recent bounded sports proposer work (`52b413f`) on `fix/e1-5-sports-proposer-2026-04-08`. The immediate next milestone is to validate the sports proposer flow end to end on the current branch, update docs to match verified repo reality, and then decide whether E1.5 is ready to be marked complete or remains partial. E2 (crypto) stays gated on E1 proposer acceptance.
+## Current milestone: E1.5 remediation after verified acceptance failure
+E1.1–E1.4 are complete. On 2026-04-09, the actual acceptance flow was run on `fix/e1-5-sports-proposer-2026-04-08`: the proposer completed with zero considered/inserted pairs, while the strict sports audit packet reported zero semantic violations but a large unknown-sport and stale-active backlog. That means E1.5 remains partial, not complete, and should be remediated rather than merged as finished. E2 (crypto) stays gated on a real passing E1 proposer acceptance run.

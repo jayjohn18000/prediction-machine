@@ -69,3 +69,9 @@
 - Rationale: the repo had moved beyond older E1/E1.5 documentation, including branch-local sports workflow scripts and bounded E1.5 proposer work, while some docs still described those scripts as missing.
 - Constraint: do not promote planning docs into implementation claims; branch-local progress must be labeled as branch-local until verified on the intended baseline.
 - Same audit also confirmed that Phase F remains planning-only in code as of 2026-04-09.
+
+## 2026-04-09 — Rerun evidence supersedes earlier same-day snapshot counts
+- Decision: update roadmap/system-state E1 evidence using rerun outputs from this audit pass rather than earlier same-day counts.
+- Fresh evidence: `npm run pmci:propose:sports` returned `considered=0 inserted=0 rejected=0`; `npm run pmci:audit:sports:packet` produced `semantic_violations=0`, `stale_active=19222`, `unknown_sport=38707`; `npm run pmci:smoke` (18:30 UTC rerun) reported `provider_markets=71750`, `snapshots=415249`, `families=3119`, `current_links=124`.
+- Branch status at audit time: `fix/e1-5-sports-proposer-2026-04-08` is ahead of `main` by 2 commits (`52b413f`, `452a784`), so E1.5 conclusions are branch-local until merged.
+- Outcome: keep E1.5 as incomplete, keep Phase F as planning-only, and mark older contradictory snapshots as historical context.
