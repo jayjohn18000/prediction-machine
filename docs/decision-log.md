@@ -62,3 +62,10 @@
 - Phase E: sports + crypto (requires Phase D complete — different market structure, rapid event turnover for sports, continuous price events for crypto).
 - Phase F: additional providers (Metaculus, Manifold, PredictIt) — after normalization loop battle-tested across 3 categories.
 - Entry criteria for Phase E: observer running, ≥10/22 canonical events linked, p95 <500ms.
+
+## 2026-04-09 — Live audit becomes documentation source of truth refresh trigger
+- Decision: treat live repo audits as the trigger to refresh roadmap/state/supporting docs when implementation reality drifts from documentation.
+- Refresh order: `docs/roadmap.md` → `docs/system-state.md` → `docs/decision-log.md` → directly affected phase/validation docs.
+- Rationale: the repo had moved beyond older E1/E1.5 documentation, including branch-local sports workflow scripts and bounded E1.5 proposer work, while some docs still described those scripts as missing.
+- Constraint: do not promote planning docs into implementation claims; branch-local progress must be labeled as branch-local until verified on the intended baseline.
+- Same audit also confirmed that Phase F remains planning-only in code as of 2026-04-09.

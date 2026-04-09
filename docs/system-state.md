@@ -11,25 +11,26 @@
 - `pmci:*` scripts are PMCI operational workflows (ingest/probe/smoke/review/audit/check), not API server entrypoints.
 
 ## Branch
-- `main` (all E1 work merged to main)
+- Active audited branch on 2026-04-09: `fix/e1-5-sports-proposer-2026-04-08`
+- Important: current repo reality may be ahead of `main`; do not assume all E1.5 work is merged until verified on the target branch.
 
-## Current Status (2026-04-08 — Phase E1 active)
+## Current Status (2026-04-09 — Phase E1 active, docs refreshed from live audit)
 
 ### Phase E1 — Sports Expansion (in progress)
 - **E1.1 schema applied:** `sport`, `event_type`, `game_date`, `home_team`, `away_team` on `provider_markets`; `lifecycle`, `resolves_at` on `canonical_events`. Snapshot retention pg_cron live (3am UTC, 30-day TTL).
 - **E1.2 ingestion wired:** `lib/ingestion/sports-universe.mjs` + `lib/ingestion/services/sport-inference.mjs` are in repo and active.
-- **Current runtime-facing counts:** provider_markets **16,246** | snapshots **281,267** | families **72** | current_links **124**.
-- **Why current_links is 124, not 138:** live runtime status (`src/services/runtime-status.mjs`), smoke/probe scripts, and recent audit artifacts all read `pmci.v_market_links_current` / `pmci_runtime_status.current_links_count` and now agree on **124**. The older **138** figure is stale documentation from the politics closeout period, not the current runtime state.
-- **Sports scripts present today:** `pmci:ingest:sports` exists. `seed:sports:pmci`, `pmci:propose:sports`, and `pmci:audit:sports:packet` are still planned but not yet implemented in the repo.
+- **Current live smoke counts:** provider_markets **71,639** | snapshots **407,909** | families **3,119** | current_links **124**.
+- **Why current_links is 124, not 138:** live smoke/runtime surfaces still agree on **124** current links; **138** is historical politics-closeout context, not the present runtime count.
+- **Sports scripts present in repo today:** `pmci:ingest:sports`, `seed:sports:pmci`, `pmci:propose:sports`, and `pmci:audit:sports:packet` are all wired in `package.json`.
 - **Scheduled ingest:** Cowork task "pmci-sports-ingest" every 4 hours (`0 */4 * * *`).
-- **Observer:** sports ingest is active; politics runtime remains the canonical linked surface.
-- **Sports proposer status:** E1.5 is the next real roadmap task, now treated as active implementation work rather than a future placeholder.
+- **Observer:** observer/watchdog and smoke checks are healthy, but the PMCI API health probe has been intermittently unreachable on port 3001 during the same period.
+- **Sports proposer status:** active branch work indicates E1.5 progress beyond older validation docs, including `52b413f` (`fix(pmci): add bounded sports e1.5 subset workflow`), but end-to-end proposer acceptance is still not verified in this document.
 
 ### Known issues / next actions for E1
-1. Unknown-sport mappings still need expansion for leagues like Japanese B.League and Turkish soccer.
-2. Implement the missing sports PMCI workflow scripts: `seed:sports:pmci`, `pmci:propose:sports`, `pmci:audit:sports:packet`.
-3. Extend proposer logic for `category='sports'`, sport/team/game-date extraction, and game-date proximity scoring.
-4. Run the actual sports proposer validation loop after implementation and verify semantic integrity / audit output.
+1. Run the actual sports proposer validation loop on the active branch: `npm run pmci:propose:sports` then `npm run pmci:audit:sports:packet`.
+2. Resolve branch-versus-main ambiguity for E1.5 and document merged status explicitly.
+3. Expand unknown-sport mappings only after the current branch reality is validated.
+4. Investigate the PMCI API process or port binding on port 3001, since observer/ingest health is green while API health checks are intermittently unreachable.
 
 ---
 

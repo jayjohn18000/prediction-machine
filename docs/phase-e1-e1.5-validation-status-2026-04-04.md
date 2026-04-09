@@ -7,9 +7,11 @@ Repo: `~/prediction-machine`
 ## Overall Status
 
 - **E1.1–E1.4:** mostly real and present in codebase
-- **E1.5:** **not complete** in code, despite planning docs existing
+- **E1.5:** **not complete in this 2026-04-04 validation snapshot**
 - **Runtime health right now:** ingestion/freshness are healthy, but **API p95 latency is degraded**
 - **Repo state:** there are uncommitted local modifications, so current file state may be ahead of last documented checkpoints
+
+> Historical note added 2026-04-09: this document is an April 4 validation snapshot, not the current source of truth. Later live audit evidence showed the repo had advanced, including wired `seed:sports:pmci`, `pmci:propose:sports`, and `pmci:audit:sports:packet` scripts plus branch-local E1.5 work on `fix/e1-5-sports-proposer-2026-04-08`. Use `docs/roadmap.md` and `docs/system-state.md` for refreshed current-state claims.
 
 ---
 
@@ -34,8 +36,9 @@ git status --short --branch
 ```
 
 **Interpretation**
-- The repo has **local, uncommitted changes**
+- The repo had **local, uncommitted changes** at the time of this snapshot
 - That matters because roadmap text may not match committed implementation yet
+- Historical note added 2026-04-09: this caveat turned out to matter; later audits confirmed implementation moved ahead of several April 4 documentation claims
 
 ---
 

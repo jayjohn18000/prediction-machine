@@ -54,7 +54,7 @@
 ## Phase E — Sports & Crypto Expansion (active)
 **Entry criteria:** Phase D semantic closeout complete (met). Coverage/performance targets continue as tracked optimization work during Phase E onboarding.
 
-### E1 — Sports ✅ ACTIVE (schema + ingestion complete, data accumulating)
+### E1 — Sports ✅ ACTIVE (schema + ingestion complete, proposer workflow partially implemented on active branch)
 
 **Completed (2026-03-31 — 2026-04-01):**
 - [x] **E1.1 — Schema migration** (`20260331000001_sports_market_fields.sql`): added `sport`, `event_type`, `game_date`, `home_team`, `away_team` to `provider_markets`; added `lifecycle`, `resolves_at` to `canonical_events`
@@ -81,13 +81,20 @@
   - `outcomePrices` + `clobTokenIds` now parsed via `JSON.parse()` (Gamma returns stringified arrays)
   - Status mapping: `isLive ? "active" : "closed"` (was `m?.active ? "open" : "closed"`)
 
-**Current DB state (post E1.4, 2026-04-02):**
-- provider_markets: 16,246 | snapshots: 281,267 | families: 72 | current_links: 124
-- Smoke: 14+ consecutive green runs
+**Current DB state (live smoke, 2026-04-09):**
+- provider_markets: 71,639 | snapshots: 407,909 | families: 3,119 | current_links: 124
+- `npm run verify:schema` passes
+- `npm run pmci:smoke` passes
+
+**Current implementation reality (2026-04-09 audit):**
+- `seed:sports:pmci`, `pmci:propose:sports`, and `pmci:audit:sports:packet` now exist in `package.json` and are wired to repo scripts.
+- Recent branch-local work indicates active E1.5 progress on `fix/e1-5-sports-proposer-2026-04-08`, including `52b413f` (`fix(pmci): add bounded sports e1.5 subset workflow`).
+- This is stronger than the older 2026-04-04 validation snapshot, but does **not** yet prove full E1.5 acceptance on `main`.
 
 **E1 remaining work:**
-- [ ] **E1.5 — Sports proposer**: adapt `proposal-engine.mjs` to accept `category='sports'`; add sport-specific entity extractors (team names, game dates); add `game_date` proximity scoring — start after Polymarket sports data accumulates ~3–7 days
-- [ ] Add B.League / Turkish league patterns to sport-inference (reduce unknown-158 count)
+- [ ] **E1.5 — Sports proposer acceptance**: verify the actual sports proposer loop end to end on current repo state (`pmci:propose:sports` + `pmci:audit:sports:packet`) and confirm semantic integrity / acceptance gate output
+- [ ] Clarify branch-versus-main status for current E1.5 work and merge/document accordingly
+- [ ] Add B.League / Turkish league patterns to sport-inference if still needed after current branch work is verified
 - [ ] Define canonical event lifecycle for game markets (auto-archive on settle vs. delete)
 - [ ] E1 acceptance gate: ≥5 confirmed cross-platform sports pairs with semantic integrity = 0
 
@@ -200,5 +207,5 @@
 
 ---
 
-## Current milestone: E1.4 live → Polymarket sports data accumulation → E1.5 proposer
-E1.1–E1.4 complete (commit c5701e6). The `active=true` bug blocking Polymarket sports ingestion is fixed. Sports ingest every 4 hours. Next milestone (E1.5): after Polymarket sports data accumulates ~3–7 days, adapt proposal engine for `category='sports'` and run the first sports cross-platform proposer pass. UFC 314 (April 12) will bring first MMA markets. E2 (crypto) begins after E1 proposer gate (≥5 confirmed pairs) passes.
+## Current milestone: E1.5 branch validation and documentation catch-up
+E1.1–E1.4 are complete. As of the 2026-04-09 live audit, the repo also contains branch-local E1.5 workflow progress, including wired sports seed/propose/audit scripts and recent bounded sports proposer work (`52b413f`) on `fix/e1-5-sports-proposer-2026-04-08`. The immediate next milestone is to validate the sports proposer flow end to end on the current branch, update docs to match verified repo reality, and then decide whether E1.5 is ready to be marked complete or remains partial. E2 (crypto) stays gated on E1 proposer acceptance.
