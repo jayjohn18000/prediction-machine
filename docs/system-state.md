@@ -11,29 +11,35 @@
 - `pmci:*` scripts are PMCI operational workflows (ingest/probe/smoke/review/audit/check), not API server entrypoints.
 
 ## Branch
-- Active audited branch on 2026-04-09: `fix/e1-5-sports-proposer-2026-04-08`
-- Important: current repo reality may be ahead of `main`; do not assume all E1.5 work is merged until verified on the target branch.
+- **E1.5 merged to main:** `fix/e1-5-sports-proposer-2026-04-08` → `main` (2026-04-10)
+- Active phase: **E2** (next phase, unblocked)
 
-## Current Status (2026-04-09 — Phase E1 active, refreshed from verified acceptance rerun)
+## Current Status (2026-04-10 — Phase E1.5 COMPLETE ✓)
 
-### Phase E1 — Sports Expansion (in progress)
-- **E1.1 schema applied:** `sport`, `event_type`, `game_date`, `home_team`, `away_team` on `provider_markets`; `lifecycle`, `resolves_at` on `canonical_events`. Snapshot retention pg_cron live (3am UTC, 30-day TTL).
-- **E1.2 ingestion wired:** `lib/ingestion/sports-universe.mjs` + `lib/ingestion/services/sport-inference.mjs` are in repo and active.
-- **Current live smoke counts (2026-04-09 18:30 UTC):** provider_markets **71,750** | snapshots **415,249** | families **3,119** | current_links **124**.
-- **Why current_links is 124, not 138:** live smoke/runtime surfaces still agree on **124** current links; **138** is historical politics-closeout context, not the present runtime count.
-- **Sports scripts present in repo today:** `pmci:ingest:sports`, `seed:sports:pmci`, `pmci:propose:sports`, and `pmci:audit:sports:packet` are all wired in `package.json`.
-- **Verified acceptance run (rerun 2026-04-09 18:27 UTC):** `npm run pmci:propose:sports` completed successfully but reported `considered=0 inserted=0 rejected=0 limit=250`.
-- **Verified strict audit packet (rerun 2026-04-09 18:28 UTC):** `npm run pmci:audit:sports:packet` generated `docs/reports/latest-sports-audit-packet.json` with `semantic_violations=0`, `stale_active=19222`, and `unknown_sport=38707`.
-- **Interpretation:** the semantic integrity gate passes, but the proposer acceptance gate does **not**. E1.5 remains incomplete because the current branch still yields zero candidate insertions and a very large unknown-sport backlog.
-- **Scheduled ingest:** Cowork task "pmci-sports-ingest" every 4 hours (`0 */4 * * *`).
-- **Observer:** observer/watchdog and smoke checks are healthy.
-- **API reachability note:** prior port 3001 intermittency remains a historical risk item and was not re-probed in this doc-only audit run.
+### Phase E1.5 — Sports Proposer Acceptance (complete)
 
-### Known issues / next actions for E1
-1. Fix sports normalization and proposer inputs so `pmci:propose:sports` evaluates real candidate pairs instead of returning `considered=0`.
-2. Reduce the verified unknown-sport backlog from **38,707** and investigate the verified **19,222** stale-active rows surfaced by the strict audit packet.
-3. Resolve branch-versus-main ambiguity for E1.5 only after a passing proposer acceptance run exists (active branch is 2 commits ahead of `main` as of this audit).
-4. Re-probe PMCI API process/port 3001 separately before making fresh API availability claims.
+All hard gate conditions verified (2026-04-10):
+
+| Gate | Result |
+|------|--------|
+| `stale_active=0` | ✅ PASS |
+| `unknown_sport < 1000` | ✅ PASS (922) |
+| `semantic_violations=0` | ✅ PASS |
+| `verify:schema PASS` | ✅ PASS |
+| `≥5 accepted cross-platform sports pairs` | ✅ PASS (10 accepted, 20 market_links) |
+
+**What was fixed:**
+- `sport-inference.mjs`: 30+ new ticker fallback patterns (SAUDIPL, CS2MAP, NBAGAME, NFLTEAM, AHL, KHL, Liiga, Swiss League, EUROLEAGUE, R6GAME, CONMEBOL, NWSL, AFL, Baller League, etc.) + title-map patterns for Saudi PL, NWSL, KHL, AHL, EuroLeague, R6; FC/club Polymarket title fallback
+- `sports-universe.mjs`: `parseTeams` negative lookahead (excludes "at least/most/once" false positives); Polymarket title fallback when tag inference returns 'unknown'
+- `sports-helpers.mjs`: `looksLikeMatchupMarket` false positive fix for " at " qualifier words
+- `scripts/stale-cleanup.mjs`: cleared 20,048 stale-active sports markets (guard-first)
+- `scripts/backfill-sport-inference.mjs`: DB-level backfill; reduced unknown_sport 38,707→922
+
+**Live smoke counts (2026-04-10):** provider_markets **76,531** | snapshots **658,480** | families **3,120** | current_links **131**
+**Scheduled ingest:** Cowork task "pmci-sports-ingest" every 4 hours (`0 */4 * * *`).
+**API:** Port 3001 healthy (PID 5516). Health returns `status: degraded` (no active traffic — expected).
+
+### Phase E2 — unblocked, ready to start
 
 ---
 

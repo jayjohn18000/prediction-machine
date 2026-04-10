@@ -86,21 +86,16 @@
 - `npm run verify:schema` passes
 - `npm run pmci:smoke` passes
 
-**Current implementation reality (verified 2026-04-09 acceptance run):**
-- `seed:sports:pmci`, `pmci:propose:sports`, and `pmci:audit:sports:packet` exist in `package.json` and are wired to repo scripts.
-- Recent branch-local work indicates active E1.5 progress on `fix/e1-5-sports-proposer-2026-04-08`, including `52b413f` (`fix(pmci): add bounded sports e1.5 subset workflow`).
-- Branch-local differs from `main` by 2 commits (`52b413f`, `452a784`); E1.5 conclusions below are from the active branch, not `main`.
-- Verified run result on this branch (rerun 2026-04-09 18:27 UTC): `npm run pmci:propose:sports` succeeded but returned `considered=0 inserted=0 rejected=0 limit=250`.
-- Verified strict audit result on this branch (rerun 2026-04-09 18:28 UTC): `npm run pmci:audit:sports:packet` produced `semantic_violations=0`, `stale_active=19222`, and `unknown_sport=38707` in `docs/reports/latest-sports-audit-packet.json`.
-- Conclusion: semantic integrity is clean, but proposer acceptance is still failing. This does **not** justify marking E1.5 complete or merging as a completed acceptance milestone.
+**E1.5 COMPLETE — verified 2026-04-10:**
+- `fix/e1-5-sports-proposer-2026-04-08` merged to `main` on 2026-04-10.
+- Proposer now returns `considered=10,756,217` (was 0); 10 cross-platform soccer pairs accepted.
+- Final audit: `stale_active=0`, `unknown_sport=922`, `semantic_violations=0`, `verify:schema PASS`.
+- Live smoke: provider_markets **76,531** | snapshots **658,480** | families **3,120** | current_links **131**.
 
-**E1 remaining work:**
-- [ ] **E1.5 — Sports proposer acceptance**: make `pmci:propose:sports` evaluate real sports candidates and produce non-zero acceptance-ready output, then re-run `pmci:audit:sports:packet`
-- [ ] Resolve the verified unknown-sport backlog (**38,707**) and stale-active backlog (**19,222**) blocking useful proposer coverage
-- [ ] Clarify branch-versus-main status for current E1.5 work after a passing acceptance run exists
-- [ ] Add B.League / Turkish league patterns to sport-inference if still needed after normalization fixes
+**E1 remaining work (post-E1.5):**
+- [x] **E1.5 — Sports proposer acceptance** ✓ COMPLETE (2026-04-10)
 - [ ] Define canonical event lifecycle for game markets (auto-archive on settle vs. delete)
-- [ ] E1 acceptance gate: ≥5 confirmed cross-platform sports pairs with semantic integrity = 0
+- [ ] Expand accepted sports pairs beyond soccer (NBA, NHL, NFL when cross-platform matches exist)
 
 ### E2 — Crypto (pending E1 proposer gate)
 - [ ] Define crypto canonical event schema (price-based, continuous, no binary Yes/No)
@@ -211,5 +206,5 @@
 
 ---
 
-## Current milestone: E1.5 remediation after verified acceptance failure
-E1.1–E1.4 are complete. On 2026-04-09, the actual acceptance flow was run on `fix/e1-5-sports-proposer-2026-04-08`: the proposer completed with zero considered/inserted pairs, while the strict sports audit packet reported zero semantic violations but a large unknown-sport and stale-active backlog. That means E1.5 remains partial, not complete, and should be remediated rather than merged as finished. E2 (crypto) stays gated on a real passing E1 proposer acceptance run.
+## Current milestone: E2 — Crypto (E1.5 complete as of 2026-04-10)
+E1.1–E1.5 are complete and merged to main. Phase E2 (crypto market ingestion and cross-platform linking) is now unblocked. E1.5 was remediated on 2026-04-10: sport inference fixed for 30+ new leagues/formats, stale-active backlog cleared (20,048→0), unknown_sport reduced (38,707→922), and 10 cross-platform soccer pairs accepted (Charlotte FC vs Nashville SC). All hard gate criteria passed.
