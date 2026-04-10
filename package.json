@@ -42,13 +42,15 @@
     "seed:sports:pmci": "node scripts/seed/seed-pmci-sports-families-links.mjs",
     "pmci:propose:sports": "node scripts/review/pmci-propose-links-sports.mjs",
     "pmci:audit:sports:packet": "node scripts/audit/pmci-sports-audit-packet.mjs",
+    "pmci:audit:live": "bash scripts/run_pmci_live_audit.sh",
     "pmci:status": "node scripts/checks/pmci-projection-status.mjs",
     "pmci:check:round-trip": "node scripts/checks/pmci-check-round-trip.mjs",
     "pmci:backfill:kalshi:typing": "node scripts/ingestion/pmci-backfill-kalshi-typing.mjs",
     "pmci:backfill:politics:normalization": "node scripts/ingestion/pmci-backfill-politics-normalization.mjs",
     "link:dry-run": "node scripts/review/pmci-propose-links-politics.mjs --dry-run",
     "links:guard:dry-run": "node scripts/review/links-guard-dry-run.mjs",
-    "pmci:clear:stale": "node scripts/review/pmci-clear-stale-proposals.mjs"
+    "pmci:clear:stale": "node scripts/review/pmci-clear-stale-proposals.mjs",
+    "pmci:audit:live": "bash scripts/run_pmci_live_audit.sh"
   },
   "dependencies": {
     "@fastify/rate-limit": "^10.3.0",

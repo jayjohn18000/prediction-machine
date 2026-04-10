@@ -20,8 +20,8 @@ async function main() {
   try {
     const providers = await client.query(`select id, code from pmci.providers where code in ('kalshi','polymarket') order by code`);
     const byCode = new Map(providers.rows.map((r) => [r.code, r.id]));
-    const kalshiId = byCode.get('kalshi');
-    const polyId = byCode.get('polymarket');
+    const kalshiId = Number(byCode.get('kalshi'));
+    const polyId = Number(byCode.get('polymarket'));
 
     const markets = await client.query(`
       select id, provider_id, provider_market_ref, event_ref, title, sport, game_date, home_team, away_team, status, close_time
@@ -53,17 +53,14 @@ async function main() {
     let pairBudget = 0;
 
     for (const k of kalshi) {
-      if (!looksLikeMatchupMarket(k)) continue;
       const ks = sportsEntityFromMarket(k);
       if (!ks.isMatchup || ks.matchupKey === 'unknown') continue;
       for (const p of poly) {
         if (pairBudget >= limit) break;
-        if (!looksLikeMatchupMarket(p)) continue;
         const ps = sportsEntityFromMarket(p);
         if (!ps.isMatchup || ps.matchupKey === 'unknown') continue;
         if (ks.sport !== ps.sport) continue;
         const dateDelta = sportsDateDeltaDays(ks.gameDate, ps.gameDate);
-        if (dateDelta != null && dateDelta > 1) continue;
         considered += 1;
 
         const semantic = isSportsPairSemanticallyValid(k, p);

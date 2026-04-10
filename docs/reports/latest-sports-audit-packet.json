@@ -1,19 +1,115 @@
 {
-  "generatedAt": "2026-04-09T18:28:02.819Z",
+  "generatedAt": "2026-04-10T07:05:03.200Z",
   "providerCoverage": [
+    {
+      "sport": "aussierules",
+      "provider": "kalshi",
+      "total": 16,
+      "active": 16,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
     {
       "sport": "basketball",
       "provider": "kalshi",
-      "total": 76,
-      "active": 76,
+      "total": 746,
+      "active": 386,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "basketball",
+      "provider": "polymarket",
+      "total": 109,
+      "active": 101,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "bkaba",
+      "provider": "polymarket",
+      "total": 26,
+      "active": 26,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "bkbbl",
+      "provider": "polymarket",
+      "total": 27,
+      "active": 27,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "bkbsl",
+      "provider": "polymarket",
+      "total": 24,
+      "active": 24,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "bkfibaqeu",
+      "provider": "polymarket",
+      "total": 1029,
+      "active": 485,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "bkgr1",
+      "provider": "polymarket",
+      "total": 20,
+      "active": 19,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "bkjpn",
+      "provider": "polymarket",
+      "total": 53,
+      "active": 53,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "bkvtb",
+      "provider": "polymarket",
+      "total": 18,
+      "active": 18,
       "stale_active": 0,
       "unknown_sport": 0
     },
     {
       "sport": "boxing",
       "provider": "kalshi",
-      "total": 151,
-      "active": 151,
+      "total": 153,
+      "active": 153,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "chess",
+      "provider": "kalshi",
+      "total": 21,
+      "active": 21,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "chess",
+      "provider": "polymarket",
+      "total": 44,
+      "active": 44,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "cricipl",
+      "provider": "polymarket",
+      "total": 118,
+      "active": 118,
       "stale_active": 0,
       "unknown_sport": 0
     },
@@ -26,35 +122,131 @@
       "unknown_sport": 0
     },
     {
+      "sport": "cricket",
+      "provider": "polymarket",
+      "total": 61,
+      "active": 46,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "criclcl",
+      "provider": "polymarket",
+      "total": 67,
+      "active": 0,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "cricpakt20cup",
+      "provider": "polymarket",
+      "total": 2,
+      "active": 0,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "cricpsl",
+      "provider": "polymarket",
+      "total": 96,
+      "active": 96,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
       "sport": "esports",
       "provider": "kalshi",
-      "total": 911,
-      "active": 911,
+      "total": 2002,
+      "active": 2002,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "esports",
+      "provider": "polymarket",
+      "total": 2839,
+      "active": 247,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "euroleague",
+      "provider": "polymarket",
+      "total": 33,
+      "active": 20,
       "stale_active": 0,
       "unknown_sport": 0
     },
     {
       "sport": "f1",
       "provider": "kalshi",
-      "total": 128,
-      "active": 128,
+      "total": 150,
+      "active": 150,
       "stale_active": 0,
       "unknown_sport": 0
     },
     {
       "sport": "golf",
       "provider": "kalshi",
-      "total": 2601,
-      "active": 2601,
+      "total": 3735,
+      "active": 3735,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "hockey",
+      "provider": "kalshi",
+      "total": 108,
+      "active": 108,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "itsb",
+      "provider": "polymarket",
+      "total": 11162,
+      "active": 6764,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "j1-100",
+      "provider": "polymarket",
+      "total": 584,
+      "active": 464,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "j2-100",
+      "provider": "polymarket",
+      "total": 1211,
+      "active": 980,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "lacrosse",
+      "provider": "kalshi",
+      "total": 190,
+      "active": 190,
       "stale_active": 0,
       "unknown_sport": 0
     },
     {
       "sport": "mlb",
       "provider": "kalshi",
-      "total": 9039,
-      "active": 9039,
-      "stale_active": 5747,
+      "total": 10712,
+      "active": 4464,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "mlb",
+      "provider": "polymarket",
+      "total": 547,
+      "active": 473,
+      "stale_active": 0,
       "unknown_sport": 0
     },
     {
@@ -68,16 +260,24 @@
     {
       "sport": "motorsport",
       "provider": "kalshi",
-      "total": 356,
-      "active": 356,
+      "total": 430,
+      "active": 430,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "motorsport",
+      "provider": "polymarket",
+      "total": 735,
+      "active": 331,
       "stale_active": 0,
       "unknown_sport": 0
     },
     {
       "sport": "nba",
       "provider": "kalshi",
-      "total": 5184,
-      "active": 5184,
+      "total": 6212,
+      "active": 6212,
       "stale_active": 0,
       "unknown_sport": 0
     },
@@ -92,32 +292,56 @@
     {
       "sport": "ncaab",
       "provider": "kalshi",
-      "total": 628,
-      "active": 628,
-      "stale_active": 48,
+      "total": 645,
+      "active": 595,
+      "stale_active": 0,
       "unknown_sport": 0
     },
     {
       "sport": "ncaaf",
       "provider": "kalshi",
-      "total": 212,
-      "active": 212,
+      "total": 351,
+      "active": 351,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "ncaaf",
+      "provider": "polymarket",
+      "total": 1,
+      "active": 1,
       "stale_active": 0,
       "unknown_sport": 0
     },
     {
       "sport": "nfl",
       "provider": "kalshi",
-      "total": 2701,
-      "active": 2701,
+      "total": 2989,
+      "active": 2989,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "nfl",
+      "provider": "polymarket",
+      "total": 463,
+      "active": 463,
       "stale_active": 0,
       "unknown_sport": 0
     },
     {
       "sport": "nhl",
       "provider": "kalshi",
-      "total": 1382,
-      "active": 1382,
+      "total": 1688,
+      "active": 1688,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "nhl",
+      "provider": "polymarket",
+      "total": 58,
+      "active": 32,
       "stale_active": 0,
       "unknown_sport": 0
     },
@@ -140,36 +364,77 @@
     {
       "sport": "soccer",
       "provider": "kalshi",
-      "total": 4194,
-      "active": 4194,
-      "stale_active": 18,
+      "total": 5864,
+      "active": 5842,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "soccer",
+      "provider": "polymarket",
+      "total": 12265,
+      "active": 8040,
+      "stale_active": 0,
       "unknown_sport": 0
     },
     {
       "sport": "tennis",
       "provider": "kalshi",
-      "total": 401,
-      "active": 401,
+      "total": 511,
+      "active": 511,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "tennis",
+      "provider": "polymarket",
+      "total": 732,
+      "active": 511,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "ukr1",
+      "provider": "polymarket",
+      "total": 300,
+      "active": 204,
       "stale_active": 0,
       "unknown_sport": 0
     },
     {
       "sport": "unknown",
       "provider": "kalshi",
-      "total": 4700,
-      "active": 4700,
-      "stale_active": 885,
-      "unknown_sport": 4700
+      "total": 922,
+      "active": 898,
+      "stale_active": 0,
+      "unknown_sport": 922
     },
     {
-      "sport": "unknown",
+      "sport": "wttmen",
       "provider": "polymarket",
-      "total": 34007,
-      "active": 34007,
-      "stale_active": 12524,
-      "unknown_sport": 34007
+      "total": 12,
+      "active": 2,
+      "stale_active": 0,
+      "unknown_sport": 0
+    },
+    {
+      "sport": "wwoh",
+      "provider": "polymarket",
+      "total": 1371,
+      "active": 1000,
+      "stale_active": 0,
+      "unknown_sport": 0
     }
   ],
-  "proposalBuckets": [],
+  "proposalBuckets": [
+    {
+      "decision": "(none)",
+      "count": 15
+    },
+    {
+      "decision": "accepted",
+      "count": 10
+    }
+  ],
   "semanticViolations": 0
 }
