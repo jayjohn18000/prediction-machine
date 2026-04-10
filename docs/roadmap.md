@@ -54,7 +54,7 @@
 ## Phase E — Sports & Crypto Expansion (active)
 **Entry criteria:** Phase D semantic closeout complete (met). Coverage/performance targets continue as tracked optimization work during Phase E onboarding.
 
-### E1 — Sports ✅ ACTIVE (schema + ingestion complete, data accumulating)
+### E1 — Sports ✅ ACTIVE (schema + ingestion complete, proposer workflow partially implemented on active branch)
 
 **Completed (2026-03-31 — 2026-04-01):**
 - [x] **E1.1 — Schema migration** (`20260331000001_sports_market_fields.sql`): added `sport`, `event_type`, `game_date`, `home_team`, `away_team` to `provider_markets`; added `lifecycle`, `resolves_at` to `canonical_events`
@@ -81,15 +81,21 @@
   - `outcomePrices` + `clobTokenIds` now parsed via `JSON.parse()` (Gamma returns stringified arrays)
   - Status mapping: `isLive ? "active" : "closed"` (was `m?.active ? "open" : "closed"`)
 
-**Current DB state (post E1.4, 2026-04-02):**
-- provider_markets: 16,246 | snapshots: 281,267 | families: 72 | current_links: 124
-- Smoke: 14+ consecutive green runs
+**Current DB state (live smoke, 2026-04-09 18:30 UTC):**
+- provider_markets: 71,750 | snapshots: 415,249 | families: 3,119 | current_links: 124
+- `npm run verify:schema` passes
+- `npm run pmci:smoke` passes
 
-**E1 remaining work:**
-- [ ] **E1.5 — Sports proposer**: adapt `proposal-engine.mjs` to accept `category='sports'`; add sport-specific entity extractors (team names, game dates); add `game_date` proximity scoring — start after Polymarket sports data accumulates ~3–7 days
-- [ ] Add B.League / Turkish league patterns to sport-inference (reduce unknown-158 count)
+**E1.5 COMPLETE — verified 2026-04-10:**
+- `fix/e1-5-sports-proposer-2026-04-08` merged to `main` on 2026-04-10.
+- Proposer now returns `considered=10,756,217` (was 0); 10 cross-platform soccer pairs accepted.
+- Final audit: `stale_active=0`, `unknown_sport=922`, `semantic_violations=0`, `verify:schema PASS`.
+- Live smoke: provider_markets **76,531** | snapshots **658,480** | families **3,120** | current_links **131**.
+
+**E1 remaining work (post-E1.5):**
+- [x] **E1.5 — Sports proposer acceptance** ✓ COMPLETE (2026-04-10)
 - [ ] Define canonical event lifecycle for game markets (auto-archive on settle vs. delete)
-- [ ] E1 acceptance gate: ≥5 confirmed cross-platform sports pairs with semantic integrity = 0
+- [ ] Expand accepted sports pairs beyond soccer (NBA, NHL, NFL when cross-platform matches exist)
 
 ### E2 — Crypto (pending E1 proposer gate)
 - [ ] Define crypto canonical event schema (price-based, continuous, no binary Yes/No)
@@ -200,5 +206,5 @@
 
 ---
 
-## Current milestone: E1.4 live → Polymarket sports data accumulation → E1.5 proposer
-E1.1–E1.4 complete (commit c5701e6). The `active=true` bug blocking Polymarket sports ingestion is fixed. Sports ingest every 4 hours. Next milestone (E1.5): after Polymarket sports data accumulates ~3–7 days, adapt proposal engine for `category='sports'` and run the first sports cross-platform proposer pass. UFC 314 (April 12) will bring first MMA markets. E2 (crypto) begins after E1 proposer gate (≥5 confirmed pairs) passes.
+## Current milestone: E2 — Crypto (E1.5 complete as of 2026-04-10)
+E1.1–E1.5 are complete and merged to main. Phase E2 (crypto market ingestion and cross-platform linking) is now unblocked. E1.5 was remediated on 2026-04-10: sport inference fixed for 30+ new leagues/formats, stale-active backlog cleared (20,048→0), unknown_sport reduced (38,707→922), and 10 cross-platform soccer pairs accepted (Charlotte FC vs Nashville SC). All hard gate criteria passed.
