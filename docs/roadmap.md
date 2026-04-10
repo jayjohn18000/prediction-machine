@@ -90,7 +90,9 @@
 - `fix/e1-5-sports-proposer-2026-04-08` merged to `main` on 2026-04-10.
 - Proposer now returns `considered=10,756,217` (was 0); 10 cross-platform soccer pairs accepted.
 - Final audit: `stale_active=0`, `unknown_sport=922`, `semantic_violations=0`, `verify:schema PASS`.
-- Live smoke: provider_markets **76,531** | snapshots **658,480** | families **3,120** | current_links **131**.
+- Historical smoke snapshot (2026-04-10 closeout): provider_markets **76,531** | snapshots **658,480** | families **3,120** | current_links **131**.
+- Live smoke rerun (2026-04-10, post-edit check): provider_markets **76,587** | snapshots **672,374** | families **3,120** | current_links **131**.
+- Branch-local note at audit time: local `main` is ahead of `origin/main` by 6 commits with unrelated uncommitted workflow-doc edits in the working tree.
 
 **E1 remaining work (post-E1.5):**
 - [x] **E1.5 — Sports proposer acceptance** ✓ COMPLETE (2026-04-10)
@@ -207,4 +209,4 @@
 ---
 
 ## Current milestone: E2 — Crypto (E1.5 complete as of 2026-04-10)
-E1.1–E1.5 are complete and merged to main. Phase E2 (crypto market ingestion and cross-platform linking) is now unblocked. E1.5 was remediated on 2026-04-10: sport inference fixed for 30+ new leagues/formats, stale-active backlog cleared (20,048→0), unknown_sport reduced (38,707→922), and 10 cross-platform soccer pairs accepted (Charlotte FC vs Nashville SC). All hard gate criteria passed.
+E1.1–E1.5 are complete and merged to main. Phase E2 (crypto market ingestion and cross-platform linking) is unblocked. E1.5 remediation (2026-04-10) remains validated: sport inference expanded for 30+ league/format patterns, stale-active backlog cleared (20,048→0), unknown_sport reduced (38,707→922), and 10 cross-platform soccer pairs accepted (Charlotte FC vs Nashville SC). Smoke counts are runtime-volatile; use latest `npm run pmci:smoke` output for current totals.

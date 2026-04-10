@@ -75,3 +75,13 @@
 - Fresh evidence: `npm run pmci:propose:sports` returned `considered=0 inserted=0 rejected=0`; `npm run pmci:audit:sports:packet` produced `semantic_violations=0`, `stale_active=19222`, `unknown_sport=38707`; `npm run pmci:smoke` (18:30 UTC rerun) reported `provider_markets=71750`, `snapshots=415249`, `families=3119`, `current_links=124`.
 - Branch status at audit time: `fix/e1-5-sports-proposer-2026-04-08` is ahead of `main` by 2 commits (`52b413f`, `452a784`), so E1.5 conclusions are branch-local until merged.
 - Outcome: keep E1.5 as incomplete, keep Phase F as planning-only, and mark older contradictory snapshots as historical context.
+
+## 2026-04-10 — Live roadmap audit refresh after E1.5 merge
+- Decision: refresh canonical docs (`roadmap` → `system-state` → `decision-log`) using direct repo/runtime evidence after E1.5 merge.
+- Evidence from this run:
+  - `git status --short --branch` => local `main...origin/main [ahead 6]` with unrelated workflow-doc edits in working tree.
+  - `npm run verify:schema` => PASS.
+  - `npm run pmci:smoke` => `provider_markets=76587`, `snapshots=672374`, `families=3120`, `current_links=131`.
+  - `find src/routes` and route/source checks confirm no Phase F execution-readiness API surface (`/v1/signals/ranked`, `/v1/router/best-venue`) implemented yet.
+- Documentation policy update: preserve earlier count snapshots as historical context, but anchor current-state claims to the latest rerunnable command output.
+- Outcome: E1.5 remains complete and merged; Phase E2 remains next; Phase F remains planning-only until code/runtime evidence exists.
