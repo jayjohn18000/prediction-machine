@@ -85,3 +85,13 @@
   - `find src/routes` and route/source checks confirm no Phase F execution-readiness API surface (`/v1/signals/ranked`, `/v1/router/best-venue`) implemented yet.
 - Documentation policy update: preserve earlier count snapshots as historical context, but anchor current-state claims to the latest rerunnable command output.
 - Outcome: E1.5 remains complete and merged; Phase E2 remains next; Phase F remains planning-only until code/runtime evidence exists.
+
+
+## 2026-04-12 — Live roadmap audit refresh (evidence-first)
+- Decision: refresh roadmap/state docs from rerunnable repo evidence, keeping older smoke/runtime snapshots explicitly historical.
+- Evidence from this run:
+  - `git status --short --branch` => local `main...origin/main [ahead 7]` with unrelated workflow/doc/script edits in the working tree.
+  - `npm run verify:schema` => PASS.
+  - `npm run pmci:smoke` => `provider_markets=80375`, `snapshots=816206`, `families=3120`, `current_links=131`.
+  - `find src/routes` + route/service probes confirm no Phase F execution-readiness API/code yet (`/v1/signals/ranked`, `/v1/router/best-venue`, `src/services/tradability-service.mjs`, `config/execution-readiness.json` missing).
+- Outcome: E1.5 remains complete and merged; E2 remains the active next milestone; Phase F remains planning-only until direct code/runtime evidence appears.

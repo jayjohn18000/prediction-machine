@@ -15,6 +15,8 @@ Repo: `~/prediction-machine`
 >
 > Historical note added 2026-04-10: E1.5 branch-local work referenced above has since merged to `main` (commit `cad1f9a`). Current-state smoke evidence moved to `provider_markets=76587 / snapshots=672374 / families=3120 / current_links=131` via post-edit `npm run pmci:smoke` rerun. Keep this file as a point-in-time snapshot only; use `docs/roadmap.md` and `docs/system-state.md` for current state.
 
+> Historical note added 2026-04-12: latest live audit rerun supersedes prior smoke snapshots (`npm run pmci:smoke` => `provider_markets=80375 / snapshots=816206 / families=3120 / current_links=131`; `npm run verify:schema` => PASS). Branch state at that audit: `main...origin/main [ahead 7]` with unrelated working-tree edits; no separate feature branch active.
+
 ---
 
 ## Evidence Log

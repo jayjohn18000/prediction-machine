@@ -14,8 +14,9 @@
 - **E1.5 merged to main:** `fix/e1-5-sports-proposer-2026-04-08` → `main` (2026-04-10)
 - Active phase: **E2** (next phase, unblocked)
 - **Live audit branch state (2026-04-10):** local `main` is ahead of `origin/main` by 6 commits, with unrelated uncommitted workflow-doc edits in the working tree. No separate feature branch was active during this audit.
+- **Live audit branch state (2026-04-12):** local `main...origin/main [ahead 7]` with unrelated workflow/doc/script edits in the working tree. No separate feature branch was active during this audit.
 
-## Current Status (2026-04-10 — Phase E1.5 COMPLETE ✓)
+## Current Status (2026-04-12 refresh — Phase E1.5 COMPLETE ✓)
 
 ### Phase E1.5 — Sports Proposer Acceptance (complete)
 
@@ -38,8 +39,10 @@ All hard gate conditions verified (2026-04-10):
 
 **Historical closeout smoke counts (2026-04-10):** provider_markets **76,531** | snapshots **658,480** | families **3,120** | current_links **131**
 **Live audit smoke rerun (2026-04-10, post-edit check):** provider_markets **76,587** | snapshots **672,374** | families **3,120** | current_links **131**
+**Latest live smoke rerun (2026-04-12):** provider_markets **80,375** | snapshots **816,206** | families **3,120** | current_links **131**
 **Scheduled ingest:** Cowork task "pmci-sports-ingest" every 4 hours (`0 */4 * * *`).
 **API:** Port 3001 healthy during prior closeout checks; treat PID-specific notes as historical snapshots.
+**Phase F implementation status (verified 2026-04-12):** planning docs exist (`docs/phase-f-gap-analysis.md`, `docs/phase-f-implementation-plan.md`), but execution-readiness code/routes are not present in the active PMCI API. Verified missing: `/v1/signals/ranked`, `/v1/router/best-venue`, `src/services/tradability-service.mjs`, `src/services/router-service.mjs`, and `config/execution-readiness.json`.
 
 ### Phase E2 — unblocked, ready to start
 
