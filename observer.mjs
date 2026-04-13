@@ -30,6 +30,7 @@ loadEnv();
 
 const PMCI_DEBUG = process.env.PMCI_DEBUG === '1';
 const USE_PMXT = process.env.USE_PMXT === '1'; // spike flag — see docs/pmxt-spike-result.md when ready
+const OBSERVER_DB_DISCOVERY = process.env.OBSERVER_DB_DISCOVERY === '1';
 
 /** Canonical config; do not use root event_pairs.json. */
 const DEFAULT_PAIRS_PATH = path.join(__dirname, 'scripts', 'prediction_market_event_pairs.json');
@@ -62,6 +63,65 @@ function loadConfig() {
     }
   }
   return { pairs, pairsPath };
+}
+
+const SQL_DISCOVER_PAIRS = `
+  SELECT
+    mf.label AS family_label,
+    k_pm.provider_market_ref AS kalshi_ticker,
+    p_pm.provider_market_ref AS poly_ref,
+    p_pm.event_ref AS poly_slug,
+    k_pm.title AS event_name
+  FROM pmci.market_links k_link
+  JOIN pmci.market_links p_link
+    ON k_link.family_id = p_link.family_id
+    AND k_link.provider_market_id != p_link.provider_market_id
+  JOIN pmci.providers k_prov ON k_link.provider_id = k_prov.id AND k_prov.code = 'kalshi'
+  JOIN pmci.providers p_prov ON p_link.provider_id = p_prov.id AND p_prov.code = 'polymarket'
+  JOIN pmci.provider_markets k_pm ON k_link.provider_market_id = k_pm.id
+  JOIN pmci.provider_markets p_pm ON p_link.provider_market_id = p_pm.id
+  WHERE k_link.status = 'active'
+    AND p_link.status = 'active'
+    AND k_link.relationship_type = 'equivalent'
+    AND p_link.relationship_type = 'equivalent'
+`;
+
+async function discoverPairsFromDb(pmciClient) {
+  if (!pmciClient) return [];
+  try {
+    const res = await pmciClient.query(SQL_DISCOVER_PAIRS);
+    const pairs = (res.rows || []).map((r) => {
+      const polyRef = r.poly_ref || '';
+      const hashIdx = polyRef.indexOf('#');
+      const polymarketSlug = r.poly_slug || (hashIdx > 0 ? polyRef.slice(0, hashIdx) : polyRef);
+      const polymarketOutcomeName = hashIdx >= 0 ? polyRef.slice(hashIdx + 1) : 'Yes';
+      return {
+        eventName: r.event_name || r.family_label || r.kalshi_ticker,
+        kalshiTicker: r.kalshi_ticker,
+        polymarketSlug,
+        polymarketOutcomeName,
+        _source: 'db',
+      };
+    });
+    console.log(`[observer] DB discovery: found ${pairs.length} equivalent pairs from pmci.market_links`);
+    return pairs;
+  } catch (err) {
+    console.warn('[observer] DB discovery query failed:', err.message);
+    return [];
+  }
+}
+
+function mergePairs(staticPairs, dbPairs) {
+  const seen = new Set(staticPairs.map((p) => `${p.kalshiTicker}::${p.polymarketSlug}#${p.polymarketOutcomeName}`));
+  const merged = [...staticPairs];
+  for (const p of dbPairs) {
+    const key = `${p.kalshiTicker}::${p.polymarketSlug}#${p.polymarketOutcomeName}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      merged.push(p);
+    }
+  }
+  return merged;
 }
 
 function getSupabase() {
@@ -117,17 +177,35 @@ async function main() {
   }
   const pmciReport = pmciClientRef.value ? { marketsUpserted: 0, snapshotsAppended: 0 } : null;
 
-  console.log(`Prediction market spread observer started. Pairs: ${pairs.length}, interval: ${intervalSec}s`);
+  let activePairs = pairs;
 
-  const run = () =>
-    runObserverCycle({
-      pairs,
+  async function refreshPairs() {
+    if (!OBSERVER_DB_DISCOVERY || !pmciClientRef.value) return;
+    try {
+      const dbPairs = await discoverPairsFromDb(pmciClientRef.value);
+      if (dbPairs.length > 0) {
+        activePairs = mergePairs(pairs, dbPairs);
+        console.log(`[observer] Active pairs: ${activePairs.length} (${pairs.length} static + ${dbPairs.length} DB-discovered, ${activePairs.length - pairs.length} net new)`);
+      }
+    } catch (err) {
+      console.warn('[observer] Pair refresh failed:', err.message);
+    }
+  }
+
+  await refreshPairs();
+  console.log(`Prediction market spread observer started. Pairs: ${activePairs.length}, interval: ${intervalSec}s`);
+
+  const run = async () => {
+    await refreshPairs();
+    return runObserverCycle({
+      pairs: activePairs,
       supabase,
       pmciClientRef,
       pmciReport,
       pmciIdsRef,
       pmciRetryState,
     }).catch((err) => console.error('Cycle error:', err));
+  };
 
   await run();
   const intervalId = setInterval(run, intervalSec * 1000);
