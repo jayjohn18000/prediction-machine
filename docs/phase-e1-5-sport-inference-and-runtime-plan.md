@@ -1,9 +1,11 @@
 # Phase E1.5 — Sport Inference Fix + Runtime Hardening
 
 > Created: 2026-04-03
-> Status: Ready to execute
-> Agent roles: Plumbo (code edits via Cursor); Claude Dispatch (orchestration + DB verification only)
-> Token strategy: All code changes via Cursor API / Plumbo. Claude Dispatch limited to `curl`, `node -e` DB queries, and file reads.
+> Status: Historical implementation plan snapshot (not current-state truth)
+> Agent roles: OpenClaw / Plumbo (code edits); Claude Cowork (orchestration, planning, validation)
+> Token strategy: All code changes via OpenClaw. Claude Cowork handles orchestration, validation, and planning only.
+>
+> Historical note (2026-04-09): keep this document as planning context only. Current implementation status and acceptance evidence live in `docs/roadmap.md` and `docs/system-state.md`. Do not treat plan steps below as proof that implementation completed.
 
 ---
 
@@ -96,7 +98,7 @@ function normalizePolymarketSportLabel(label) {
 
 **Files affected:** `lib/ingestion/sports-universe.mjs`
 **Expected output:** Polymarket markets get sport from the `/sports` endpoint label instead of broken numeric tag matching.
-**Cursor prompt hint:** "In sports-universe.mjs, the Polymarket sport inference is broken because inferSportFromPolymarketTags receives numeric tag IDs. Fix it by using the sport label already available in tagSlug from the /sports endpoint. Add a normalizePolymarketSportLabel() helper. See docs/phase-e1-5-sport-inference-and-runtime-plan.md Step 1 for exact code."
+**OpenClaw prompt:** "In sports-universe.mjs, the Polymarket sport inference is broken because inferSportFromPolymarketTags receives numeric tag IDs. Fix it by using the sport label already available in tagSlug from the /sports endpoint. Add a normalizePolymarketSportLabel() helper. See docs/phase-e1-5-sport-inference-and-runtime-plan.md Step 1 for exact code."
 
 ---
 
@@ -146,7 +148,7 @@ function normalizePolymarketSportLabel(label) {
 
 **Files affected:** `lib/ingestion/services/sport-inference.mjs`
 **Expected output:** Running the ticker fallback against all 130 unknown series tickers should reduce unknowns from 3,313 to < 200.
-**Cursor prompt hint:** "Expand KALSHI_SERIES_TICKER_FALLBACK in sport-inference.mjs with the patterns listed in docs/phase-e1-5-sport-inference-and-runtime-plan.md Step 2. Add entries for CS2, NCAABB, MLB variants, NBA variants, lacrosse, NPB, KBO, WNBA, AHL, KHL, motogp, darts, chess, and ~20 soccer league tickers. Keep the same style as existing entries."
+**OpenClaw prompt:** "Expand KALSHI_SERIES_TICKER_FALLBACK in sport-inference.mjs with the patterns listed in docs/phase-e1-5-sport-inference-and-runtime-plan.md Step 2. Add entries for CS2, NCAABB, MLB variants, NBA variants, lacrosse, NPB, KBO, WNBA, AHL, KHL, motogp, darts, chess, and ~20 soccer league tickers. Keep the same style as existing entries."
 
 ---
 
@@ -185,7 +187,7 @@ function normalizePolymarketSportLabel(label) {
 
 **Files affected:** New file `tests/sport-inference.test.mjs`
 **Expected output:** `node --test tests/sport-inference.test.mjs` passes with 0 failures.
-**Cursor prompt hint:** "Create tests/sport-inference.test.mjs using Node's built-in test runner. Test inferSportFromKalshiTicker with titles and tickers for all major sports. Include regression tests for previously-unknown tickers: KXCS2MAP, KXNCAABBGAME, KXMLBF5TOTAL, KXNFLTEAM1POS, KXNBA1HWINNER, KXSAUDIPLGAME, KXLIGAMXGAME. Test inferSportFromPolymarketTags with both descriptive slugs and numeric-only slugs."
+**OpenClaw prompt:** "Create tests/sport-inference.test.mjs using Node's built-in test runner. Test inferSportFromKalshiTicker with titles and tickers for all major sports. Include regression tests for previously-unknown tickers: KXCS2MAP, KXNCAABBGAME, KXMLBF5TOTAL, KXNFLTEAM1POS, KXNBA1HWINNER, KXSAUDIPLGAME, KXLIGAMXGAME. Test inferSportFromPolymarketTags with both descriptive slugs and numeric-only slugs."
 
 ---
 
@@ -227,7 +229,7 @@ async function seriesRecentlySeen(client, seriesTicker, hoursThreshold = 6) {
 
 **Files affected:** `lib/ingestion/sports-universe.mjs`
 **Expected output:** Script completes in < 30 minutes. Scheduled task runs every 2 hours and covers different series each time. Full coverage in ~16 hours across multiple runs instead of one monolithic run.
-**Cursor prompt hint:** "Add a max-runtime guard (30 min) and incremental series skipping to sports-universe.mjs. See docs/phase-e1-5-sport-inference-and-runtime-plan.md Step 5 for the exact implementation pattern. The series skip should query last_seen_at for the series_ticker and skip if seen within 6 hours."
+**OpenClaw prompt:** "Add a max-runtime guard (30 min) and incremental series skipping to sports-universe.mjs. See docs/phase-e1-5-sport-inference-and-runtime-plan.md Step 5 for the exact implementation pattern. The series skip should query last_seen_at for the series_ticker and skip if seen within 6 hours."
 
 ---
 
@@ -248,24 +250,24 @@ Add to `package.json`:
 
 **Files affected:** New file `scripts/ingestion/pmci-backfill-sport-codes.mjs`, `package.json`
 **Expected output:** Running `npm run pmci:backfill:sport-codes` reduces unknown count from ~37K to < 500.
-**Cursor prompt hint:** "Create scripts/ingestion/pmci-backfill-sport-codes.mjs — a one-shot script that updates sport codes for existing unknown sports markets. For Polymarket: fetch /sports endpoint, build tagId→sportLabel map, update based on metadata->>'tag_id'. For Kalshi: re-run inferSportFromKalshiTicker(title, metadata->>'series_ticker') with expanded patterns. Batch UPDATE in groups of 500."
+**OpenClaw prompt:** "Create scripts/ingestion/pmci-backfill-sport-codes.mjs — a one-shot script that updates sport codes for existing unknown sports markets. For Polymarket: fetch /sports endpoint, build tagId→sportLabel map, update based on metadata->>'tag_id'. For Kalshi: re-run inferSportFromKalshiTicker(title, metadata->>'series_ticker') with expanded patterns. Batch UPDATE in groups of 500."
 
 ---
 
 ### Step 7: Update scheduled task interval
 
-**Problem:** Current scheduled task runs but gets blocked by the 16-hour lock. With the 30-minute max-runtime, the task should run every 2 hours.
+**Problem:** Current scheduled task runs but gets blocked by the 16-hour lock. With the 30-minute max-runtime, the task should run every 2 hours.x-runtime, the task should run every 2 hours.
 
-**Fix:** Claude Dispatch will update the scheduled task interval via `update_scheduled_task` to run every 2 hours instead of the current cadence.
+**Fix:** Claude Cowork will update the scheduled task interval via `update_scheduled_task` to run every 2 hours instead of the current cadence.
 
-**Handled by:** Claude Dispatch (not Plumbo)
+**Handled by:** Claude Cowork (not OpenClaw)
 **Expected output:** Scheduled task runs 12x/day, each covering a different subset of series.
 
 ---
 
 ### Step 8: Kill stale process and run verification
 
-**Handled by:** Claude Dispatch
+**Handled by:** Claude Cowork
 
 ```bash
 # Kill the stuck 16-hour process
@@ -319,9 +321,9 @@ Phase E1.5 is complete when:
 
 ---
 
-## Execution Order for Plumbo
+## Execution Order for OpenClaw
 
-Steps 1-6 are code changes — send to Plumbo via Cursor API in this order:
+Steps 1-6 are code changes — dispatch to OpenClaw in this order:
 
 1. **Step 1** (Polymarket inference fix) — highest impact, fixes 34K markets
 2. **Step 2 + 3** (Kalshi ticker patterns) — can be done together, fixes 3K markets
@@ -329,4 +331,4 @@ Steps 1-6 are code changes — send to Plumbo via Cursor API in this order:
 4. **Step 5** (runtime guard) — independent of inference fixes
 5. **Step 6** (backfill script) — depends on Steps 1-3 being merged
 
-Steps 7-8 are orchestration — Claude Dispatch handles directly.
+Steps 7-8 are orchestration — Claude Cowork handles directly.

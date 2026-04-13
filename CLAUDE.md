@@ -6,7 +6,7 @@ See `docs/architecture.md` for system structure.
 
 `prediction-machine` is the PMCI backend. It owns ingestion, normalization, matching, schema, and the active machine-facing API.
 
-Current active phase: Phase E1 — sports expansion.
+Current active phase: Phase E2 — crypto expansion (E1.5 complete 2026-04-10).
 
 ## Invariants
 
@@ -31,6 +31,8 @@ Current active phase: Phase E1 — sports expansion.
 - `docs/system-state.md` — live system state and known risks
 - `docs/decision-log.md` — architectural decisions
 - `docs/plans/phase-e1-sports-plan.md` — detailed Phase E1 plan
+- `docs/db-schema-reference.md` — **DB column reference and API auth; read at session start before any DB queries or API calls**
+- `docs/plans/workflow-optimization-plan.md` — agentic workflow decisions (process patterns, agent split, gate verification)
 
 ## Verification Commands
 
