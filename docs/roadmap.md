@@ -54,7 +54,7 @@
 ## Phase E — Sports & Crypto Expansion (active)
 **Entry criteria:** Phase D semantic closeout complete (met). Coverage/performance targets continue as tracked optimization work during Phase E onboarding.
 
-### E1 — Sports ✅ ACTIVE (schema + ingestion complete, proposer workflow partially implemented on active branch)
+### E1 — Sports ✅ HISTORICAL CLOSEOUT PASS, ⚠️ LIVE DRIFT DETECTED (2026-04-13)
 
 **Completed (2026-03-31 — 2026-04-01):**
 - [x] **E1.1 — Schema migration** (`20260331000001_sports_market_fields.sql`): added `sport`, `event_type`, `game_date`, `home_team`, `away_team` to `provider_markets`; added `lifecycle`, `resolves_at` to `canonical_events`
@@ -86,7 +86,7 @@
 - `npm run verify:schema` passes
 - `npm run pmci:smoke` passes
 
-**E1.5 COMPLETE — verified 2026-04-10:**
+**E1.5 COMPLETE (historical closeout) — verified 2026-04-10:**
 - `fix/e1-5-sports-proposer-2026-04-08` merged to `main` on 2026-04-10.
 - Proposer now returns `considered=10,756,217` (was 0); 10 cross-platform soccer pairs accepted.
 - Final audit: `stale_active=0`, `unknown_sport=922`, `semantic_violations=0`, `verify:schema PASS`.
@@ -95,14 +95,17 @@
 - Branch-local note at audit time: local `main` is ahead of `origin/main` by 6 commits with unrelated uncommitted workflow-doc edits in the working tree.
 - Live audit refresh (2026-04-12): `npm run verify:schema` PASS; `npm run pmci:smoke` = provider_markets **80,375** | snapshots **816,206** | families **3,120** | current_links **131**.
 - Live smoke rerun (2026-04-12 late check): provider_markets **80,606** | snapshots **820,548** | families **3,120** | current_links **131**.
-- Branch-local note (2026-04-12 late check): local `main...origin/main [ahead 8]` with unrelated workflow/doc/script changes in the working tree; no separate feature branch active during this audit.
+- Live audit refresh (2026-04-13): `npm run verify:schema` PASS; `npm run pmci:smoke` = provider_markets **80,606** | snapshots **834,102** | families **3,120** | current_links **131**.
+- Live proposer/audit (2026-04-13): `npm run pmci:propose:sports` => `considered=12,374,090 inserted=66 rejected=12,373,696`; `npm run pmci:audit:sports:packet` => `stale_active=8,317`, `unknown_sport=1,663`, `semantic_violations=369`.
+- Branch-local note (2026-04-13): local `main...origin/main [ahead 9]` with unrelated workflow/doc/script edits and untracked files in the working tree; no separate feature branch active during this audit.
 
-**E1 remaining work (post-E1.5):**
+**E1 remaining work (post-E1.5 historical closeout, refreshed by 2026-04-13 live evidence):**
 - [x] **E1.5 — Sports proposer acceptance** ✓ COMPLETE (2026-04-10)
+- [ ] **E1.5 stabilization rerun**: return live strict-audit metrics to stable green (`stale_active=0`, `unknown_sport<1000`, `semantic_violations=0`) after 2026-04-13 drift
 - [ ] Define canonical event lifecycle for game markets (auto-archive on settle vs. delete)
 - [ ] Expand accepted sports pairs beyond soccer (NBA, NHL, NFL when cross-platform matches exist)
 
-### E2 — Crypto ⬅ ACTIVE (E1.5 gate passed 2026-04-10; E2 unblocked as of 2026-04-12)
+### E2 — Crypto ⬅ PLANNING/UNBLOCKED (do not promote to active implementation while E1 strict-audit is red)
 - [ ] Define crypto canonical event schema (price-based, continuous, no binary Yes/No)
 - [ ] Identify crypto markets on Kalshi + Polymarket (BTC price targets, ETH events)
 - [ ] Adapt ingestion for continuous price events vs. binary elections
@@ -212,5 +215,5 @@
 
 ---
 
-## Current milestone: E2 — Crypto (E1.5 complete as of 2026-04-10)
-E1.1–E1.5 are complete and merged to main. Phase E2 (crypto market ingestion and cross-platform linking) is unblocked. E1.5 remediation (2026-04-10) remains validated: sport inference expanded for 30+ league/format patterns, stale-active backlog cleared (20,048→0), unknown_sport reduced (38,707→922), and 10 cross-platform soccer pairs accepted (Charlotte FC vs Nashville SC). Latest live smoke snapshot (2026-04-12 late rerun) is **80,606 / 820,548 / 3,120 / 131** (provider_markets/snapshots/families/current_links). Smoke counts are runtime-volatile; use latest `npm run pmci:smoke` output for current totals.
+## Current milestone: E1 stabilization + E2 planning
+E1.1–E1.5 closeout remains historically complete and merged to `main` (2026-04-10), but live 2026-04-13 audit evidence shows regression in strict-audit health: `stale_active=8,317`, `unknown_sport=1,663`, `semantic_violations=369` with fresh proposer insertions (`inserted=66`). Treat E2 as planning-ready/unblocked, but do not claim active E2 implementation progress until E1 live strict-audit returns to stable green. Latest live smoke snapshot (2026-04-13) is **80,606 / 834,102 / 3,120 / 131** (provider_markets/snapshots/families/current_links). Smoke counts are runtime-volatile; use latest `npm run pmci:smoke` output for current totals.

@@ -17,6 +17,8 @@ Repo: `~/prediction-machine`
 
 > Historical note added 2026-04-12: latest live audit rerun supersedes prior smoke snapshots (`npm run pmci:smoke` => `provider_markets=80375 / snapshots=816206 / families=3120 / current_links=131`; `npm run verify:schema` => PASS). Branch state at that audit: `main...origin/main [ahead 7]` with unrelated working-tree edits; no separate feature branch active.
 
+> Historical note added 2026-04-13: latest live audit rerun supersedes the 2026-04-12 snapshot (`npm run pmci:smoke` => `provider_markets=80606 / snapshots=834102 / families=3120 / current_links=131`; `npm run verify:schema` => PASS). Live strict-audit evidence at this time is not green (`stale_active=8317`, `unknown_sport=1663`, `semantic_violations=369`; proposer inserted 66). Treat this file as point-in-time evidence only, not current completion state.
+
 ---
 
 ## Evidence Log

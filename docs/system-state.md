@@ -16,6 +16,7 @@
 - **Live audit branch state (2026-04-10):** local `main` is ahead of `origin/main` by 6 commits, with unrelated uncommitted workflow-doc edits in the working tree. No separate feature branch was active during this audit.
 - **Live audit branch state (2026-04-12):** local `main...origin/main [ahead 7]` with unrelated workflow/doc/script edits in the working tree. No separate feature branch was active during this audit.
 - **Live audit branch state (2026-04-12 late check):** local `main...origin/main [ahead 8]` with unrelated workflow/doc/script edits in the working tree. No separate feature branch was active during this audit.
+- **Live audit branch state (2026-04-13):** local `main...origin/main [ahead 9]` with unrelated workflow/doc/script edits and untracked files in the working tree. No separate feature branch was active during this audit.
 
 ## Current Status (2026-04-12 refresh — Phase E1.5 COMPLETE ✓)
 
@@ -54,6 +55,29 @@ Next steps (see roadmap.md E2 section):
 3. Build `lib/ingestion/crypto-universe.mjs` following the same guard-first pattern as `sports-universe.mjs`
 4. Adapt spread computation model for non-binary continuous events
 5. Apply guard-first proposer + strict-audit gate loop before accepting any crypto market links
+
+---
+
+## Current Status (2026-04-13 refresh — live drift detected after E1.5 closeout)
+
+### Phase E1.5 — historical closeout remains true, but live strict-audit is red
+
+Historical closeout (2026-04-10) still stands as a past pass event, but this live rerun shows drift:
+
+| Check | Result |
+|------|--------|
+| `npm run verify:schema` | ✅ PASS |
+| `npm run pmci:smoke` | ✅ `provider_markets=80606`, `snapshots=834102`, `families=3120`, `current_links=131` |
+| `npm run pmci:propose:sports` | ⚠️ `considered=12374090`, `inserted=66`, `rejected=12373696` |
+| `npm run pmci:audit:sports:packet` | ❌ `stale_active=8317`, `unknown_sport=1663`, `semantic_violations=369` |
+| API port 3001 probe during audit script | ⚠️ `PORT_3001_NOT_LISTENING` / `API_UNREACHABLE` |
+
+Interpretation:
+- Do not erase E1.5 historical closeout claims, but treat them as historical snapshots.
+- Current runtime state requires E1 stabilization before claiming clean strict-audit health.
+- E2 remains unblocked at planning level only; avoid claiming active E2 implementation while E1 strict-audit is red.
+
+Phase F implementation status remains unchanged (planning docs exist; execution-readiness routes/services still absent in active PMCI API).
 
 ---
 

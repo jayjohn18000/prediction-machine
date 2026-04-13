@@ -104,3 +104,15 @@
   - Late rerun checks: `npm run verify:schema` => PASS; `npm run pmci:smoke` => `provider_markets=80606`, `snapshots=820548`, `families=3120`, `current_links=131`.
   - Phase F execution-readiness probes remain missing (`/v1/signals/ranked`, `/v1/router/best-venue`, `src/services/tradability-service.mjs`, `src/services/router-service.mjs`, `config/execution-readiness.json`).
 - Outcome: docs remain directionally correct; refreshed smoke/branch snapshot lines to match late rerun evidence and preserved the cron false-negative diagnosis.
+
+## 2026-04-13 — Live roadmap audit refresh: preserve E1.5 closeout as historical, flag current drift
+- Decision: keep 2026-04-10 E1.5 completion as historical truth, but stop presenting it as current strict-audit health after live rerun evidence.
+- Evidence from this run:
+  - `git status --short --branch` => `main...origin/main [ahead 9]` with unrelated workflow/doc/script edits and untracked files in working tree (no separate feature branch).
+  - `npm run verify:schema` => PASS.
+  - `npm run pmci:smoke` => `provider_markets=80606`, `snapshots=834102`, `families=3120`, `current_links=131`.
+  - `npm run pmci:propose:sports` => `considered=12374090`, `inserted=66`, `rejected=12373696`.
+  - `npm run pmci:audit:sports:packet` => `stale_active=8317`, `unknown_sport=1663`, `semantic_violations=369`.
+  - Phase F execution-readiness probes still missing in active PMCI API (`/v1/signals/ranked`, `/v1/router/best-venue`, `src/services/tradability-service.mjs`, `src/services/router-service.mjs`, `config/execution-readiness.json`).
+- Outcome: roadmap/system-state were refreshed to separate historical closeout from current live state; E2 remains planning-unblocked but not promoted to active implementation claims while E1 strict-audit is red.
+
