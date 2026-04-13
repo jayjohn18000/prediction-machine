@@ -20,9 +20,8 @@ Before making changes, read:
 
 ## Responsibility model
 
-- OpenClaw executes implementation.
-- Cursor may be used for rapid file editing, function implementation, refactors, and polish within the approved scope.
-- Claude Computer does not perform large repository edits; it plans and orchestrates.
+- OpenClaw executes all implementation: code generation, code editing, refactoring, and file creation.
+- Claude Cowork does not perform large repository edits; it plans, orchestrates, and validates.
 
 ## Responsibilities
 
@@ -34,7 +33,6 @@ Before making changes, read:
 ## Rules
 
 - Follow the existing structure in `src/`, `lib/`, `scripts/`, `supabase/`, and `docs/`
-- Use Cursor only as an editing accelerator when needed
 - Do not introduce new architecture patterns without clear justification
 - Prefer small commits and incremental changes
 - Keep changes aligned with documented PMCI boundaries

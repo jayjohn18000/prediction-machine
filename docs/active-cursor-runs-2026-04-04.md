@@ -1,7 +1,13 @@
-# Active Cursor Runs — 2026-04-04
+# Active Cursor Runs — 2026-04-04 [ARCHIVED]
+
+> ⚠️ ARCHIVED — 2026-04-09
+> Cursor is no longer used in this workflow. This file is retained as a historical record only.
+> Future execution tracking should use `active-openclaw-runs-YYYY-MM-DD.md`.
+
+---
 
 Created: 2026-04-04 20:33 CDT
-Purpose: Fresh-session handoff note for in-flight Phase E1.5 work
+Purpose: Fresh-session handoff note for in-flight Phase E1.5 work (historical — executed via Cursor)
 
 ## Background runs launched
 

@@ -66,9 +66,9 @@ After the agent completes, ask:
 - If yes: follow `agents/AGENT_ENHANCER.md` targeting the agent(s) used in this session
 - This is how the system self-corrects over time — each run leaves evidence for the next
 
-## Step 8 — Cursor handoff (optional)
-Ask the user: "Save this plan as a Cursor handoff?"
-- If yes: follow the steps in `.claude/commands/cursor-handoff.md` to save the plan to `docs/cursor-prompts/` and output the Cursor invocation block
+## Step 8 — OpenClaw dispatch (optional)
+Ask the user: "Dispatch this plan to OpenClaw for execution?"
+- If yes: follow the steps in `.claude/commands/openclaw-dispatch.md` to save the plan to `docs/openclaw-prompts/` and send it to OpenClaw via the OpenClaw skill
 
 ## Scope (strict)
 ingestion → windows → calibration → scoring → reporting → DB health → schema → provider APIs → market discovery → link review → health monitoring → anomaly detection → research → agent enhancement.

@@ -1,3 +1,10 @@
+> ⚠️ DEPRECATED — 2026-04-09
+> This command has been replaced by `/openclaw-dispatch` (`.claude/commands/openclaw-dispatch.md`).
+> Cursor is no longer used in this workflow. OpenClaw is the sole executor.
+> This file is retained as a historical reference only. Do not invoke it.
+
+---
+
 Save the current plan as a Cursor-ready prompt and output the Cursor invocation.
 
 Working directory: /Users/jaylenjohnson/prediction-machine

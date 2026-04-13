@@ -2,15 +2,16 @@
 
 ## Responsibility Model
 
-### Claude Computer
+### Claude Cowork
 
-Claude Computer is responsible for:
+Claude Cowork is responsible for:
 - planning
 - reasoning
 - orchestration
 - triggering other tools
+- validation
 
-Claude Computer must not perform large repository edits.
+Claude Cowork must not perform large repository edits.
 
 ### OpenClaw
 
@@ -21,25 +22,17 @@ OpenClaw is responsible for:
 - large diffs
 - commit creation
 - long-running execution tasks
+- code generation
+- code editing and refactoring
+- file and document creation
 - reviewer audit
-
-### Cursor
-
-Cursor is responsible for:
-- fast code editing
-- implementing functions
-- refactoring files
-- polishing code changes
-
-Cursor is an implementation accelerator, not the planner or final reviewer.
 
 ## Flow
 
-1. Operator → Claude Computer
-2. Claude Computer → planning
-3. OpenClaw → repository execution
-4. Cursor → code editing when needed
-5. OpenClaw → reviewer audit
+1. Operator → Claude Cowork
+2. Claude Cowork → planning
+3. OpenClaw → repository execution + code generation
+4. OpenClaw → reviewer audit
 
 ## Rules
 

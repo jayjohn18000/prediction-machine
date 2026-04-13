@@ -29,8 +29,7 @@ Verify that changes:
 
 - OpenClaw performs the reviewer audit.
 - Reviewer scope is architecture and contract validation only.
-- Claude Computer may inform reasoning, but review output must stay focused on validation findings.
-- Cursor is not the reviewer.
+- Claude Cowork may inform reasoning, but review output must stay focused on validation findings.
 
 ## Responsibilities
 

@@ -26,7 +26,7 @@
 6. **REPORTER** — Metrics, report format, outputs (JSON/CSV). Output: metrics/report spec + sanity checklist.
 7. **VALIDATION_AGENT** — Validates assumptions against logs/backtests; acceptance tests; fail-reason taxonomy. Run when assumptions or data drift are in question. Output: test plan + assertions.
 
-**Merge rule:** Combine each agent’s output into a single **Implementation Plan** document (one place for "files to touch", "migrations", "tests", "checklists"). That plan is what Cursor uses to implement.
+**Merge rule:** Combine each agent’s output into a single **Implementation Plan** document (one place for "files to touch", "migrations", "tests", "checklists"). That plan is what OpenClaw uses to implement.
 
 ---
 
@@ -60,10 +60,10 @@ Produce exactly one of:
 - **Context:** ...
 ```
 
-### C) "Plan ready for Cursor"
+### C) "Plan ready for OpenClaw"
 ```markdown
 ## Implementation plan (final)
-[Complete plan suitable for Cursor to execute]
+[Complete plan suitable for OpenClaw to execute]
 
 ## Definition of done
 - [ ] Checklist items from all agents
@@ -77,7 +77,7 @@ Produce exactly one of:
 - [ ] Every relevant agent in the pipeline has contributed (or was explicitly skipped with reason).
 - [ ] Plan has: files to touch, diffs/migrations, tests, and sanity checklists.
 - [ ] Scope stayed within ingestion → windows → calibration → scoring → reporting (no execution/trading).
-- [ ] Human has one clear "run this agent next" or "plan ready for Cursor" instruction.
+- [ ] Human has one clear "run this agent next" or "plan ready for OpenClaw" instruction.
 
 ---
 
