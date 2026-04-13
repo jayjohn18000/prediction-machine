@@ -101,9 +101,11 @@
 
 **E1 remaining work (post-E1.5 historical closeout, refreshed by 2026-04-13 live evidence):**
 - [x] **E1.5 — Sports proposer acceptance** ✓ COMPLETE (2026-04-10)
-- [ ] **E1.5 stabilization rerun**: return live strict-audit metrics to stable green (`stale_active=0`, `unknown_sport<1000`, `semantic_violations=0`) after 2026-04-13 drift
+- [ ] **E1.6 — Sports execution-readiness sprint** ⬅ ACTIVE (week of 2026-04-14)
+  - See [`docs/plans/e1.6-sports-execution-readiness-sprint.md`](plans/e1.6-sports-execution-readiness-sprint.md) for full plan
+  - Target: 200+ linked sports pairs with bilateral live prices, competitive baseline documented, E1 strict-audit green
+  - Steps: sport inference backfill → stale-active cleanup → semantic violation fix → proposer full run → enable DB discovery → competitive baseline research → spread analysis
 - [ ] Define canonical event lifecycle for game markets (auto-archive on settle vs. delete)
-- [ ] Expand accepted sports pairs beyond soccer (NBA, NHL, NFL when cross-platform matches exist)
 
 ### E2 — Crypto ⬅ PLANNING/UNBLOCKED (do not promote to active implementation while E1 strict-audit is red)
 - [ ] Define crypto canonical event schema (price-based, continuous, no binary Yes/No)
@@ -215,5 +217,9 @@
 
 ---
 
-## Current milestone: E1 stabilization + E2 planning
-E1.1–E1.5 closeout remains historically complete and merged to `main` (2026-04-10), but live 2026-04-13 audit evidence shows regression in strict-audit health: `stale_active=8,317`, `unknown_sport=1,663`, `semantic_violations=369` with fresh proposer insertions (`inserted=66`). Treat E2 as planning-ready/unblocked, but do not claim active E2 implementation progress until E1 live strict-audit returns to stable green. Latest live smoke snapshot (2026-04-13) is **80,606 / 834,102 / 3,120 / 131** (provider_markets/snapshots/families/current_links). Smoke counts are runtime-volatile; use latest `npm run pmci:smoke` output for current totals.
+## Current milestone: E1.6 Sports Execution-Readiness Sprint (week of 2026-04-14)
+**Goal for the week:** Get from 7 linked sports pairs to 200+ with live bilateral prices, benchmark against OddPool/OddsJam, and produce the first real spread analysis. This clears the E1 strict-audit gate (unblocking E2) and provides the data foundation for Phase F tradability modeling.
+
+See [`docs/plans/e1.6-sports-execution-readiness-sprint.md`](plans/e1.6-sports-execution-readiness-sprint.md) for the full execution plan.
+
+Latest live smoke snapshot (2026-04-13): **80,606 / 874,301 / 3,120 / 131** (provider_markets/snapshots/families/current_links). Smoke counts are runtime-volatile; use latest `npm run pmci:smoke` output for current totals.
