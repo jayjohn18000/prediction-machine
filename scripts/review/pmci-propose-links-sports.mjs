@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import pg from 'pg';
 import { loadEnv } from '../../src/platform/env.mjs';
-import { sportsEntityFromMarket, sportsDateDeltaDays, isSportsPairSemanticallyValid, looksLikeMatchupMarket } from '../../lib/matching/sports-helpers.mjs';
+import { sportsEntityFromMarket, sportsDateDeltaDays, isSportsPairSemanticallyValid, looksLikeMatchupMarket, classifyMarketTypeBucket } from '../../lib/matching/sports-helpers.mjs';
 
 loadEnv();
 const { Client } = pg;
@@ -10,6 +10,7 @@ async function main() {
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
   const argv = process.argv.slice(2);
   const dryRun = argv.includes('--dry-run');
+  const verbose = argv.includes('--verbose');
   const sportIdx = argv.indexOf('--sport');
   const sportFilter = sportIdx >= 0 ? String(argv[sportIdx + 1] || '').toLowerCase().trim() : null;
   const limitIdx = argv.indexOf('--limit');
@@ -52,16 +53,63 @@ async function main() {
     let rejected = 0;
     let pairBudget = 0;
 
+    // A2: track proposals emitted per matchup_key across the full run
+    const proposalsPerMatchup = new Map();
+
     for (const k of kalshi) {
+      if (pairBudget >= limit) break;
       const ks = sportsEntityFromMarket(k);
       if (!ks.isMatchup || ks.matchupKey === 'unknown') continue;
+
+      // A3: classify Kalshi market type bucket once per outer market
+      const kBucket = classifyMarketTypeBucket(k.title);
+
+      // Collect valid candidates for this Kalshi market before inserting (needed for A2 sort)
+      const candidates = [];
+
       for (const p of poly) {
-        if (pairBudget >= limit) break;
         const ps = sportsEntityFromMarket(p);
         if (!ps.isMatchup || ps.matchupKey === 'unknown') continue;
         if (ks.sport !== ps.sport) continue;
+
+        // A1: compute delta with Date-object-safe helper; gate on null or >7d
         const dateDelta = sportsDateDeltaDays(ks.gameDate, ps.gameDate);
         considered += 1;
+
+        if (dateDelta === null) {
+          verbose && console.log(`[skip] date_null ${ks.matchupKey}`);
+          rejected += 1;
+          continue;
+        }
+        if (dateDelta > 7) {
+          verbose && console.log(`[skip] date_gap:${dateDelta}d ${ks.matchupKey}`);
+          rejected += 1;
+          continue;
+        }
+
+        // A3: reject cross-bucket pairs; only filter when both buckets are known
+        const pBucket = classifyMarketTypeBucket(p.title);
+        if (kBucket && pBucket && kBucket !== pBucket) {
+          const skipReason = `market_type_mismatch:${kBucket}:${pBucket}`;
+          verbose && console.log(`[skip] ${skipReason} ${ks.matchupKey}`);
+          const skipReasons = {
+            skip_reason: skipReason,
+            sport: ks.sport,
+            matchup_key: ks.matchupKey,
+            source: 'sports_proposer_v1',
+          };
+          if (!dryRun) {
+            await client.query(
+              `insert into pmci.proposed_links (
+                category, provider_market_id_a, provider_market_id_b, proposed_relationship_type, confidence, reasons, features, decision
+              ) values ('sports', $1, $2, 'equivalent', $3, $4::jsonb, $5::jsonb, 'rejected')
+               on conflict do nothing`,
+              [Math.min(k.id, p.id), Math.max(k.id, p.id), 0.0, JSON.stringify(skipReasons), JSON.stringify({})],
+            );
+          }
+          rejected += 1;
+          continue;
+        }
 
         const semantic = isSportsPairSemanticallyValid(k, p);
         if (!semantic.ok) {
@@ -71,6 +119,24 @@ async function main() {
 
         const pairKey = `${Math.min(k.id, p.id)}:${Math.max(k.id, p.id)}:equivalent`;
         if (existingPairs.has(pairKey)) continue;
+
+        const confidence = ks.matchupKey === ps.matchupKey ? 0.96 : 0.0;
+        candidates.push({ p, ps, pairKey, dateDelta, confidence });
+      }
+
+      // A2: sort by confidence desc, then dateDelta asc (closer date = better tiebreaker)
+      candidates.sort((a, b) => b.confidence - a.confidence || a.dateDelta - b.dateDelta);
+
+      for (const { p, ps, pairKey, dateDelta, confidence } of candidates) {
+        if (pairBudget >= limit) break;
+
+        // A2: enforce global cap of 3 pending proposals per matchup_key
+        const matchupCount = proposalsPerMatchup.get(ks.matchupKey) || 0;
+        if (matchupCount >= 3) {
+          verbose && console.log(`[skip] fan_out_suppressed ${ks.matchupKey}`);
+          rejected += 1;
+          continue;
+        }
 
         const reasons = {
           sport: ks.sport,
@@ -84,7 +150,7 @@ async function main() {
           sport_match: ks.sport === ps.sport ? 1 : 0,
           matchup_match: ks.matchupKey === ps.matchupKey ? 1 : 0,
           date_delta_days: dateDelta,
-          confidence_raw: ks.matchupKey === ps.matchupKey ? 0.96 : 0.0,
+          confidence_raw: confidence,
         };
 
         if (!dryRun) {
@@ -93,14 +159,14 @@ async function main() {
               category, provider_market_id_a, provider_market_id_b, proposed_relationship_type, confidence, reasons, features
             ) values ('sports', $1, $2, 'equivalent', $3, $4::jsonb, $5::jsonb)
              on conflict do nothing`,
-            [Math.min(k.id, p.id), Math.max(k.id, p.id), 0.96, JSON.stringify(reasons), JSON.stringify(features)],
+            [Math.min(k.id, p.id), Math.max(k.id, p.id), confidence, JSON.stringify(reasons), JSON.stringify(features)],
           );
         }
         existingPairs.add(pairKey);
+        proposalsPerMatchup.set(ks.matchupKey, matchupCount + 1);
         inserted += 1;
         pairBudget += 1;
       }
-      if (pairBudget >= limit) break;
     }
 
     console.log(`pmci:propose:sports sport=${sportFilter || 'all'} considered=${considered} inserted=${inserted} rejected=${rejected} limit=${limit}${dryRun ? ' dry-run=true' : ''}`);
