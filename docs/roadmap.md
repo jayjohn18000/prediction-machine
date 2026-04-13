@@ -94,18 +94,20 @@
 - Live smoke rerun (2026-04-10, post-edit check): provider_markets **76,587** | snapshots **672,374** | families **3,120** | current_links **131**.
 - Branch-local note at audit time: local `main` is ahead of `origin/main` by 6 commits with unrelated uncommitted workflow-doc edits in the working tree.
 - Live audit refresh (2026-04-12): `npm run verify:schema` PASS; `npm run pmci:smoke` = provider_markets **80,375** | snapshots **816,206** | families **3,120** | current_links **131**.
-- Branch-local note (2026-04-12): local `main...origin/main [ahead 7]` with unrelated workflow/doc/script changes in the working tree; no separate feature branch active during this audit.
+- Live smoke rerun (2026-04-12 late check): provider_markets **80,606** | snapshots **820,548** | families **3,120** | current_links **131**.
+- Branch-local note (2026-04-12 late check): local `main...origin/main [ahead 8]` with unrelated workflow/doc/script changes in the working tree; no separate feature branch active during this audit.
 
 **E1 remaining work (post-E1.5):**
 - [x] **E1.5 — Sports proposer acceptance** ✓ COMPLETE (2026-04-10)
 - [ ] Define canonical event lifecycle for game markets (auto-archive on settle vs. delete)
 - [ ] Expand accepted sports pairs beyond soccer (NBA, NHL, NFL when cross-platform matches exist)
 
-### E2 — Crypto (pending E1 proposer gate)
+### E2 — Crypto ⬅ ACTIVE (E1.5 gate passed 2026-04-10; E2 unblocked as of 2026-04-12)
 - [ ] Define crypto canonical event schema (price-based, continuous, no binary Yes/No)
 - [ ] Identify crypto markets on Kalshi + Polymarket (BTC price targets, ETH events)
 - [ ] Adapt ingestion for continuous price events vs. binary elections
 - [ ] Determine spread computation model for non-binary markets
+- [ ] Apply guard-first proposer + strict-audit gate loop (same pattern as sports)
 
 ---
 
@@ -211,4 +213,4 @@
 ---
 
 ## Current milestone: E2 — Crypto (E1.5 complete as of 2026-04-10)
-E1.1–E1.5 are complete and merged to main. Phase E2 (crypto market ingestion and cross-platform linking) is unblocked. E1.5 remediation (2026-04-10) remains validated: sport inference expanded for 30+ league/format patterns, stale-active backlog cleared (20,048→0), unknown_sport reduced (38,707→922), and 10 cross-platform soccer pairs accepted (Charlotte FC vs Nashville SC). Latest live smoke snapshot (2026-04-12) is **80,375 / 816,206 / 3,120 / 131** (provider_markets/snapshots/families/current_links). Smoke counts are runtime-volatile; use latest `npm run pmci:smoke` output for current totals.
+E1.1–E1.5 are complete and merged to main. Phase E2 (crypto market ingestion and cross-platform linking) is unblocked. E1.5 remediation (2026-04-10) remains validated: sport inference expanded for 30+ league/format patterns, stale-active backlog cleared (20,048→0), unknown_sport reduced (38,707→922), and 10 cross-platform soccer pairs accepted (Charlotte FC vs Nashville SC). Latest live smoke snapshot (2026-04-12 late rerun) is **80,606 / 820,548 / 3,120 / 131** (provider_markets/snapshots/families/current_links). Smoke counts are runtime-volatile; use latest `npm run pmci:smoke` output for current totals.

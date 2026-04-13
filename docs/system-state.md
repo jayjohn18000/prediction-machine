@@ -15,6 +15,7 @@
 - Active phase: **E2** (next phase, unblocked)
 - **Live audit branch state (2026-04-10):** local `main` is ahead of `origin/main` by 6 commits, with unrelated uncommitted workflow-doc edits in the working tree. No separate feature branch was active during this audit.
 - **Live audit branch state (2026-04-12):** local `main...origin/main [ahead 7]` with unrelated workflow/doc/script edits in the working tree. No separate feature branch was active during this audit.
+- **Live audit branch state (2026-04-12 late check):** local `main...origin/main [ahead 8]` with unrelated workflow/doc/script edits in the working tree. No separate feature branch was active during this audit.
 
 ## Current Status (2026-04-12 refresh — Phase E1.5 COMPLETE ✓)
 
@@ -40,11 +41,19 @@ All hard gate conditions verified (2026-04-10):
 **Historical closeout smoke counts (2026-04-10):** provider_markets **76,531** | snapshots **658,480** | families **3,120** | current_links **131**
 **Live audit smoke rerun (2026-04-10, post-edit check):** provider_markets **76,587** | snapshots **672,374** | families **3,120** | current_links **131**
 **Latest live smoke rerun (2026-04-12):** provider_markets **80,375** | snapshots **816,206** | families **3,120** | current_links **131**
+**Latest live smoke rerun (2026-04-12 late check):** provider_markets **80,606** | snapshots **820,548** | families **3,120** | current_links **131**
 **Scheduled ingest:** Cowork task "pmci-sports-ingest" every 4 hours (`0 */4 * * *`).
 **API:** Port 3001 healthy during prior closeout checks; treat PID-specific notes as historical snapshots.
 **Phase F implementation status (verified 2026-04-12):** planning docs exist (`docs/phase-f-gap-analysis.md`, `docs/phase-f-implementation-plan.md`), but execution-readiness code/routes are not present in the active PMCI API. Verified missing: `/v1/signals/ranked`, `/v1/router/best-venue`, `src/services/tradability-service.mjs`, `src/services/router-service.mjs`, and `config/execution-readiness.json`.
 
-### Phase E2 — unblocked, ready to start
+### Phase E2 — Crypto ⬅ ACTIVE (unblocked 2026-04-12; current working phase)
+
+Next steps (see roadmap.md E2 section):
+1. Define crypto canonical event schema (price-based, continuous — differs from binary political/sports markets)
+2. Audit live crypto markets on Kalshi + Polymarket (BTC/ETH price targets, level events)
+3. Build `lib/ingestion/crypto-universe.mjs` following the same guard-first pattern as `sports-universe.mjs`
+4. Adapt spread computation model for non-binary continuous events
+5. Apply guard-first proposer + strict-audit gate loop before accepting any crypto market links
 
 ---
 

@@ -15,6 +15,15 @@
 - Docs needed smoke/count refresh from 2026-04-10 snapshots to 2026-04-12 rerun values.
 - Phase F planning docs remain valid as intent, but not implementation claims.
 
+## Cron status diagnosis (same-day follow-up)
+- Scheduler marked the run as error (`⚠️ 🩹 Apply Patch failed`), but run summary and git history show the audit completed and committed `d12828a`.
+- This is a false-negative on job status/delivery, not an incomplete audit outcome.
+
+## Late-check evidence (2026-04-12)
+- `npm run verify:schema`: PASS.
+- `npm run pmci:smoke`: provider_markets=80606, snapshots=820548, families=3120, current_links=131.
+- `git status --short --branch`: `main...origin/main [ahead 8]` with unrelated workflow/doc/script edits in working tree.
+
 ## Next moves
 1. Start E2 crypto schema + ingestion slice with deterministic checks.
 2. Keep Phase F documents labeled planning-only until routes/services exist in `src/*`.

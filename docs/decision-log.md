@@ -95,3 +95,12 @@
   - `npm run pmci:smoke` => `provider_markets=80375`, `snapshots=816206`, `families=3120`, `current_links=131`.
   - `find src/routes` + route/service probes confirm no Phase F execution-readiness API/code yet (`/v1/signals/ranked`, `/v1/router/best-venue`, `src/services/tradability-service.mjs`, `config/execution-readiness.json` missing).
 - Outcome: E1.5 remains complete and merged; E2 remains the active next milestone; Phase F remains planning-only until direct code/runtime evidence appears.
+
+## 2026-04-12 (late check) — Revalidate live audit docs and diagnose cron false-negative
+- Decision: treat the cron status `Apply Patch failed` as a delivery/reporting false-negative for run outcome, because the run summary and repo history confirm docs were refreshed and committed.
+- Evidence:
+  - Cron run history entry for job `5efe61d2-13b4-45dd-be99-b7ec230e3387` shows `status=error` with `error="⚠️ 🩹 Apply Patch failed"` while the same entry summary reports completed updates and commit `d12828a`.
+  - `git log --oneline` confirms `d12828a` exists on `main`, following prior audit commits `ff69db3` and `3dcf4ea`.
+  - Late rerun checks: `npm run verify:schema` => PASS; `npm run pmci:smoke` => `provider_markets=80606`, `snapshots=820548`, `families=3120`, `current_links=131`.
+  - Phase F execution-readiness probes remain missing (`/v1/signals/ranked`, `/v1/router/best-venue`, `src/services/tradability-service.mjs`, `src/services/router-service.mjs`, `config/execution-readiness.json`).
+- Outcome: docs remain directionally correct; refreshed smoke/branch snapshot lines to match late rerun evidence and preserved the cron false-negative diagnosis.
