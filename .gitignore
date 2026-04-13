@@ -6,3 +6,7 @@ node_modules
 .supabase
 supabase/.temp
 .DS_Store
+
+# Live audit snapshots (ephemeral)
+pmci-live-audit-*/
+
