@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-14T02:03:47.018Z",
+  "generatedAt": "2026-04-14T03:33:22.126Z",
   "providerCoverage": [
     {
       "sport": "aussierules",
@@ -429,11 +429,11 @@
   "proposalBuckets": [
     {
       "decision": "rejected",
-      "count": 38612
+      "count": 62832
     },
     {
       "decision": "accepted",
-      "count": 10
+      "count": 117
     }
   ],
   "semanticViolations": 0

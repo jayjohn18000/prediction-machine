@@ -40,15 +40,31 @@ async function main() {
     `);
 
     const semanticViolations = await q(client, `
+      with sport_family(code, family) as (values
+        ('soccer','soccer'),('itsb','soccer'),('j1-100','soccer'),
+        ('j2-100','soccer'),('ukr1','soccer'),
+        ('nhl','hockey'),('wwoh','hockey'),('hockey','hockey'),
+        ('nba','basketball'),('basketball','basketball'),
+        ('bkfibaqeu','basketball'),('bkjpn','basketball'),('bkaba','basketball')
+      )
       select count(*)::int as violations
       from pmci.proposed_links pl
-      join pmci.provider_markets a on a.id = pl.provider_market_id_a
-      join pmci.provider_markets b on b.id = pl.provider_market_id_b
+      join pmci.provider_markets a on a.id = pl.provider_market_id_a::int
+      join pmci.provider_markets b on b.id = pl.provider_market_id_b::int
       where pl.category = 'sports'
         and (pl.decision is null or pl.decision = 'accepted')
         and (
-          coalesce(a.sport,'unknown') <> coalesce(b.sport,'unknown')
-          or abs(a.game_date - b.game_date) > 1
+          coalesce(
+            (select sf.family from sport_family sf where sf.code = a.sport),
+            a.sport, 'unknown'
+          ) <> coalesce(
+            (select sf.family from sport_family sf where sf.code = b.sport),
+            b.sport, 'unknown'
+          )
+          or (
+            a.title ilike '%vs%' and b.title ilike '%vs%'
+            and abs(a.game_date - b.game_date) > 1
+          )
         )
     `);
 
