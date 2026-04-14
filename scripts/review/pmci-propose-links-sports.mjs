@@ -15,6 +15,10 @@ async function main() {
   const sportFilter = sportIdx >= 0 ? String(argv[sportIdx + 1] || '').toLowerCase().trim() : null;
   const limitIdx = argv.indexOf('--limit');
   const limit = limitIdx >= 0 ? Math.max(1, Number(argv[limitIdx + 1] || 0)) : 250;
+  const capIdx = argv.indexOf('--market-cap');
+  const marketCapPerSide = capIdx >= 0
+    ? Math.max(50, Number(argv[capIdx + 1] || 0))
+    : Math.max(50, Number(process.env.PMCI_PROPOSE_SPORTS_MARKETS_PER_SIDE || 1500));
 
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
@@ -24,22 +28,42 @@ async function main() {
     const kalshiId = Number(byCode.get('kalshi'));
     const polyId = Number(byCode.get('polymarket'));
 
-    const markets = await client.query(`
-      select id, provider_id, provider_market_ref, event_ref, title, sport, game_date, home_team, away_team, status, close_time
-      from pmci.provider_markets
-      where category = 'sports'
+    const baseWhere = `
+      category = 'sports'
         and coalesce(status,'') in ('active','open')
         and sport is not null
         and sport <> 'unknown'
         and game_date is not null
         and home_team is not null
         and away_team is not null
-        and ($1::text is null or lower(sport) = $1)
-      order by game_date desc, id desc
-    `, [sportFilter]);
+        and ($1::text is null or lower(sport) = $1)`;
 
-    const kalshi = markets.rows.filter((r) => r.provider_id === kalshiId);
-    const poly = markets.rows.filter((r) => r.provider_id === polyId);
+    const { rows: kalshiRows } = await client.query(
+      `
+      select id, provider_id, provider_market_ref, event_ref, title, sport, game_date, home_team, away_team, status, close_time
+      from pmci.provider_markets
+      where provider_id = $2 and ${baseWhere}
+      order by game_date desc, id desc
+      limit $3
+    `,
+      [sportFilter, kalshiId, marketCapPerSide],
+    );
+    const { rows: polyRows } = await client.query(
+      `
+      select id, provider_id, provider_market_ref, event_ref, title, sport, game_date, home_team, away_team, status, close_time
+      from pmci.provider_markets
+      where provider_id = $2 and ${baseWhere}
+      order by game_date desc, id desc
+      limit $3
+    `,
+      [sportFilter, polyId, marketCapPerSide],
+    );
+
+    const kalshi = kalshiRows;
+    const poly = polyRows;
+    console.log(
+      `[pmci:propose:sports] candidate markets: kalshi=${kalshi.length} polymarket=${poly.length} (cap ${marketCapPerSide}/side)`,
+    );
 
     const existing = await client.query(`
       select provider_market_id_a, provider_market_id_b, proposed_relationship_type

@@ -45,6 +45,7 @@ async function main() {
       join pmci.provider_markets a on a.id = pl.provider_market_id_a
       join pmci.provider_markets b on b.id = pl.provider_market_id_b
       where pl.category = 'sports'
+        and (pl.decision is null or pl.decision = 'accepted')
         and (
           coalesce(a.sport,'unknown') <> coalesce(b.sport,'unknown')
           or abs(a.game_date - b.game_date) > 1

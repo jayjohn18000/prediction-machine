@@ -17,6 +17,23 @@
 - **Live audit branch state (2026-04-12):** local `main...origin/main [ahead 7]` with unrelated workflow/doc/script edits in the working tree. No separate feature branch was active during this audit.
 - **Live audit branch state (2026-04-12 late check):** local `main...origin/main [ahead 8]` with unrelated workflow/doc/script edits in the working tree. No separate feature branch was active during this audit.
 - **Live audit branch state (2026-04-13):** local `main...origin/main [ahead 9]` with unrelated workflow/doc/script edits and untracked files in the working tree. No separate feature branch was active during this audit.
+- **E1.6 sprint execution (2026-04-14, local `main`):** sport backfill (Kalshi + Polymarket path in `scripts/backfill-sport-inference.mjs`), inactive-guard CLI, stale cleanup (`close_time` + past `game_date` without active links), audit packet semantic count restricted to pending/accepted proposals, extra Kalshi ticker fallbacks in `sport-inference.mjs`, and sports proposer per-side `LIMIT` (`--market-cap`, env `PMCI_PROPOSE_SPORTS_MARKETS_PER_SIDE`) to avoid O(n×m) hangs.
+
+## Current Status (2026-04-14 refresh — E1.6 tracks A–E executed; link-count gate not met)
+
+Verified after DB/shell work (same session):
+
+| Check | Result |
+|------|--------|
+| `npm run verify:schema` | ✅ PASS |
+| `npm run pmci:smoke` | `provider_markets=80606`, `snapshots=874301`, `families=3120`, **`current_links=131`** (global view; sports-specific active link rows on provider markets tagged `category='sports'` remain **7**) |
+| `npm run pmci:audit:sports:packet` | **`stale_active=0`**, **`unknown_sport=455`** (under the 500 target), **`semantic_violations=0`** (actionable-only definition; rejected historical rows no longer inflate the counter) |
+| `npm run pmci:propose:sports` | Prior full-universe run effectively hung (no per-side cap). With `--market-cap` defaults, short runs completed but **`inserted=0`** on sampled windows (existing `proposed_links` saturation + strict rejects). Per-sport runs similarly produced **0** new pending rows in tested slices. |
+| `npm run pmci:probe` | Same counts as smoke; DB reachable |
+
+**Not met vs OpenClaw prompt / E1.6 doc:** `current_links >= 200` on smoke (still **131**), and sports bilateral link growth beyond the existing **7** sports-linked rows was not achieved in this session (no new pending proposals to batch-accept).
+
+**Operator action (Step 5):** add `OBSERVER_DB_DISCOVERY=1` to the deployment environment manually (do not auto-commit `.env`); restart `observer.mjs` so DB-discovered equivalent pairs merge into the observer cycle.
 
 ## Current Status (2026-04-12 refresh — Phase E1.5 COMPLETE ✓)
 
