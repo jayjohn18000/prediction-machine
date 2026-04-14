@@ -1,4 +1,25 @@
-export async function getTopDivergences(db, eventId, limit) {
+export async function getTopDivergences(db, eventId, limit, category = null) {
+  const params = [];
+  const conditions = [];
+
+  if (eventId) {
+    params.push(eventId);
+    conditions.push(`f.canonical_event_id = $${params.length}`);
+  }
+  if (category) {
+    params.push(category);
+    conditions.push(`ce.category = $${params.length}`);
+  }
+
+  const ceJoin = category
+    ? "join pmci.canonical_events ce on ce.id = f.canonical_event_id"
+    : "";
+
+  const whereClause = conditions.length > 0 ? `where ${conditions.join(" and ")}` : "";
+
+  params.push(limit);
+  const limitParam = `$${params.length}`;
+
   const sql = `
     with latest_snapshots as (
       select distinct on (s.provider_market_id)
@@ -52,9 +73,10 @@ export async function getTopDivergences(db, eventId, limit) {
         on p.id = l.provider_id
       join pmci.provider_markets pm
         on pm.id = l.provider_market_id
+      ${ceJoin}
       left join latest_snapshots ls
         on ls.provider_market_id = l.provider_market_id
-      where f.canonical_event_id = $1
+      ${whereClause}
     ),
     scored as (
       select
@@ -107,7 +129,7 @@ export async function getTopDivergences(db, eventId, limit) {
       from ranked_families
       group by family_id
       order by family_max_divergence desc nulls last, family_id asc
-      limit $2
+      limit ${limitParam}
     )
     select
       rf.family_id,
@@ -145,7 +167,7 @@ export async function getTopDivergences(db, eventId, limit) {
     order by tf.family_max_divergence desc nulls last, rf.family_id asc, rf.relationship_type asc, rf.confidence desc;
   `;
 
-  const { rows } = await db.query(sql, [eventId, limit]);
+  const { rows } = await db.query(sql, params);
 
   const families = [];
   const byFamilyId = new Map();

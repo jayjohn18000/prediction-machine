@@ -20,22 +20,23 @@ async function main() {
     process.exit(1);
   }
   const data = await res.json();
-  if (!Array.isArray(data)) {
-    console.error('Expected array, got', typeof data, data?.error ? JSON.stringify(data.error) : '');
+  const families = Array.isArray(data?.families) ? data.families : null;
+  if (!families) {
+    console.error('Expected { families: [] }, got', typeof data, data?.error ? JSON.stringify(data.error) : '');
     process.exit(1);
   }
-  if (data.length > Number(limit)) {
-    console.error('Expected ≤', limit, 'items, got', data.length);
+  if (families.length > Number(limit)) {
+    console.error('Expected ≤', limit, 'items, got', families.length);
     process.exit(1);
   }
   let withPrices = 0;
   let withMaxDiv = 0;
-  for (const row of data) {
+  for (const row of families) {
     const legsWithPrice = (row.legs || []).filter(l => l.price_yes != null);
     if (legsWithPrice.length >= 2) withPrices += 1;
     if (row.max_divergence != null) withMaxDiv += 1;
   }
-  console.log('top-divergences: count=%d (limit=%s), families_with_both_prices=%d, with_max_divergence=%d', data.length, limit, withPrices, withMaxDiv);
+  console.log('top-divergences: count=%d (limit=%s), families_with_both_prices=%d, with_max_divergence=%d', families.length, limit, withPrices, withMaxDiv);
   if (withPrices > 0 && withMaxDiv === 0) {
     console.error('At least one family has both legs with prices but no max_divergence set.');
     process.exit(1);

@@ -165,14 +165,15 @@ async function main() {
         hadWarnings = true;
       }
 
-      if (Array.isArray(results)) {
-        if (results.length === 0) {
+      const families = Array.isArray(results?.families) ? results.families : null;
+      if (families) {
+        if (families.length === 0) {
           console.warn(
             `WARN: top-divergences returned 0 results for event_id=${canonicalEventId}.`,
           );
           hadWarnings = true;
         } else {
-          const item = results.find(
+          const item = families.find(
             (r) => Number(r.family_id) === familyId,
           );
           if (item) {
@@ -181,7 +182,7 @@ async function main() {
             );
           } else {
             console.warn(
-              `WARN: family_id=${familyId} not in top-divergences response (${results.length} families returned for event).\n       This is expected if neither market has a recent snapshot yet.`,
+              `WARN: family_id=${familyId} not in top-divergences response (${families.length} families returned for event).\n       This is expected if neither market has a recent snapshot yet.`,
             );
             hadWarnings = true;
           }

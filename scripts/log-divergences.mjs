@@ -37,8 +37,9 @@ async function run() {
       const top = await fetchJson(
         `${API_BASE}/v1/signals/top-divergences?event_id=${encodeURIComponent(evt.id)}&limit=50`
       );
+      const items = Array.isArray(top?.families) ? top.families : [];
 
-      for (const item of top) {
+      for (const item of items) {
         rows.push({
           timestamp,
           event_slug: evt.slug ?? '',

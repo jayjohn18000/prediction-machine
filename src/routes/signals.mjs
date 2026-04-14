@@ -40,15 +40,28 @@ export function registerSignalsRoutes(app, deps) {
       }));
   });
 
-  app.get("/v1/signals/top-divergences", { preHandler: assertFreshness, rateLimit: RATE_LIMIT_CONFIG }, async (req) => {
+  app.get("/v1/signals/top-divergences", { rateLimit: RATE_LIMIT_CONFIG }, async (req) => {
     const schema = z.object({
-      event_id: z.string().uuid(),
+      event_id: z.string().uuid().optional(),
+      category: z.string().optional(),
       limit: z.coerce.number().int().min(1).max(100).default(20),
     });
     const parsed = schema.safeParse(req.query);
     if (!parsed.success) return { error: parsed.error.flatten() };
 
-    return getTopDivergences({ query }, parsed.data.event_id, parsed.data.limit);
+    const result = await getTopDivergences(
+      { query },
+      parsed.data.event_id ?? null,
+      parsed.data.limit,
+      parsed.data.category ?? null,
+    );
+
+    const { rows: lagRows } = await query(
+      `select extract(epoch from (now() - max(observed_at)))::int as lag_seconds from pmci.provider_market_snapshots`,
+    );
+    const lag = lagRows[0]?.lag_seconds != null ? Number(lagRows[0].lag_seconds) : null;
+
+    return { data_lag_seconds: lag, families: result };
   });
 
   app.get("/v1/snapshots", { rateLimit: RATE_LIMIT_CONFIG }, async (req, reply) => {

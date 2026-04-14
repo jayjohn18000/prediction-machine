@@ -99,10 +99,8 @@ for (const ev of canonicalEvents) {
     const { status: divStatus, body: divBody } = await get(
       `/v1/signals/top-divergences?event_id=${ev.id}&limit=50`
     );
-    if (divStatus === 503) {
-      // stale guard already handled above
-    } else {
-      divRows = Array.isArray(divBody) ? divBody : [];
+    if (divStatus === 200 && divBody && typeof divBody === "object") {
+      divRows = Array.isArray(divBody.families) ? divBody.families : [];
     }
   }
 

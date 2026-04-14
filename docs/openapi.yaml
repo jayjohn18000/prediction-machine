@@ -461,6 +461,18 @@ components:
               confidence:
                 type: number
 
+    TopDivergencesResponse:
+      type: object
+      properties:
+        data_lag_seconds:
+          type: integer
+          nullable: true
+          description: Seconds since the newest row in provider_market_snapshots (soft staleness hint).
+        families:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopDivergenceResult"
+
     FreshnessResponse:
       type: object
       properties:
@@ -1466,10 +1478,12 @@ paths:
 
   /v1/signals/top-divergences:
     get:
-      summary: Top divergences across an event
+      summary: Top divergences (global or filtered)
       description: |
-        Returns the families with the highest cross-provider price divergence under a canonical event,
-        sorted by `max_divergence` descending. Requires fresh data — returns `503` if stale.
+        Returns the families with the highest cross-provider price divergence among active links,
+        sorted by `max_divergence` descending. With no `event_id`, ranks across all linked families.
+        Optional `category` filters via `canonical_events.category`. Does not use the API freshness gate;
+        the response includes `data_lag_seconds` so clients can judge staleness.
       operationId: getTopDivergences
       tags: [Signals]
       security:
@@ -1478,10 +1492,17 @@ paths:
       parameters:
         - name: event_id
           in: query
-          required: true
+          required: false
+          description: When set, restrict to families under this canonical event.
           schema:
             type: string
             format: uuid
+        - name: category
+          in: query
+          required: false
+          description: When set (e.g. politics), filter families whose canonical event has this category.
+          schema:
+            type: string
         - name: limit
           in: query
           required: false
@@ -1492,22 +1513,18 @@ paths:
             default: 20
       responses:
         "200":
-          description: Top divergence results
+          description: Top divergence results with soft staleness metadata
           headers:
             X-PMCI-Version:
               $ref: "#/components/headers/XPmciVersion"
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TopDivergenceResult"
+                $ref: "#/components/schemas/TopDivergencesResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "429":
           $ref: "#/components/responses/RateLimited"
-        "503":
-          $ref: "#/components/responses/Stale"
 
   /v1/snapshots:
     get:

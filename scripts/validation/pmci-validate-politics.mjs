@@ -98,12 +98,13 @@ async function run() {
       }
 
       const topDiv = await get(`/v1/signals/top-divergences?event_id=${eventId}&limit=10`);
-      if (!Array.isArray(topDiv)) {
-        failures.push(`${label}: top-divergences not array`);
+      const topFamilies = Array.isArray(topDiv?.families) ? topDiv.families : null;
+      if (!topFamilies) {
+        failures.push(`${label}: top-divergences missing families array`);
       } else {
-        if (topDiv.length > 10) failures.push(`${label}: top-divergences length ${topDiv.length} > 10`);
-        out.topDivergences = topDiv.slice(0, 3);
-        for (const row of topDiv) {
+        if (topFamilies.length > 10) failures.push(`${label}: top-divergences length ${topFamilies.length} > 10`);
+        out.topDivergences = topFamilies.slice(0, 3);
+        for (const row of topFamilies) {
           const legsWithPrice = (row.legs || []).filter((l) => l.price_yes != null);
           if (legsWithPrice.length >= 2 && row.max_divergence == null) {
             failures.push(`${label}: family_id ${row.family_id} has both prices but max_divergence null`);
