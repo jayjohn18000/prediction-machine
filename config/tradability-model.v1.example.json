@@ -1,0 +1,24 @@
+{
+  "version": "1.0.0",
+  "description": "Example tradability / net-edge inputs for Phase F1. Copy to a deployment-specific path and reference from code when implementing execution-readiness.",
+  "venues": {
+    "kalshi": {
+      "taker_fee_bps": null,
+      "maker_rebate_bps": null,
+      "latency_p95_ms": null
+    },
+    "polymarket": {
+      "taker_fee_bps": null,
+      "maker_rebate_bps": null,
+      "latency_p95_ms": null
+    }
+  },
+  "slippage": {
+    "model": "fixed_bps",
+    "bps": null,
+    "notes": "Replace with measured depth curve when fillability exists in PMCI."
+  },
+  "relationship_types_allowed_for_trading": ["identical", "equivalent"],
+  "stale_risk_buffer_bps": null,
+  "updated_at": "2026-04-14T00:00:00Z"
+}

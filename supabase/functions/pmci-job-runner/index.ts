@@ -1,0 +1,66 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const PMCI_API_KEY = Deno.env.get("PMCI_API_KEY") ?? "";
+const PMCI_SERVER_URL = Deno.env.get("PMCI_SERVER_URL") ?? "";
+
+const JOB_MAP: Record<string, string> = {
+  "ingest:sports":    "/v1/admin/jobs/ingest-sports",
+  "ingest:politics":  "/v1/admin/jobs/ingest-politics",
+  "ingest:economics": "/v1/admin/jobs/ingest-economics",
+  "ingest:crypto":    "/v1/admin/jobs/ingest-crypto",
+  "stale-cleanup":    "/v1/admin/jobs/stale-cleanup",
+  "verify:schema":    "/v1/admin/jobs/verify-schema",
+  "audit:live":       "/v1/admin/jobs/audit-live",
+};
+
+serve(async (req: Request) => {
+  const key = req.headers.get("x-pmci-api-key");
+  if (key !== PMCI_API_KEY) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  let body: { job?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "invalid JSON body" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const job = body?.job;
+  if (!job || !JOB_MAP[job]) {
+    return new Response(
+      JSON.stringify({ error: "unknown job", job, available: Object.keys(JOB_MAP) }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const targetUrl = `${PMCI_SERVER_URL}${JOB_MAP[job]}`;
+
+  try {
+    const res = await fetch(targetUrl, {
+      method: "POST",
+      headers: {
+        "x-pmci-api-key": PMCI_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+    const result = await res.json();
+    console.log(`[pmci-job-runner] job=${job} status=${res.status}`, result);
+    return new Response(JSON.stringify({ job, status: res.status, result }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    console.error(`[pmci-job-runner] job=${job} error=`, err);
+    return new Response(JSON.stringify({ job, error: String(err) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});

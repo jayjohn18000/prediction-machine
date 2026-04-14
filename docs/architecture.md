@@ -79,6 +79,8 @@ Responsibilities:
 4. The PMCI API serves normalized read models and operational health endpoints.
 5. `lovable-ui` consumes those endpoints for operator and dashboard views.
 
+**Observer frontier (v2):** Ingestion fills `pmci.provider_markets`; accepted rows in `pmci.market_links` define which Kalshi↔Polymarket legs are bilaterally priced. The spread observer resolves its working set from a capped SQL query over active links (`lib/ingestion/observer-frontier.mjs`) — ordered by `last_seen_at`, optionally filtered by category and relationship type — so operators are not forced to maintain a large static JSON pair list. The PMCI sweep (`lib/ingestion/pmci-sweep.mjs`) can align with the same priority story by setting `PMCI_SWEEP_PRIORITIZE_LINKED=1` to refresh snapshots for linked markets first.
+
 ## PMCI Data Model
 
 Primary tables:

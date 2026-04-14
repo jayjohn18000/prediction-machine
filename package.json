@@ -42,8 +42,12 @@
     "pmci:discover:sports:kalshi": "node scripts/discovery/pmci-discover-kalshi-sports-series.mjs",
     "pmci:discover:sports:poly": "node scripts/discovery/pmci-discover-polymarket-sports-tags.mjs",
     "pmci:ingest:sports": "node lib/ingestion/sports-universe.mjs",
+    "pmci:ingest:economics": "node lib/ingestion/economics-universe.mjs",
+    "pmci:ingest:crypto": "node lib/ingestion/crypto-universe.mjs",
     "seed:sports:pmci": "node scripts/seed/seed-pmci-sports-families-links.mjs",
     "pmci:propose:sports": "node scripts/review/pmci-propose-links-sports.mjs",
+    "pmci:propose:crypto": "node scripts/review/pmci-propose-links-crypto.mjs",
+    "pmci:propose:economics": "node scripts/review/pmci-propose-links-economics.mjs",
     "pmci:audit:sports:packet": "node scripts/audit/pmci-sports-audit-packet.mjs",
     "pmci:accept:sports": "node scripts/reset-and-accept-valid-sports.mjs",
     "pmci:gate:sports": "node scripts/gate/pmci-gate-sports.mjs",
@@ -55,7 +59,13 @@
     "link:dry-run": "node scripts/review/pmci-propose-links-politics.mjs --dry-run",
     "links:guard:dry-run": "node scripts/review/links-guard-dry-run.mjs",
     "pmci:clear:stale": "node scripts/review/pmci-clear-stale-proposals.mjs",
-    "pmci:audit:live": "bash scripts/run_pmci_live_audit.sh"
+    "pmci:audit:live": "bash scripts/run_pmci_live_audit.sh",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:stop": "pm2 stop all",
+    "pm2:restart": "pm2 restart all",
+    "pm2:status": "pm2 status",
+    "pm2:logs": "pm2 logs --lines 50",
+    "pmci:benchmark:coverage": "node scripts/benchmark/coverage-benchmark.mjs"
   },
   "dependencies": {
     "@fastify/rate-limit": "^10.3.0",

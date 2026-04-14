@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import pg from 'pg';
 import { loadEnv } from '../../src/platform/env.mjs';
-import { sportsEntityFromMarket, sportsDateDeltaDays, isSportsPairSemanticallyValid, looksLikeMatchupMarket, classifyMarketTypeBucket } from '../../lib/matching/sports-helpers.mjs';
+import { sportsEntityFromMarket, sportsDateDeltaDays, isSportsPairSemanticallyValid, looksLikeMatchupMarket } from '../../lib/matching/sports-helpers.mjs';
+import { sportsMarketTypePairAllowed } from '../../lib/matching/compatibility.mjs';
 
 loadEnv();
 const { Client } = pg;
@@ -85,9 +86,6 @@ async function main() {
       const ks = sportsEntityFromMarket(k);
       if (!ks.isMatchup || ks.matchupKey === 'unknown') continue;
 
-      // A3: classify Kalshi market type bucket once per outer market
-      const kBucket = classifyMarketTypeBucket(k.title);
-
       // Collect valid candidates for this Kalshi market before inserting (needed for A2 sort)
       const candidates = [];
 
@@ -111,10 +109,9 @@ async function main() {
           continue;
         }
 
-        // A3: reject cross-bucket pairs; only filter when both buckets are known
-        const pBucket = classifyMarketTypeBucket(p.title);
-        if (kBucket && pBucket && kBucket !== pBucket) {
-          const skipReason = `market_type_mismatch:${kBucket}:${pBucket}`;
+        const compat = sportsMarketTypePairAllowed(k.title, p.title);
+        if (!compat.ok) {
+          const skipReason = compat.reason;
           verbose && console.log(`[skip] ${skipReason} ${ks.matchupKey}`);
           const skipReasons = {
             skip_reason: skipReason,

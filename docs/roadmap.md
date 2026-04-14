@@ -51,10 +51,20 @@
 
 ---
 
-## Phase E — Sports & Crypto Expansion (active)
+## Phase E — Parallel expansion (Sports complete; E2 crypto ∥ E3 economics active)
 **Entry criteria:** Phase D semantic closeout complete (met). Coverage/performance targets continue as tracked optimization work during Phase E onboarding.
 
-### E1 — Sports ✅ HISTORICAL CLOSEOUT PASS, ⚠️ LIVE DRIFT DETECTED (2026-04-13)
+**Parallel workstreams (same guard-first + strict-audit pattern):**
+| Track | Focus | npm scripts (ingest / propose) |
+|-------|--------|-------------------------------|
+| **E2 — Crypto** | BTC/ETH/SOL cross-venue, binary spread v1 + canonical schema for harder templates | `pmci:ingest:crypto`, `pmci:propose:crypto` |
+| **E3 — Economics / macro** | Fed/CPI/rates-style binary macro | `pmci:ingest:economics`, `pmci:propose:economics` |
+
+**Shared exit criteria (per track):** `npm run verify:schema` PASS, `npm run pmci:smoke` PASS, audit packet at semantic violation budget, no bulk inactivation without inactive-guard.
+
+**Observer v2 — observation frontier:** Static JSON pair lists are optional when DB frontier is enabled (`OBSERVER_DB_DISCOVERY` / `OBSERVER_USE_DB_FRONTIER_ONLY`). Capped SQL over `pmci.market_links` replaces hand-maintained merge-at-scale; see `lib/ingestion/observer-frontier.mjs` and `docs/system-state.md`.
+
+### E1 — Sports ✅ COMPLETE — E1.6 VALIDATED (2026-04-14)
 
 **Completed (2026-03-31 — 2026-04-01):**
 - [x] **E1.1 — Schema migration** (`20260331000001_sports_market_fields.sql`): added `sport`, `event_type`, `game_date`, `home_team`, `away_team` to `provider_markets`; added `lifecycle`, `resolves_at` to `canonical_events`
@@ -101,18 +111,26 @@
 
 **E1 remaining work (post-E1.5 historical closeout, refreshed by 2026-04-13 live evidence):**
 - [x] **E1.5 — Sports proposer acceptance** ✓ COMPLETE (2026-04-10)
-- [ ] **E1.6 — Sports execution-readiness sprint** ⬅ ACTIVE (week of 2026-04-14)
+- [x] **E1.6 — Sports execution-readiness sprint** ✓ VALIDATED (2026-04-14)
+  - All hard gates passed: unknown_sport=180 (<1000), sports stale_active=0, sports links=234 (≥200)
+  - verify:schema PASS, pmci:smoke PASS (80,606 / 874,301 / 3,227 / 345)
+  - OBSERVER_DB_DISCOVERY=1 active; bilateral prices flowing (104K Kalshi + 107K Polymarket snapshots on linked markets)
+  - Spread dashboard + competitive baseline committed
   - See [`docs/plans/e1.6-sports-execution-readiness-sprint.md`](plans/e1.6-sports-execution-readiness-sprint.md) for full plan
-  - Target: 200+ linked sports pairs with bilateral live prices, competitive baseline documented, E1 strict-audit green
-  - Steps: sport inference backfill → stale-active cleanup → semantic violation fix → proposer full run → enable DB discovery → competitive baseline research → spread analysis
 - [ ] Define canonical event lifecycle for game markets (auto-archive on settle vs. delete)
 
-### E2 — Crypto ⬅ PLANNING/UNBLOCKED (do not promote to active implementation while E1 strict-audit is red)
-- [ ] Define crypto canonical event schema (price-based, continuous, no binary Yes/No)
-- [ ] Identify crypto markets on Kalshi + Polymarket (BTC price targets, ETH events)
-- [ ] Adapt ingestion for continuous price events vs. binary elections
-- [ ] Determine spread computation model for non-binary markets
-- [ ] Apply guard-first proposer + strict-audit gate loop (same pattern as sports)
+### E2 — Crypto (parallel with E3)
+- [x] Scaffold ingestion `lib/ingestion/crypto-universe.mjs` + `npm run pmci:ingest:crypto`
+- [x] Guard-first proposer scaffold `npm run pmci:propose:crypto` (asset-bucket prefilter)
+- [ ] Define crypto canonical event schema (price-based, continuous, non-binary templates)
+- [ ] Adapt spread computation for non-binary / ladder markets where YES/NO mid is insufficient
+- [ ] Strict-audit packet + semantic gates at acceptance (same pattern as sports)
+
+### E3 — Economics / macro (parallel with E2)
+- [x] Scaffold ingestion `lib/ingestion/economics-universe.mjs` + `npm run pmci:ingest:economics` (Kalshi macro series + Poly tag/keyword discovery; category `economics`)
+- [x] Macro keyword proposer scaffold `npm run pmci:propose:economics`
+- [ ] Dedicated semantic guards (resolution timing, Fed meeting ids, outcome labels) + audit packet
+- [ ] Expand Kalshi series / Polymarket tag coverage from competitive benchmarks
 
 ---
 
@@ -120,6 +138,8 @@
 **Goal:** Bridge PMCI from intelligence substrate to execution-ready relative-value infrastructure.
 
 **Principle:** PMCI remains the intelligence / canonicalization layer. A downstream execution service should own order placement, inventory, fills, and capital allocation.
+
+**Entry gates (do not start broad F1 implementation until met):** See [`docs/phase-f-entry-gates.md`](phase-f-entry-gates.md) and versioned example config [`config/tradability-model.v1.example.json`](../config/tradability-model.v1.example.json).
 
 ### F1 — Tradability & Net-Edge Modeling
 - [ ] Add family / venue-pair tradability model including:
@@ -217,9 +237,15 @@
 
 ---
 
-## Current milestone: E1.6 Sports Execution-Readiness Sprint (week of 2026-04-14)
-**Goal for the week:** Get from 7 linked sports pairs to 200+ with live bilateral prices, benchmark against OddPool/OddsJam, and produce the first real spread analysis. This clears the E1 strict-audit gate (unblocking E2) and provides the data foundation for Phase F tradability modeling.
+## Current milestone: E2 ∥ E3 — Crypto + Economics/macro (starting 2026-04-14)
+**Goals:** (E2) Extend PMCI cross-linking to crypto markets on Kalshi and Polymarket. (E3) Ingest and link binary macro templates (Fed, rates, CPI-style) with economics category tagging. Apply the same guard-first proposer + strict-audit gate loop proven in E1.
 
-See [`docs/plans/e1.6-sports-execution-readiness-sprint.md`](plans/e1.6-sports-execution-readiness-sprint.md) for the full execution plan.
+**E1.6 sprint complete (2026-04-14):** 234 sports market_links across 117 accepted proposals with bilateral prices flowing. E1 strict-audit GREEN. See [`docs/plans/e1.6-sports-execution-readiness-sprint.md`](plans/e1.6-sports-execution-readiness-sprint.md) for historical sprint plan.
 
-Latest live smoke snapshot (2026-04-13): **80,606 / 874,301 / 3,120 / 131** (provider_markets/snapshots/families/current_links). Smoke counts are runtime-volatile; use latest `npm run pmci:smoke` output for current totals.
+**Carry-forward from E1.6 (non-blocking):**
+- `signals/top-divergences` endpoint returns 503 (1 test failure)
+- 7 families with same-provider duplicate links (96 violation pairs); family 3120 mis-labeled as politics
+- 10 non-sports stale_active markets (politics, sport=NULL)
+- stale-cleanup.mjs not yet scheduled as cron
+
+Latest live smoke snapshot (2026-04-14): **80,606 / 874,301 / 3,227 / 345** (provider_markets/snapshots/families/current_links). Smoke counts are runtime-volatile; use latest `npm run pmci:smoke` output for current totals.

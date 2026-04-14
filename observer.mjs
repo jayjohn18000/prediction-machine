@@ -6,15 +6,21 @@
  * inserts rows into Supabase prediction_market_spreads. Endpoint discovery by
  * verification; no hardcoded API bases. Append-only storage.
  *
- * Config: single source of truth is scripts/prediction_market_event_pairs.json.
- * Override with SPREAD_EVENT_PAIRS_PATH if needed. Each pair: eventName,
- * kalshiTicker, polymarketSlug, polymarketOutcomeName.
+ * Config: default seed is scripts/prediction_market_event_pairs.json (override via
+ * SPREAD_EVENT_PAIRS_PATH). Pairs may be empty when OBSERVER_ALLOW_EMPTY_STATIC=1 or
+ * OBSERVER_USE_DB_FRONTIER_ONLY=1 and DATABASE_URL supplies the frontier query.
  *
  * Env:
  *   SUPABASE_URL                    – Supabase project URL (required)
  *   SUPABASE_ANON_KEY               – Supabase anon or service key (required)
  *   SPREAD_EVENT_PAIRS_PATH         – Config JSON path (optional override)
  *   SPREAD_OBSERVER_INTERVAL_SEC    – Seconds between cycles (default: 60)
+ *   OBSERVER_DB_DISCOVERY           – When 1, merge DB frontier (active market_links) each cycle
+ *   OBSERVER_USE_DB_FRONTIER_ONLY   – When 1, ignore static file; pairs come only from DB
+ *   OBSERVER_ALLOW_EMPTY_STATIC     – When 1, allow empty JSON array for static pairs
+ *   OBSERVER_MAX_PAIRS_PER_CYCLE    – Cap for DB frontier rows (default 500)
+ *   OBSERVER_CATEGORY_ALLOWLIST     – Optional comma categories (both legs must match)
+ *   OBSERVER_INCLUDE_PROXY_LINKS    – When 1, include proxy relationship links in frontier
  */
 
 import fs from 'node:fs';
@@ -24,19 +30,27 @@ import { loadEnv } from './src/platform/env.mjs';
 import { createClient } from '@supabase/supabase-js';
 import { createPmciClient, getProviderIds } from './lib/pmci-ingestion.mjs';
 import { runObserverCycle } from './lib/ingestion/observer-cycle.mjs';
+import { discoverFrontierPairs } from './lib/ingestion/observer-frontier.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 loadEnv();
 
 const PMCI_DEBUG = process.env.PMCI_DEBUG === '1';
 const USE_PMXT = process.env.USE_PMXT === '1'; // spike flag — see docs/pmxt-spike-result.md when ready
-const OBSERVER_DB_DISCOVERY = process.env.OBSERVER_DB_DISCOVERY === '1';
+const OBSERVER_USE_DB_FRONTIER_ONLY = process.env.OBSERVER_USE_DB_FRONTIER_ONLY === '1';
+const OBSERVER_DB_DISCOVERY =
+  process.env.OBSERVER_DB_DISCOVERY === '1' || OBSERVER_USE_DB_FRONTIER_ONLY;
+const OBSERVER_ALLOW_EMPTY_STATIC =
+  process.env.OBSERVER_ALLOW_EMPTY_STATIC === '1' || OBSERVER_USE_DB_FRONTIER_ONLY;
 
 /** Canonical config; do not use root event_pairs.json. */
 const DEFAULT_PAIRS_PATH = path.join(__dirname, 'scripts', 'prediction_market_event_pairs.json');
 const DEFAULT_INTERVAL_SEC = 60;
 
 function loadConfig() {
+  if (OBSERVER_USE_DB_FRONTIER_ONLY) {
+    return { pairs: [], pairsPath: '(OBSERVER_USE_DB_FRONTIER_ONLY)', allowEmpty: true };
+  }
   const pairsPath = process.env.SPREAD_EVENT_PAIRS_PATH || DEFAULT_PAIRS_PATH;
   let raw;
   try {
@@ -52,8 +66,12 @@ function loadConfig() {
     console.error(`Error: invalid JSON in event pairs config:`, err.message);
     process.exit(1);
   }
-  if (!Array.isArray(pairs) || pairs.length === 0) {
-    console.error('Error: event pairs config must be a non-empty array of { eventName, kalshiTicker, polymarketSlug, polymarketOutcomeName }');
+  if (!Array.isArray(pairs)) {
+    console.error('Error: event pairs config must be an array of { eventName, kalshiTicker, polymarketSlug, polymarketOutcomeName }');
+    process.exit(1);
+  }
+  if (pairs.length === 0 && !OBSERVER_ALLOW_EMPTY_STATIC) {
+    console.error('Error: event pairs config must be non-empty unless OBSERVER_ALLOW_EMPTY_STATIC=1 or OBSERVER_USE_DB_FRONTIER_ONLY=1 (with DB frontier)');
     process.exit(1);
   }
   for (const p of pairs) {
@@ -62,53 +80,7 @@ function loadConfig() {
       process.exit(1);
     }
   }
-  return { pairs, pairsPath };
-}
-
-const SQL_DISCOVER_PAIRS = `
-  SELECT
-    mf.label AS family_label,
-    k_pm.provider_market_ref AS kalshi_ticker,
-    p_pm.provider_market_ref AS poly_ref,
-    p_pm.event_ref AS poly_slug,
-    k_pm.title AS event_name
-  FROM pmci.market_links k_link
-  JOIN pmci.market_links p_link
-    ON k_link.family_id = p_link.family_id
-    AND k_link.provider_market_id != p_link.provider_market_id
-  JOIN pmci.providers k_prov ON k_link.provider_id = k_prov.id AND k_prov.code = 'kalshi'
-  JOIN pmci.providers p_prov ON p_link.provider_id = p_prov.id AND p_prov.code = 'polymarket'
-  JOIN pmci.provider_markets k_pm ON k_link.provider_market_id = k_pm.id
-  JOIN pmci.provider_markets p_pm ON p_link.provider_market_id = p_pm.id
-  WHERE k_link.status = 'active'
-    AND p_link.status = 'active'
-    AND k_link.relationship_type = 'equivalent'
-    AND p_link.relationship_type = 'equivalent'
-`;
-
-async function discoverPairsFromDb(pmciClient) {
-  if (!pmciClient) return [];
-  try {
-    const res = await pmciClient.query(SQL_DISCOVER_PAIRS);
-    const pairs = (res.rows || []).map((r) => {
-      const polyRef = r.poly_ref || '';
-      const hashIdx = polyRef.indexOf('#');
-      const polymarketSlug = r.poly_slug || (hashIdx > 0 ? polyRef.slice(0, hashIdx) : polyRef);
-      const polymarketOutcomeName = hashIdx >= 0 ? polyRef.slice(hashIdx + 1) : 'Yes';
-      return {
-        eventName: r.event_name || r.family_label || r.kalshi_ticker,
-        kalshiTicker: r.kalshi_ticker,
-        polymarketSlug,
-        polymarketOutcomeName,
-        _source: 'db',
-      };
-    });
-    console.log(`[observer] DB discovery: found ${pairs.length} equivalent pairs from pmci.market_links`);
-    return pairs;
-  } catch (err) {
-    console.warn('[observer] DB discovery query failed:', err.message);
-    return [];
-  }
+  return { pairs, pairsPath, allowEmpty: OBSERVER_ALLOW_EMPTY_STATIC };
 }
 
 function mergePairs(staticPairs, dbPairs) {
@@ -182,10 +154,15 @@ async function main() {
   async function refreshPairs() {
     if (!OBSERVER_DB_DISCOVERY || !pmciClientRef.value) return;
     try {
-      const dbPairs = await discoverPairsFromDb(pmciClientRef.value);
+      const dbPairs = await discoverFrontierPairs(pmciClientRef.value);
+      if (OBSERVER_USE_DB_FRONTIER_ONLY) {
+        activePairs = dbPairs;
+        console.log(`[observer] Active pairs: ${activePairs.length} (DB frontier only)`);
+        return;
+      }
       if (dbPairs.length > 0) {
         activePairs = mergePairs(pairs, dbPairs);
-        console.log(`[observer] Active pairs: ${activePairs.length} (${pairs.length} static + ${dbPairs.length} DB-discovered, ${activePairs.length - pairs.length} net new)`);
+        console.log(`[observer] Active pairs: ${activePairs.length} (${pairs.length} static + ${dbPairs.length} DB frontier merged)`);
       }
     } catch (err) {
       console.warn('[observer] Pair refresh failed:', err.message);
