@@ -2,7 +2,7 @@
  * /v1/health/* routes.
  */
 import { getObserverHealth } from "../services/observer-health.mjs";
-import { getRuntimeStatus } from "../services/runtime-status.mjs";
+import { computeLiveFreshnessSnapshot, getRuntimeStatus } from "../services/runtime-status.mjs";
 
 // 10-second TTL cache for the freshness response.
 // Caching the full result eliminates repeated pmci_runtime_status reads on SLO
@@ -29,7 +29,10 @@ export function registerHealthRoutes(app, deps) {
     }
 
     try {
-      const rts = await getRuntimeStatus({ query });
+      let rts = await getRuntimeStatus({ query });
+      if (!rts) {
+        rts = await computeLiveFreshnessSnapshot({ query });
+      }
       if (!rts) {
         return { status: "error", error: "no_runtime_status", message: "pmci_runtime_status has no rows" };
       }
@@ -94,7 +97,10 @@ export function registerHealthRoutes(app, deps) {
     let freshness = null;
     let projection = null;
     try {
-      const rts = await getRuntimeStatus({ query });
+      let rts = await getRuntimeStatus({ query });
+      if (!rts) {
+        rts = await computeLiveFreshnessSnapshot({ query });
+      }
       if (!rts) {
         freshness = { status: "error", error: "no_runtime_status", message: "pmci_runtime_status has no rows" };
         projection = {
@@ -252,7 +258,10 @@ export function registerHealthRoutes(app, deps) {
 
   app.get("/v1/health/projection-ready", async (req, reply) => {
     try {
-      const rts = await getRuntimeStatus({ query });
+      let rts = await getRuntimeStatus({ query });
+      if (!rts) {
+        rts = await computeLiveFreshnessSnapshot({ query });
+      }
       if (!rts) {
         reply.code(503);
         return {
