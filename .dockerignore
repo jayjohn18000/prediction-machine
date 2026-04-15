@@ -1,0 +1,32 @@
+# deps & vcs
+node_modules
+.git
+.gitignore
+
+# secrets & local env
+.env
+.env.*
+
+# logs & caches
+logs
+npm-debug.log*
+.npm
+
+# editor & tooling
+.cursor
+.vscode
+*.swp
+*.swo
+
+# tests (not needed at runtime)
+test
+
+# docs (optional shrink)
+*.md
+
+# local checkpoints / scratch
+.pmci_*.json
+output
+
+# Fly configs (not needed inside the image)
+deploy

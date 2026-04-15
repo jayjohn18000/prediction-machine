@@ -2,6 +2,8 @@
 
 ## Overview
 
+For **Fly.io** (PMCI API + observer Machines, TLS at the Fly edge), see [deployment-fly.md](deployment-fly.md).
+
 Production deployments terminate TLS at Caddy and run the PMCI Fastify API on localhost. Local and development deployments can continue to use plain HTTP on `http://localhost:8787` without Caddy.
 
 ## Prerequisites

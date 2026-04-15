@@ -1,0 +1,24 @@
+# Spread observer (long-running worker; no public HTTP — outbound to Kalshi/Polymarket/Supabase only).
+# 1. Pick a globally unique app name (replace `pmci-observer` below and in `fly apps create`).
+# 2. From repo root: fly apps create pmci-observer && fly deploy --config deploy/fly.observer.toml
+#
+# Docs: docs/deployment-fly.md
+
+app = "pmci-observer"
+primary_region = "iad"
+
+# Paths are relative to this file's directory; root Dockerfile lives one level up.
+[build]
+  dockerfile = "../Dockerfile"
+
+[env]
+  PMCI_FLY_ROLE = "observer"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[[restart]]
+  policy = "on-failure"
+  retries = 10

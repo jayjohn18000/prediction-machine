@@ -24,10 +24,54 @@ DB-backed pair discovery replaces mandatory large static JSON when enabled.
 - `pmci:*` scripts are PMCI operational workflows (ingest/probe/smoke/review/audit/check), not API server entrypoints.
 
 ## Branch
-- **Active branch:** `main` at `28db86f` (E1.6 spread dashboard — final E1.6 commit)
-- **Active phase:** **E2 — Crypto** (E1 strict-audit GREEN, E2 unblocked)
-- **E1.6 validation audit (2026-04-14):** All exit criteria met. Stale-cleanup run cleared 31 sports stales. OBSERVER_DB_DISCOVERY=1 confirmed active. Bilateral prices flowing on both providers.
-- **Prior branch history:** E1.5 merged 2026-04-10 (`fix/e1-5-sports-proposer-2026-04-08` → `main`). E1.6 sprint executed 2026-04-14 on `main` (4 commits: `b11322a` → `7c09ea4` → `87d8a71` → `28db86f`).
+- **Active branch:** `main` at `038715c` — fully synced with `origin/main` (no unmerged branches)
+- **Active phase:** **E2 — Crypto ∥ E3 — Economics** (scaffolds committed; guard-first proposer + strict-audit gates not yet run)
+- **E1.6 validation audit (2026-04-14):** All exit criteria met. E2/E3 unblocked.
+- **Post-E1.6 commits on main (2026-04-14 — 2026-04-15):**
+  - `8db2b41` feat(E2/E3): parallel crypto + economics tracks — observer frontier v2, cron parity, Phase F entry gates
+  - `1aa1fb7` fix(signals): make top-divergences global — drop mandatory event_id, relax freshness gate
+  - `b52b7bb` fix(health): fall back to live snapshot when pmci_runtime_status row missing
+  - `038715c` docs: add competitive coverage analysis, automation plan, and benchmark artifacts
+- **Prior branch history:** E1.5 merged 2026-04-10. E1.6 sprint executed 2026-04-14 on `main` (4 commits: `b11322a` → `7c09ea4` → `87d8a71` → `28db86f`).
+
+## Untracked / uncommitted files (as of 2026-04-15)
+These files exist locally but are not yet committed to main:
+- `docs/deployment-fly.md` — Fly.io deployment runbook (both apps)
+- `docs/deployment.md` — modified (Fly notes added)
+- `docs/plans/phase-e2-auto-review-plan.md` + `phase-e2-auto-review-schema.md` — E2 planning docs
+- `Dockerfile` + `docker-entrypoint.sh` + `.dockerignore` — container build (used by Fly)
+- `deploy/fly.api.toml` + `deploy/fly.observer.toml` — Fly app configs
+- `.pmci_kalshi_crypto_checkpoint.json` + `.pmci_kalshi_economics_checkpoint.json` — ingest checkpoints (gitignore candidate)
+- `.claude/settings.local.json` — do NOT commit
+
+## Current Status (2026-04-15 — E2/E3 SCAFFOLDED ✓, Fly.io LIVE ✓)
+
+### What happened since E1.6 closeout (2026-04-14 → 2026-04-15)
+
+**Commits pushed to main:**
+
+| Commit | Summary |
+|--------|---------|
+| `8db2b41` | **E2/E3 parallel tracks scaffolded.** New files: `lib/ingestion/crypto-universe.mjs`, `lib/ingestion/economics-universe.mjs`, `scripts/review/pmci-propose-links-crypto.mjs`, `scripts/review/pmci-propose-links-economics.mjs`, `src/routes/admin-jobs.mjs` (ingest-economics + ingest-crypto spawn targets), `supabase/functions/pmci-job-runner/index.ts` (job map). New npm scripts: `pmci:ingest:economics`, `pmci:ingest:crypto`, `pmci:propose:crypto`, `pmci:propose:economics`. Phase F entry gates documented in `docs/phase-f-entry-gates.md`. Tradability config sketch in `config/tradability-model.v1.example.json`. Observer frontier v2: DB-only mode + empty static allowed. |
+| `1aa1fb7` | **signals/top-divergences fixed.** Endpoint was returning 503 due to required `event_id` param. Now global — drops mandatory `event_id`, relaxes freshness gate. Divergence ranking moved into SQL. |
+| `b52b7bb` | **health routes hardened.** `/v1/health/freshness`, `/v1/health/slo`, `/v1/health/projection-ready` now fall back to live snapshot query when `pmci_runtime_status` row is missing (was crashing with id=1 not found). |
+| `038715c` | **Competitive intelligence committed.** `docs/competitive-coverage-gap-analysis.md` (PMCI vs SimpleFunctions vs OddPool, as of 2026-04-14). `docs/plans/automation-sprint-plan.md` (PM2/pg_cron/Edge Functions automation roadmap). `scripts/benchmark/coverage-benchmark.mjs` + `output/benchmark/` artifacts (OddPool + SimpleFunctions API response snapshots). Two audit reports: `docs/plans/2026-04-13-e1.6-validation-fixes.md`, `docs/plans/2026-04-14-e1.6-validation-audit.md`. Top-divergences fix plan: `docs/plans/2026-04-14-fix-top-divergences-plan.md`. |
+
+**Fly.io deployment — LIVE (2026-04-15):**
+- `pmci-api`: 2 machines running in IAD (us-east-1), both green, 1/1 health checks passing. URL: `https://pmci-api.fly.dev`
+- `pmci-observer`: running in IAD. URL: `https://pmci-observer.fly.dev`
+- All secrets set on both apps (`DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `PG_SSL`, `OBSERVER_DB_DISCOVERY=1`)
+- Deploy configs: `deploy/fly.api.toml`, `deploy/fly.observer.toml`
+- Dockerfile + `docker-entrypoint.sh` selects role via `PMCI_FLY_ROLE` env var (`api` or `observer`)
+- **Cron jobs run via Supabase Edge Functions** (`supabase/functions/pmci-job-runner/`), NOT local PM2. To add a new cron job: add entry to `JOB_MAP` in `index.ts` + apply a migration adding the pg_cron row.
+
+**Carry-forward (still open):**
+- Deployment artifacts (`docs/deployment-fly.md`, `deploy/`, `Dockerfile`, `docker-entrypoint.sh`, `docs/plans/phase-e2-auto-review-plan.md`) not yet committed to main
+- E2/E3 guard-first proposer runs not yet executed — scaffolds only, zero accepted crypto/economics pairs
+- `signals/top-divergences` fix committed but needs live verification on deployed API
+- Stale-cleanup not scheduled as cron — sports stales will re-accumulate over time
+
+---
 
 ## Current Status (2026-04-14 — E1.6 VALIDATED ✓, E2 UNBLOCKED)
 

@@ -6,7 +6,23 @@ See `docs/architecture.md` for system structure.
 
 `prediction-machine` is the PMCI backend. It owns ingestion, normalization, matching, schema, and the active machine-facing API.
 
-Current active phase: Phase E2 — crypto expansion (E1.5 complete 2026-04-10).
+Current active phase: Phase E2/E3 — parallel crypto + economics expansion (E1.6 validated 2026-04-14).
+
+## Deployment (Fly.io — ACTIVE PRODUCTION)
+
+Both apps are live on Fly.io. All secrets are set. Do not use PM2 or local `node` processes as the production runtime.
+
+| App | URL | Config | Role |
+|-----|-----|--------|------|
+| `pmci-api` | `https://pmci-api.fly.dev` | `deploy/fly.api.toml` | Fastify API (`src/api.mjs`) |
+| `pmci-observer` | `https://pmci-observer.fly.dev` | `deploy/fly.observer.toml` | Observer loop (`observer.mjs`) |
+
+- Deploy: `fly deploy --remote-only --config deploy/fly.api.toml` (or `fly.observer.toml`)
+- Logs: `fly logs -a pmci-api` / `fly logs -a pmci-observer`
+- Secrets: `fly secrets list -a pmci-api` / `fly secrets list -a pmci-observer`
+- Health check: `curl -sS https://pmci-api.fly.dev/v1/health/freshness | jq .`
+- Cron jobs run via Supabase Edge Functions (`supabase/functions/pmci-job-runner/`) — NOT via local PM2
+- New cron jobs: add entry to `JOB_MAP` in `supabase/functions/pmci-job-runner/index.ts` + apply migration adding pg_cron row
 
 ## Invariants
 
