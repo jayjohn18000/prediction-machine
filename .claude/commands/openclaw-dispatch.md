@@ -1,3 +1,13 @@
+> ⚠️ DEPRECATED — 2026-04-15
+> OpenClaw / Plumbo is no longer part of this workflow. Use `/cursor-handoff`
+> instead, or have Claude Cowork spawn a sub-agent that drives Cursor via
+> GUI automation (see the `cursor-orchestrator` skill). This file is retained
+> as a historical reference only. Do not invoke it.
+>
+> Current workflow: `DEV_WORKFLOW.md` at the repo root.
+
+---
+
 Save the current plan and dispatch it to OpenClaw for execution.
 
 Working directory: /Users/jaylenjohnson/prediction-machine

@@ -1,6 +1,9 @@
 # PMCI Agentic Workflow Optimization Plan
 
 _Decided: 2026-04-10, based on Phase E1.5 session retrospective_
+_Amended: 2026-04-15 — OpenClaw/Plumbo retired; Cursor is now the primary code executor. See `DEV_WORKFLOW.md`._
+
+> ⚠️ Amendment (2026-04-15): the agent-role decision below (Decision 4) originally split work between Claude Cowork and Plumbo/OpenClaw. That split still holds, but **read every mention of "Plumbo" or "OpenClaw" in this doc as "Cursor"** — driven either manually or by a Cowork sub-agent via GUI automation (see the `cursor-orchestrator` skill). The rationale (preserving Cowork context for orchestration; keeping the executor's context focused on diffs) is unchanged.
 
 ---
 
@@ -46,19 +49,21 @@ The script must include guard logic: only accept proposals that currently pass `
 
 ## Decision 4 — Agent role split (nuanced rule)
 
-**Plumbo for 3+ files or careful diffs; Claude directly for single-file fixes and config.**
+**Cursor for 3+ files or careful diffs; Claude directly for single-file fixes and config.**
 
-| Task type | Agent |
-|-----------|-------|
-| Change touching 3+ files | Plumbo (OpenClaw/Cursor) |
-| Schema migration | Plumbo |
-| Multi-file refactor requiring careful diffs | Plumbo |
+_Amended 2026-04-15: OpenClaw/Plumbo retired; Cursor is the sole non-Cowork executor. Cursor may be driven manually by the operator or by a Cowork sub-agent via GUI automation (see `cursor-orchestrator` skill) — the latter is preferred when the main Cowork session's context is saturated._
+
+| Task type | Executor |
+|-----------|----------|
+| Change touching 3+ files | Cursor |
+| Schema migration | Cursor |
+| Multi-file refactor requiring careful diffs | Cursor |
 | Single-file fix | Claude (Cowork) |
 | Config / env / package.json change | Claude (Cowork) |
 | Shell / git / API operations | Claude (Cowork) |
 | Orchestration, approval, review | Claude (Cowork) |
 
-**Rationale:** Preserves Claude's context window for orchestration tasks. Plumbo's context stays focused on code changes where its diff awareness is highest-value. Do not send Plumbo tasks that require reading 10+ files just to make a one-line change.
+**Rationale:** Preserves Claude's context window for orchestration tasks. Cursor's context stays focused on code changes where its diff awareness is highest-value. Do not send Cursor tasks that require reading 10+ files just to make a one-line change. When Cowork's context is already high, spawn a fresh sub-agent to drive Cursor instead of continuing in the main session.
 
 ---
 

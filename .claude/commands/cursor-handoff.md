@@ -1,7 +1,9 @@
-> ⚠️ DEPRECATED — 2026-04-09
-> This command has been replaced by `/openclaw-dispatch` (`.claude/commands/openclaw-dispatch.md`).
-> Cursor is no longer used in this workflow. OpenClaw is the sole executor.
-> This file is retained as a historical reference only. Do not invoke it.
+> ✅ REACTIVATED — 2026-04-15
+> The 2026-04-09 deprecation is reversed. OpenClaw/Plumbo has been retired
+> (see `DEV_WORKFLOW.md`), and Cursor is once again the primary code
+> executor. Use this command to prepare a Cursor handoff, either for manual
+> paste or for a Cowork sub-agent driving Cursor via GUI automation
+> (see the `cursor-orchestrator` skill).
 
 ---
 

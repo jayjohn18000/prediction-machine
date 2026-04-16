@@ -14,3 +14,5 @@ pmci-live-audit-*/
 # Benchmark run output (may include API payloads)
 output/benchmark/last-run.json
 
+.pmci_kalshi_crypto_checkpoint.json
+.pmci_kalshi_economics_checkpoint.json

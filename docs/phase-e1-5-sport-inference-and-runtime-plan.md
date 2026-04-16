@@ -6,6 +6,8 @@
 > Token strategy: All code changes via OpenClaw. Claude Cowork handles orchestration, validation, and planning only.
 >
 > Historical note (2026-04-09): keep this document as planning context only. Current implementation status and acceptance evidence live in `docs/roadmap.md` and `docs/system-state.md`. Do not treat plan steps below as proof that implementation completed.
+>
+> ⚠️ Historical note (2026-04-15): OpenClaw / Plumbo has been retired. For any future replay of this plan, substitute Cursor (driven manually or by a Cowork sub-agent via GUI automation; see the `cursor-orchestrator` skill) wherever this doc names OpenClaw or Plumbo. See `DEV_WORKFLOW.md`.
 
 ---
 

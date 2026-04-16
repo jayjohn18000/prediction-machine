@@ -66,9 +66,11 @@ After the agent completes, ask:
 - If yes: follow `agents/AGENT_ENHANCER.md` targeting the agent(s) used in this session
 - This is how the system self-corrects over time — each run leaves evidence for the next
 
-## Step 8 — OpenClaw dispatch (optional)
-Ask the user: "Dispatch this plan to OpenClaw for execution?"
-- If yes: follow the steps in `.claude/commands/openclaw-dispatch.md` to save the plan to `docs/openclaw-prompts/` and send it to OpenClaw via the OpenClaw skill
+## Step 8 — Cursor dispatch (optional)
+Ask the user: "Dispatch this plan to Cursor for execution?"
+- If yes: follow the steps in `.claude/commands/cursor-handoff.md` to save the plan to `docs/cursor-prompts/` and either (a) hand the prompt to the operator for manual paste into Cursor or (b) spawn a Cowork sub-agent to drive Cursor via GUI automation (see the `cursor-orchestrator` skill).
+
+> ⚠️ Historical note (2026-04-15): prior versions of this step dispatched to OpenClaw / Plumbo. That workflow has been retired. `.claude/commands/openclaw-dispatch.md` is deprecated and retained only for history.
 
 ## Scope (strict)
 ingestion → windows → calibration → scoring → reporting → DB health → schema → provider APIs → market discovery → link review → health monitoring → anomaly detection → research → agent enhancement.

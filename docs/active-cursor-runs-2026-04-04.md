@@ -1,8 +1,9 @@
 # Active Cursor Runs — 2026-04-04 [ARCHIVED]
 
-> ⚠️ ARCHIVED — 2026-04-09
-> Cursor is no longer used in this workflow. This file is retained as a historical record only.
-> Future execution tracking should use `active-openclaw-runs-YYYY-MM-DD.md`.
+> ⚠️ ARCHIVED — 2026-04-09 (status amended 2026-04-15)
+> This file is retained as a historical record of an April 4 Cursor run.
+>
+> The 2026-04-09 instruction to use `active-openclaw-runs-*` for future tracking is **superseded**. As of 2026-04-15, OpenClaw/Plumbo has been retired and Cursor is once again the primary code executor — driven manually or by a Cowork sub-agent via GUI automation (see the `cursor-orchestrator` skill). Future execution tracking should use `active-cursor-runs-YYYY-MM-DD.md` (this filename convention). See `DEV_WORKFLOW.md`.
 
 ---
 

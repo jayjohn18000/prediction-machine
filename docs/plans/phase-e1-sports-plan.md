@@ -2,7 +2,8 @@
 
 > Created: 2026-03-30
 > Status: Planning — entry criteria met (Phase D semantic closeout complete)
-> Agent roles: OpenClaw (Plumbo) for code; Claude (Dispatch) for orchestration + verification
+> Agent roles: Cursor for code (driven manually or by a Cowork sub-agent via GUI automation — see `cursor-orchestrator` skill); Claude Cowork for orchestration + verification
+> ⚠️ Amended 2026-04-15: earlier versions named OpenClaw (Plumbo) as the code executor. OpenClaw has been retired; Cursor is now the sole non-Cowork executor.
 
 ---
 

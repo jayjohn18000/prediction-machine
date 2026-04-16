@@ -26,7 +26,9 @@
 6. **REPORTER** — Metrics, report format, outputs (JSON/CSV). Output: metrics/report spec + sanity checklist.
 7. **VALIDATION_AGENT** — Validates assumptions against logs/backtests; acceptance tests; fail-reason taxonomy. Run when assumptions or data drift are in question. Output: test plan + assertions.
 
-**Merge rule:** Combine each agent’s output into a single **Implementation Plan** document (one place for "files to touch", "migrations", "tests", "checklists"). That plan is what OpenClaw uses to implement.
+**Merge rule:** Combine each agent’s output into a single **Implementation Plan** document (one place for "files to touch", "migrations", "tests", "checklists"). That plan is what Cursor (driven manually or by a Cowork sub-agent via GUI automation) uses to implement.
+
+> ⚠️ Historical note (2026-04-15): prior versions of this file named OpenClaw/Plumbo as the implementer. That workflow has been retired. Cursor is now the primary code executor — see `DEV_WORKFLOW.md` and the `cursor-orchestrator` skill.
 
 ---
 
@@ -60,10 +62,10 @@ Produce exactly one of:
 - **Context:** ...
 ```
 
-### C) "Plan ready for OpenClaw"
+### C) "Plan ready for Cursor"
 ```markdown
 ## Implementation plan (final)
-[Complete plan suitable for OpenClaw to execute]
+[Complete plan suitable for Cursor to execute — either via manual paste or via a Cowork sub-agent driving Cursor with GUI automation]
 
 ## Definition of done
 - [ ] Checklist items from all agents
@@ -77,7 +79,7 @@ Produce exactly one of:
 - [ ] Every relevant agent in the pipeline has contributed (or was explicitly skipped with reason).
 - [ ] Plan has: files to touch, diffs/migrations, tests, and sanity checklists.
 - [ ] Scope stayed within ingestion → windows → calibration → scoring → reporting (no execution/trading).
-- [ ] Human has one clear "run this agent next" or "plan ready for OpenClaw" instruction.
+- [ ] Human has one clear "run this agent next" or "plan ready for Cursor" instruction.
 
 ---
 

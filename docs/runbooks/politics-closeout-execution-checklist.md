@@ -1,5 +1,7 @@
 # Politics Closeout Execution Checklist (A–D)
 
+> ⚠️ Historical note (2026-04-15): the "Operator: Plumbo" entry below is a record of the 2026-03-17 run. For any future rerun of this checklist, the operator should be Cursor (driven manually or by a Cowork sub-agent via GUI automation; see the `cursor-orchestrator` skill) or Claude Cowork directly. OpenClaw/Plumbo has been retired — see `DEV_WORKFLOW.md`.
+
 Use this checklist during execution and tick each item as it passes.
 
 > Decision rule: **A–D COMPLETE only if all gates pass in one run window**. Any fail => **A–D BLOCKED**.

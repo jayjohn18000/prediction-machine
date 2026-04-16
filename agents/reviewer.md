@@ -27,9 +27,11 @@ Verify that changes:
 
 ## Responsibility model
 
-- OpenClaw performs the reviewer audit.
+- Cursor performs the reviewer audit on large changesets, driven either manually or by a Cowork sub-agent via GUI automation (see `cursor-orchestrator` skill). Small-diff reviews can be handled by Claude Cowork directly.
 - Reviewer scope is architecture and contract validation only.
 - Claude Cowork may inform reasoning, but review output must stay focused on validation findings.
+
+> ⚠️ Historical note (2026-04-15): prior versions named OpenClaw as the reviewer executor. OpenClaw/Plumbo has been retired. See `DEV_WORKFLOW.md`.
 
 ## Responsibilities
 

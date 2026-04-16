@@ -2,6 +2,23 @@
 
 See `docs/architecture.md` for system structure.
 
+## Knowledge Vault (Obsidian)
+
+Compiled wiki for this project lives at `~/Obsidian/Prediction Machine/` (Karpathy LLM-wiki pattern). Read pre-compiled context from there before re-deriving from source.
+
+Entry points:
+- `_home.md` — dashboard, active phase, recent decisions
+- `10-architecture/system-overview.md` — one-page mental model
+- `20-database/_index.md` — schema gotchas + per-table pages
+- `50-api/_index.md` — `/v1/*` reference
+- `70-agents/_index.md` — agent specs
+- `80-phases/_index.md` — phase status
+- `90-decisions/_index.md` — ADRs (mirrors `docs/decision-log.md`)
+- `95-runbooks/_index.md` — operational procedures
+
+After significant code/schema changes: update the relevant wiki page and bump `last-verified` in its frontmatter. Source snapshots in `99-sources/` are immutable — re-snapshot explicitly.
+
+
 ## Repo Orientation
 
 `prediction-machine` is the PMCI backend. It owns ingestion, normalization, matching, schema, and the active machine-facing API.
@@ -49,6 +66,14 @@ Both apps are live on Fly.io. All secrets are set. Do not use PM2 or local `node
 - `docs/plans/phase-e1-sports-plan.md` — detailed Phase E1 plan
 - `docs/db-schema-reference.md` — **DB column reference and API auth; read at session start before any DB queries or API calls**
 - `docs/plans/workflow-optimization-plan.md` — agentic workflow decisions (process patterns, agent split, gate verification)
+
+## Supabase Project
+
+- **Project name:** Prediction Machine
+- **Project ref:** `awueugxrdlolzjzikero`
+- **Region:** us-east-1
+- **Status:** ACTIVE_HEALTHY
+- Use ref `awueugxrdlolzjzikero` directly with the Supabase MCP — no need to call `list_projects` to find it.
 
 ## Verification Commands
 

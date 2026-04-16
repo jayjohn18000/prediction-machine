@@ -20,7 +20,9 @@ Before planning any work, read:
 ## Responsibility model
 
 - Claude Cowork owns planning, reasoning, orchestration, and triggering other tools.
-- OpenClaw owns repository analysis and downstream execution after planning is complete.
+- Cursor (driven manually or by a Cowork sub-agent via GUI automation — see `cursor-orchestrator` skill) owns repository analysis and downstream execution after planning is complete.
+
+> ⚠️ Historical note (2026-04-15): prior versions named OpenClaw as the downstream executor. OpenClaw/Plumbo has been retired. See `DEV_WORKFLOW.md`.
 
 ## Responsibilities
 
