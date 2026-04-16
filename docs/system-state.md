@@ -24,25 +24,67 @@ DB-backed pair discovery replaces mandatory large static JSON when enabled.
 - `pmci:*` scripts are PMCI operational workflows (ingest/probe/smoke/review/audit/check), not API server entrypoints.
 
 ## Branch
-- **Active branch:** `main` at `038715c` — fully synced with `origin/main` (no unmerged branches)
+- **Active branch:** `main` at `3df03b1` — dirty working tree (modified `.gitignore`, `package.json`; untracked audit tooling not yet committed)
 - **Active phase:** **E2 — Crypto ∥ E3 — Economics** (scaffolds committed; guard-first proposer + strict-audit gates not yet run)
 - **E1.6 validation audit (2026-04-14):** All exit criteria met. E2/E3 unblocked.
-- **Post-E1.6 commits on main (2026-04-14 — 2026-04-15):**
+- **Post-E1.6 commits on main (2026-04-14 — 2026-04-16):**
   - `8db2b41` feat(E2/E3): parallel crypto + economics tracks — observer frontier v2, cron parity, Phase F entry gates
   - `1aa1fb7` fix(signals): make top-divergences global — drop mandatory event_id, relax freshness gate
   - `b52b7bb` fix(health): fall back to live snapshot when pmci_runtime_status row missing
   - `038715c` docs: add competitive coverage analysis, automation plan, and benchmark artifacts
+  - `ab34adc` feat(deploy): add Fly.io deployment artifacts and update docs for live production
+  - `0dd0393` feat(pmci): phase E2 auto-review gate for crypto + economics
+  - `0f81e0c` chore(workflow): retire OpenClaw/Plumbo — Cursor is now primary executor
+  - `3df03b1` docs(E2/E3): add proposer run plan for crypto + economics expansion
 - **Prior branch history:** E1.5 merged 2026-04-10. E1.6 sprint executed 2026-04-14 on `main` (4 commits: `b11322a` → `7c09ea4` → `87d8a71` → `28db86f`).
 
-## Untracked / uncommitted files (as of 2026-04-15)
+## Untracked / uncommitted files (as of 2026-04-16)
 These files exist locally but are not yet committed to main:
-- `docs/deployment-fly.md` — Fly.io deployment runbook (both apps)
-- `docs/deployment.md` — modified (Fly notes added)
-- `docs/plans/phase-e2-auto-review-plan.md` + `phase-e2-auto-review-schema.md` — E2 planning docs
-- `Dockerfile` + `docker-entrypoint.sh` + `.dockerignore` — container build (used by Fly)
-- `deploy/fly.api.toml` + `deploy/fly.observer.toml` — Fly app configs
-- `.pmci_kalshi_crypto_checkpoint.json` + `.pmci_kalshi_economics_checkpoint.json` — ingest checkpoints (gitignore candidate)
+- `scripts/audit/repo-roadmap-audit-daily.mjs` + `repo-roadmap-audit-weekly.mjs` + `repo-roadmap-audit-lib.mjs` — repo audit tooling (new)
+- `state/` — audit state directory (daily JSON gitignored; weekly markdown tracked)
+- `.cursor/skills/` — Cursor agent skills (new)
+- `.claude/commands/repo-roadmap-audit.md` — Cowork audit command (new)
+- `.gitignore` (modified — adds `state/repo-audit/daily/*.json`)
+- `package.json` (modified — adds `audit:repo:daily`, `audit:repo:weekly` npm scripts; dedupes `pmci:audit:live`)
 - `.claude/settings.local.json` — do NOT commit
+
+## Current Status (2026-04-16 — E2/E3 SCAFFOLDED ✓, AUDIT TOOLING ADDED, Fly.io LIVE ✓)
+
+### Smoke snapshot (2026-04-16 live)
+| Metric | Count |
+|--------|-------|
+| `provider_markets` | **95,314** |
+| `snapshots` | **1,432,756** |
+| `families` | **3,236** |
+| `current_links` | **369** |
+
+All gate checks passing: `verify:schema` PASS · `pmci:smoke` PASS · `pmci:probe` PASS.
+
+### What happened since 2026-04-15 closeout
+
+**New commits on main:**
+
+| Commit | Summary |
+|--------|---------|
+| `ab34adc` | **Fly.io deployment artifacts committed.** `docs/deployment-fly.md`, `deploy/fly.api.toml`, `deploy/fly.observer.toml`, `Dockerfile`, `docker-entrypoint.sh`. |
+| `0dd0393` | **E2 auto-review gate.** Phase E2 strict-audit gate scaffolded. |
+| `0f81e0c` | **OpenClaw/Plumbo retired.** Cursor is now primary executor. |
+| `3df03b1` | **E2/E3 proposer run plan docs.** Crypto + economics expansion runbook added. |
+
+**New untracked tooling (not yet committed):**
+- `scripts/audit/repo-roadmap-audit-*.mjs` — daily + weekly repo/roadmap audit runners
+- `state/` — audit output directory
+- `.cursor/skills/` — Cursor agent skill files
+- `.claude/commands/repo-roadmap-audit.md` — Cowork audit slash command
+- Modified `.gitignore` + `package.json` (audit npm scripts)
+
+**Carry-forward (still open):**
+- E2/E3 guard-first proposer runs not yet executed — scaffolds only, zero accepted crypto/economics pairs
+- `signals/top-divergences` fix committed but live verification pending
+- Stale-cleanup not scheduled as cron — sports stales will re-accumulate
+- Canonical event lifecycle for game markets (auto-archive vs delete) still open
+
+---
 
 ## Current Status (2026-04-15 — E2/E3 SCAFFOLDED ✓, Fly.io LIVE ✓)
 

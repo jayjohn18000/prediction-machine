@@ -16,3 +16,6 @@ output/benchmark/last-run.json
 
 .pmci_kalshi_crypto_checkpoint.json
 .pmci_kalshi_economics_checkpoint.json
+
+# Repo audit: daily JSON is noisy; keep weekly markdown unless you prefer otherwise
+state/repo-audit/daily/*.json

@@ -248,4 +248,4 @@
 - 10 non-sports stale_active markets (politics, sport=NULL)
 - stale-cleanup.mjs not yet scheduled as cron
 
-Latest live smoke snapshot (2026-04-14): **80,606 / 874,301 / 3,227 / 345** (provider_markets/snapshots/families/current_links). Smoke counts are runtime-volatile; use latest `npm run pmci:smoke` output for current totals.
+Latest live smoke snapshot (2026-04-16): **95,314 / 1,432,756 / 3,236 / 369** (provider_markets/snapshots/families/current_links). Smoke counts are runtime-volatile; use latest `npm run pmci:smoke` output for current totals.
