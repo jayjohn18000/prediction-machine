@@ -4,13 +4,17 @@ const PMCI_API_KEY = Deno.env.get("PMCI_API_KEY") ?? "";
 const PMCI_SERVER_URL = Deno.env.get("PMCI_SERVER_URL") ?? "";
 
 const JOB_MAP: Record<string, string> = {
-  "ingest:sports":    "/v1/admin/jobs/ingest-sports",
-  "ingest:politics":  "/v1/admin/jobs/ingest-politics",
-  "ingest:economics": "/v1/admin/jobs/ingest-economics",
-  "ingest:crypto":    "/v1/admin/jobs/ingest-crypto",
-  "stale-cleanup":    "/v1/admin/jobs/stale-cleanup",
-  "verify:schema":    "/v1/admin/jobs/verify-schema",
-  "audit:live":       "/v1/admin/jobs/audit-live",
+  "ingest:sports":     "/v1/admin/jobs/ingest-sports",
+  "ingest:politics":   "/v1/admin/jobs/ingest-politics",
+  "ingest:economics":  "/v1/admin/jobs/ingest-economics",
+  "ingest:crypto":     "/v1/admin/jobs/ingest-crypto",
+  "stale-cleanup":     "/v1/admin/jobs/stale-cleanup",
+  "verify:schema":     "/v1/admin/jobs/verify-schema",
+  "audit:live":        "/v1/admin/jobs/audit-live",
+  "review:crypto":     "/v1/admin/jobs/review-crypto",
+  "review:economics":  "/v1/admin/jobs/review-economics",
+  "auto-accept":       "/v1/admin/jobs/auto-accept",
+  "auto-accept:audit": "/v1/admin/jobs/auto-accept-audit",
 };
 
 serve(async (req: Request) => {

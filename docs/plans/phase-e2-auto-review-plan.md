@@ -6,7 +6,7 @@ Adds an autonomous proposal acceptance loop for crypto and economics categories.
 ## Prerequisites
 - `npm run pmci:ingest:crypto` and `npm run pmci:ingest:economics` have run at least once (markets seeded)
 - `DATABASE_URL`, `PMCI_API_KEY`, and `PMCI_ADMIN_KEY` set in `.env`
-- PMCI API server running on port 3001 (`npm run api:pmci`)
+- PMCI API reachable at `https://pmci-api.fly.dev` (production on Fly.io); set `API_BASE_URL` to override for local testing
 - `pmci:propose:crypto` and `pmci:propose:economics` scripts working (verified)
 
 ## Execution Steps
