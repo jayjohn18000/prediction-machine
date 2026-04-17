@@ -26,10 +26,25 @@ By default, **`daily/*.json` is gitignored** to avoid noisy commits; **`weekly/*
 
 ## Scheduling (local)
 
-**Daily** (example macOS `launchd` or cron):
+### Daily cron (every day)
+
+1. Put `DATABASE_URL` (and optional `PMCI_WIKI_ROOT`) in **`~/.config/prediction-machine/audit.env`** or **`prediction-machine/.env.cron.local`** (both gitignored for the latter pattern via `.env.cron.local`).
+2. From the repo root, install the user crontab entry (default **06:30** in the **server’s local timezone**; override with `MINUTE` / `HOUR`):
 
 ```bash
-cd /path/to/prediction-machine && DATABASE_URL=... npm run audit:repo:daily
+./scripts/cron/install-daily-cron.sh
+# Example: run at 07:45 local time daily
+# MINUTE=45 HOUR=7 ./scripts/cron/install-daily-cron.sh
+```
+
+This runs `scripts/cron/run-repo-roadmap-audit-daily.sh`, which sets a sane `PATH`, sources the env files, then `npm run audit:repo:daily`. Logs append to `state/repo-audit/cron.log` (ignored via `*.log`).
+
+To remove the job later: `crontab -e` and delete the two lines marked `prediction-machine: audit:repo:daily`, or run `crontab -l | grep -v 'run-repo-roadmap-audit-daily.sh' | grep -v '# prediction-machine: audit:repo:daily' | crontab -`.
+
+**Manual one-off** (same as cron):
+
+```bash
+./scripts/cron/run-repo-roadmap-audit-daily.sh
 ```
 
 **Weekly** (e.g. Sunday):

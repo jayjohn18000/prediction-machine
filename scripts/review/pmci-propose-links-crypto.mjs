@@ -1,14 +1,134 @@
 #!/usr/bin/env node
 /**
- * Phase E2 crypto proposer — guard-first: same asset bucket (BTC/ETH/SOL) before scoring.
+ * Phase E2 crypto proposer — ladder grouping: match by event_ref first, then strikes.
  * Uses pmci.proposed_links with category `crypto`.
  */
 import pg from "pg";
 import { loadEnv } from "../../src/platform/env.mjs";
-import { cryptoPairPrefilter } from "../../lib/matching/compatibility.mjs";
+import { cryptoAssetBucket, cryptoPairPrefilter } from "../../lib/matching/compatibility.mjs";
+import { tokenize, jaccard } from "../../lib/matching/scoring.mjs";
 
 loadEnv();
 const { Client } = pg;
+
+/** Kalshi ladder strike from ticker suffix ...-T74999.99 */
+function parseKalshiStrikeFromRef(ref) {
+  const m = String(ref || "").match(/-T([\d.]+)\s*$/i);
+  if (!m) return null;
+  const v = Number(m[1]);
+  return Number.isFinite(v) ? v : null;
+}
+
+/**
+ * Polymarket / title fallback: $100,000, $100K, ↑ $150 (often $150K in ladder context).
+ */
+function parseStrikeFromTitle(title, { allowKShorthand = true } = {}) {
+  const t = String(title || "");
+  let m = t.match(/\$\s*([\d,]+(?:\.\d+)?)\s*K\b/i);
+  if (m) return parseFloat(m[1].replace(/,/g, "")) * 1000;
+  m = t.match(/\$\s*([\d,]+(?:\.\d+)?)\b/);
+  if (m) {
+    let v = parseFloat(m[1].replace(/,/g, ""));
+    if (allowKShorthand && v > 0 && v < 1000 && /(bitcoin|btc|ethereum|eth|solana|sol|hit|above|below)/i.test(t)) {
+      v *= 1000;
+    }
+    return v;
+  }
+  m = t.match(/[↑↓]\s*\$\s*([\d,]+(?:\.\d+)?)/i);
+  if (m) {
+    let v = parseFloat(m[1].replace(/,/g, ""));
+    if (allowKShorthand && v > 0 && v < 1000) v *= 1000;
+    return v;
+  }
+  return null;
+}
+
+/** @param {{ title?: string, provider_market_ref?: string }} row @param {'kalshi'|'polymarket'} venue */
+function parseStrikeValue(row, venue) {
+  if (venue === "kalshi") {
+    const fromRef = parseKalshiStrikeFromRef(row.provider_market_ref);
+    if (fromRef != null) return fromRef;
+  }
+  return parseStrikeFromTitle(row.title);
+}
+
+function stripDollarThresholds(s) {
+  return String(s || "")
+    .replace(/\$\s*[\d,]+(?:\.\d+)?\s*K/gi, " ")
+    .replace(/\$\s*[\d,]+(?:\.\d+)?/g, " ")
+    .replace(/[↑↓]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function eventRefTokens(ref) {
+  const base = String(ref || "").split("#")[0];
+  return tokenize(base.replace(/-/g, " "));
+}
+
+function groupRowsByEventRef(rows) {
+  const m = new Map();
+  for (const r of rows) {
+    const key = String(r.event_ref || "").trim() || `__singleton_${r.id}__`;
+    if (!m.has(key)) m.set(key, []);
+    m.get(key).push(r);
+  }
+  return m;
+}
+
+function representativeTitle(markets) {
+  const sorted = [...markets].sort((a, b) => Number(a.id) - Number(b.id));
+  return stripDollarThresholds(sorted[0]?.title || "");
+}
+
+function repMarketId(markets) {
+  return Math.min(...markets.map((x) => Number(x.id)));
+}
+
+function eventLevelSimilarity(eventRefK, marketsK, eventRefP, marketsP) {
+  const titleK = representativeTitle(marketsK);
+  const titleP = representativeTitle(marketsP);
+  const tokK = new Set([...tokenize(titleK), ...eventRefTokens(eventRefK)]);
+  const tokP = new Set([...tokenize(titleP), ...eventRefTokens(eventRefP)]);
+  return jaccard(tokK, tokP);
+}
+
+function confidenceFromTitleSim(sim) {
+  return Math.min(0.85, Math.max(0.5, 0.42 + sim * 0.55));
+}
+
+function strikesWithinTolerance(a, b) {
+  if (a == null || b == null || !Number.isFinite(a) || !Number.isFinite(b)) return false;
+  const mx = Math.max(Math.abs(a), Math.abs(b));
+  if (mx === 0) return a === b;
+  return Math.abs(a - b) / mx < 0.01;
+}
+
+/**
+ * Best Polymarket group for this Kalshi group: same asset bucket + max title/slug similarity.
+ */
+function bestPolyMatch(kEventRef, kMarkets, polyEventMap, kalshiId, polyId) {
+  const kRep = kMarkets.slice().sort((a, b) => Number(a.id) - Number(b.id))[0];
+  const kBucket = cryptoAssetBucket(`${kRep.title || ""} ${kRep.provider_market_ref || ""}`);
+  if (!kBucket) return null;
+
+  let best = null;
+  for (const [pEventRef, pMarkets] of polyEventMap) {
+    const pRep = pMarkets.slice().sort((a, b) => Number(a.id) - Number(b.id))[0];
+    const pBucket = cryptoAssetBucket(`${pRep.title || ""} ${pRep.provider_market_ref || ""}`);
+    if (pBucket !== kBucket) continue;
+
+    const pre = cryptoPairPrefilter(
+      { ...kRep, provider_id: kalshiId },
+      { ...pRep, provider_id: polyId },
+    );
+    if (!pre.ok) continue;
+
+    const sim = eventLevelSimilarity(kEventRef, kMarkets, pEventRef, pMarkets);
+    if (!best || sim > best.sim) best = { pEventRef, pMarkets, sim, pre };
+  }
+  return best;
+}
 
 async function main() {
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
@@ -57,8 +177,14 @@ async function main() {
       [polyId, marketCapPerSide],
     );
 
+    const kalshiByEvent = groupRowsByEventRef(kalshiRows);
+    const polyByEvent = groupRowsByEventRef(polyRows);
+
     console.log(
       `[pmci:propose:crypto] candidates kalshi=${kalshiRows.length} polymarket=${polyRows.length} (cap ${marketCapPerSide}/side)`,
+    );
+    console.log(
+      `[pmci:propose:crypto] event_groups kalshi=${kalshiByEvent.size} polymarket=${polyByEvent.size}`,
     );
 
     const existing = await client.query(`
@@ -76,44 +202,163 @@ async function main() {
     let inserted = 0;
     let considered = 0;
     let rejected = 0;
+    let eventMatches = 0;
+    let eventProposals = 0;
+    let strikeProposals = 0;
 
-    for (const k of kalshiRows) {
-      if (inserted >= limit) break;
-      for (const p of polyRows) {
-        if (inserted >= limit) break;
-        considered += 1;
-        const pre = cryptoPairPrefilter(k, p);
-        if (!pre.ok) {
-          rejected += 1;
-          verbose && console.log(`[skip] ${pre.reason}`);
-          continue;
-        }
-        const pairKey = `${Math.min(k.id, p.id)}:${Math.max(k.id, p.id)}:equivalent`;
-        if (existingPairs.has(pairKey)) continue;
+    const MIN_EVENT_SIM = 0.14;
 
-        const confidence = 0.55;
-        const reasons = {
-          asset_gate: pre,
-          source: "crypto_proposer_v1",
-        };
-        const features = { title_k: k.title, title_p: p.title };
+    async function tryInsert(k, p, confidence, reasons, features) {
+      if (inserted >= limit) return false;
+      const pairKey = `${Math.min(k.id, p.id)}:${Math.max(k.id, p.id)}:equivalent`;
+      if (existingPairs.has(pairKey)) return false;
 
-        if (!dryRun) {
-          await client.query(
-            `insert into pmci.proposed_links (
+      if (!dryRun) {
+        await client.query(
+          `insert into pmci.proposed_links (
               category, provider_market_id_a, provider_market_id_b, proposed_relationship_type, confidence, reasons, features
             ) values ('crypto', $1, $2, 'equivalent', $3, $4::jsonb, $5::jsonb)
              on conflict do nothing`,
-            [Math.min(k.id, p.id), Math.max(k.id, p.id), confidence, JSON.stringify(reasons), JSON.stringify(features)],
+          [Math.min(k.id, p.id), Math.max(k.id, p.id), confidence, JSON.stringify(reasons), JSON.stringify(features)],
+        );
+      }
+      existingPairs.add(pairKey);
+      inserted += 1;
+      verbose &&
+        console.log(
+          `[insert] ${reasons.proposal_type} conf=${confidence.toFixed(3)} k=${k.provider_market_ref?.slice(0, 40)} p=${p.provider_market_ref?.slice(0, 40)}`,
+        );
+      return true;
+    }
+
+    for (const [kEventRef, kMarkets] of kalshiByEvent) {
+      if (inserted >= limit) break;
+
+      considered += polyByEvent.size;
+      const match = bestPolyMatch(kEventRef, kMarkets, polyByEvent, kalshiId, polyId);
+      if (!match || match.sim < MIN_EVENT_SIM) {
+        rejected += 1;
+        verbose &&
+          console.log(
+            `[skip] no_poly_match event=${kEventRef.slice(0, 48)} sim=${match ? match.sim.toFixed(3) : "n/a"}`,
           );
+        continue;
+      }
+
+      const { pEventRef, pMarkets, sim, pre } = match;
+      eventMatches += 1;
+
+      const titleK = representativeTitle(kMarkets);
+      const titleP = representativeTitle(pMarkets);
+      const eventTitleK = kMarkets.slice().sort((a, b) => Number(a.id) - Number(b.id))[0]?.title || "";
+      const eventTitleP = pMarkets.slice().sort((a, b) => Number(a.id) - Number(b.id))[0]?.title || "";
+
+      const repK = kMarkets.find((m) => Number(m.id) === repMarketId(kMarkets));
+      const repP = pMarkets.find((m) => Number(m.id) === repMarketId(pMarkets));
+
+      const multiLadder = kMarkets.length > 1 || pMarkets.length > 1;
+
+      /** @type {Array<{ k: object, p: object, sk: number|null, sp: number|null }>} */
+      const strikePairs = [];
+      for (const k of kMarkets) {
+        const sk = parseStrikeValue(k, "kalshi");
+        for (const p of pMarkets) {
+          considered += 1;
+          const sp = parseStrikeValue(p, "polymarket");
+          if (strikesWithinTolerance(sk, sp)) strikePairs.push({ k, p, sk, sp });
         }
-        existingPairs.add(pairKey);
-        inserted += 1;
+      }
+
+      const confEvent = confidenceFromTitleSim(sim);
+
+      if (!multiLadder) {
+        const one = strikePairs[0];
+        if (one && one.sk != null && one.sp != null) {
+          const confidence = Math.max(0.75, confEvent);
+          const reasons = {
+            proposal_type: "strike_match",
+            event_ref_k: kEventRef,
+            event_ref_p: pEventRef,
+            title_similarity: Math.round(sim * 10000) / 10000,
+            asset_gate: pre,
+            source: "crypto_proposer_v2_ladder",
+          };
+          const features = {
+            strike_value_k: one.sk,
+            strike_value_p: one.sp,
+            event_title_k: eventTitleK,
+            event_title_p: eventTitleP,
+            title_k: one.k.title,
+            title_p: one.p.title,
+          };
+          if (await tryInsert(one.k, one.p, confidence, reasons, features)) strikeProposals += 1;
+        } else {
+          const reasons = {
+            proposal_type: "event_group",
+            event_ref_k: kEventRef,
+            event_ref_p: pEventRef,
+            title_similarity: Math.round(sim * 10000) / 10000,
+            asset_gate: pre,
+            source: "crypto_proposer_v2_ladder",
+          };
+          const features = {
+            event_title_k: eventTitleK,
+            event_title_p: eventTitleP,
+            title_k: repK.title,
+            title_p: repP.title,
+          };
+          if (await tryInsert(repK, repP, confEvent, reasons, features)) eventProposals += 1;
+        }
+        continue;
+      }
+
+      {
+        const reasons = {
+          proposal_type: "event_group",
+          event_ref_k: kEventRef,
+          event_ref_p: pEventRef,
+          title_similarity: Math.round(sim * 10000) / 10000,
+          asset_gate: pre,
+          source: "crypto_proposer_v2_ladder",
+        };
+        const features = {
+          event_title_k: eventTitleK,
+          event_title_p: eventTitleP,
+          title_k: repK.title,
+          title_p: repP.title,
+        };
+        if (await tryInsert(repK, repP, confEvent, reasons, features)) eventProposals += 1;
+      }
+
+      for (const { k, p, sk, sp } of strikePairs) {
+        if (inserted >= limit) break;
+        if (Number(k.id) === Number(repK.id) && Number(p.id) === Number(repP.id)) continue;
+
+        const confidence = Math.max(0.75, confEvent);
+        const reasons = {
+          proposal_type: "strike_match",
+          event_ref_k: kEventRef,
+          event_ref_p: pEventRef,
+          title_similarity: Math.round(sim * 10000) / 10000,
+          asset_gate: pre,
+          source: "crypto_proposer_v2_ladder",
+        };
+        const features = {
+          strike_value_k: sk,
+          strike_value_p: sp,
+          event_title_k: eventTitleK,
+          event_title_p: eventTitleP,
+          title_k: k.title,
+          title_p: p.title,
+        };
+        if (await tryInsert(k, p, confidence, reasons, features)) strikeProposals += 1;
       }
     }
 
     console.log(
-      `pmci:propose:crypto considered=${considered} inserted=${inserted} rejected=${rejected} limit=${limit}${dryRun ? " dry-run=true" : ""}`,
+      `pmci:propose:crypto considered=${considered} inserted=${inserted} rejected=${rejected} ` +
+        `event_matches=${eventMatches} event_proposals=${eventProposals} strike_proposals=${strikeProposals} ` +
+        `limit=${limit}${dryRun ? " dry-run=true" : ""}`,
     );
   } finally {
     await client.end();
