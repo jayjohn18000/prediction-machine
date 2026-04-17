@@ -53,6 +53,7 @@ const REQUIRED_COLUMNS = {
     'last_seen_at',
     'election_phase',
     'subject_type',
+    'volume_24h',
   ],
   provider_market_snapshots: ['provider_market_id', 'observed_at', 'price_yes'],
 };
