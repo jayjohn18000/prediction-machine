@@ -74,9 +74,11 @@
     "pm2:restart": "pm2 restart all",
     "pm2:status": "pm2 status",
     "pm2:logs": "pm2 logs --lines 50",
-    "pmci:benchmark:coverage": "node scripts/benchmark/coverage-benchmark.mjs"
+    "pmci:benchmark:coverage": "node scripts/benchmark/coverage-benchmark.mjs",
+    "pmci:classify:templates": "node scripts/classify/pmci-classify-templates.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "@fastify/rate-limit": "^10.3.0",
     "@supabase/supabase-js": "^2.91.1",
     "dotenv": "^17.3.1",

@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 /**
- * Phase E3 economics proposer — guard-first: macro keyword overlap on titles + refs.
+ * Phase E3/E4 economics proposer — template compatibility + title similarity on filtered pairs.
  */
 import pg from "pg";
 import { loadEnv } from "../../src/platform/env.mjs";
+import { areTemplatesCompatible } from "../../lib/matching/templates/compatibility-rules.mjs";
+import { tokenize, jaccard } from "../../lib/matching/scoring.mjs";
 
 loadEnv();
 const { Client } = pg;
@@ -22,6 +24,18 @@ function macroTokens(row) {
 function tokenOverlap(a, b) {
   for (const t of a) if (b.has(t)) return t;
   return null;
+}
+
+function templateParams(row) {
+  const p = row?.template_params;
+  if (p && typeof p === "object") return p;
+  return {};
+}
+
+function titleSim(k, p) {
+  const tokK = new Set(tokenize(`${k.title || ""} ${k.provider_market_ref || ""}`));
+  const tokP = new Set(tokenize(`${p.title || ""} ${p.provider_market_ref || ""}`));
+  return jaccard(tokK, tokP);
 }
 
 async function main() {
@@ -48,12 +62,14 @@ async function main() {
     const where = `category = 'economics' and coalesce(status,'') in ('active','open')`;
 
     const { rows: kalshiRows } = await client.query(
-      `select id, provider_id, provider_market_ref, event_ref, title from pmci.provider_markets
+      `select id, provider_id, provider_market_ref, event_ref, title, market_template, template_params
+       from pmci.provider_markets
        where provider_id = $1 and ${where} order by id desc limit $2`,
       [kalshiId, marketCapPerSide],
     );
     const { rows: polyRows } = await client.query(
-      `select id, provider_id, provider_market_ref, event_ref, title from pmci.provider_markets
+      `select id, provider_id, provider_market_ref, event_ref, title, market_template, template_params
+       from pmci.provider_markets
        where provider_id = $1 and ${where} order by id desc limit $2`,
       [polyId, marketCapPerSide],
     );
@@ -82,9 +98,24 @@ async function main() {
       for (const p of polyRows) {
         if (inserted >= limit) break;
         considered += 1;
-        const pt = macroTokens(p);
-        const overlap = tokenOverlap(kt, pt);
-        if (!overlap) continue;
+
+        if (k.market_template && p.market_template) {
+          const tc = areTemplatesCompatible(
+            k.market_template,
+            templateParams(k),
+            p.market_template,
+            templateParams(p),
+          );
+          if (!tc.compatible) continue;
+        } else {
+          const pt = macroTokens(p);
+          const overlap = tokenOverlap(kt, pt);
+          if (!overlap) continue;
+        }
+
+        const sim = titleSim(k, p);
+        const confidence = Math.min(0.92, Math.max(0.45, 0.4 + sim * 0.55));
+
         const pairKey = `${Math.min(k.id, p.id)}:${Math.max(k.id, p.id)}:equivalent`;
         if (existingPairs.has(pairKey)) continue;
 
@@ -97,8 +128,12 @@ async function main() {
             [
               Math.min(k.id, p.id),
               Math.max(k.id, p.id),
-              0.5,
-              JSON.stringify({ macro_overlap: overlap, source: "economics_proposer_v1" }),
+              confidence,
+              JSON.stringify({
+                source: "economics_proposer_v2_template",
+                title_similarity: Math.round(sim * 10000) / 10000,
+                templates: { k: k.market_template, p: p.market_template },
+              }),
               JSON.stringify({}),
             ],
           );

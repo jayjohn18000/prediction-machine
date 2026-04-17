@@ -54,6 +54,8 @@ const REQUIRED_COLUMNS = {
     'election_phase',
     'subject_type',
     'volume_24h',
+    'market_template',
+    'template_params',
   ],
   provider_market_snapshots: ['provider_market_id', 'observed_at', 'price_yes'],
 };

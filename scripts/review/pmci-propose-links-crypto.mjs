@@ -6,6 +6,7 @@
 import pg from "pg";
 import { loadEnv } from "../../src/platform/env.mjs";
 import { cryptoAssetBucket, cryptoPairPrefilter } from "../../lib/matching/compatibility.mjs";
+import { areTemplatesCompatible } from "../../lib/matching/templates/compatibility-rules.mjs";
 import { tokenize, jaccard } from "../../lib/matching/scoring.mjs";
 
 loadEnv();
@@ -85,6 +86,25 @@ function repMarketId(markets) {
   return Math.min(...markets.map((x) => Number(x.id)));
 }
 
+function templateParams(row) {
+  const p = row?.template_params;
+  if (p && typeof p === "object") return p;
+  return {};
+}
+
+/** When both sides have market_template, require structural compatibility. */
+function templateGate(k, p) {
+  if (!k?.market_template || !p?.market_template) {
+    return { compatible: true, reason: "legacy_missing_template" };
+  }
+  return areTemplatesCompatible(
+    k.market_template,
+    templateParams(k),
+    p.market_template,
+    templateParams(p),
+  );
+}
+
 function eventLevelSimilarity(eventRefK, marketsK, eventRefP, marketsP) {
   const titleK = representativeTitle(marketsK);
   const titleP = representativeTitle(marketsP);
@@ -133,6 +153,9 @@ function bestPolyMatch(kEventRef, kMarkets, polyEventMap, kalshiId, polyId) {
     );
     if (!pre.ok) continue;
 
+    const tg = templateGate(kRep, pRep);
+    if (!tg.compatible) continue;
+
     const sim = eventLevelSimilarity(kEventRef, kMarkets, pEventRef, pMarkets);
     if (!best || sim > best.sim) best = { pEventRef, pMarkets, sim, pre };
   }
@@ -167,7 +190,8 @@ async function main() {
 
     const { rows: kalshiRows } = await client.query(
       `
-      select id, provider_id, provider_market_ref, event_ref, title, status, close_time, volume_24h
+      select id, provider_id, provider_market_ref, event_ref, title, status, close_time, volume_24h,
+             market_template, template_params
       from pmci.provider_markets
       where provider_id = $1 and ${baseWhere}
       order by id desc
@@ -177,7 +201,8 @@ async function main() {
     );
     const { rows: polyRows } = await client.query(
       `
-      select id, provider_id, provider_market_ref, event_ref, title, status, close_time, volume_24h
+      select id, provider_id, provider_market_ref, event_ref, title, status, close_time, volume_24h,
+             market_template, template_params
       from pmci.provider_markets
       where provider_id = $1 and ${baseWhere}
       order by id desc
@@ -287,6 +312,8 @@ async function main() {
         for (const p of pMarkets) {
           considered += 1;
           const sp = parseStrikeValue(p, "polymarket");
+          const pairGate = templateGate(k, p);
+          if (!pairGate.compatible) continue;
           if (strikesWithinTolerance(sk, sp)) strikePairs.push({ k, p, sk, sp });
         }
       }
@@ -303,7 +330,8 @@ async function main() {
             event_ref_p: pEventRef,
             title_similarity: Math.round(sim * 10000) / 10000,
             asset_gate: pre,
-            source: "crypto_proposer_v2_ladder",
+            template_gate: tg,
+            source: "crypto_proposer_v3_template",
           };
           const features = {
             strike_value_k: one.sk,
@@ -321,7 +349,8 @@ async function main() {
             event_ref_p: pEventRef,
             title_similarity: Math.round(sim * 10000) / 10000,
             asset_gate: pre,
-            source: "crypto_proposer_v2_ladder",
+            template_gate: tg,
+            source: "crypto_proposer_v3_template",
           };
           const features = {
             event_title_k: eventTitleK,
@@ -341,7 +370,8 @@ async function main() {
           event_ref_p: pEventRef,
           title_similarity: Math.round(sim * 10000) / 10000,
           asset_gate: pre,
-          source: "crypto_proposer_v2_ladder",
+          template_gate: tg,
+          source: "crypto_proposer_v3_template",
         };
         const features = {
           event_title_k: eventTitleK,
@@ -362,7 +392,8 @@ async function main() {
           event_ref_p: pEventRef,
           title_similarity: Math.round(sim * 10000) / 10000,
           asset_gate: pre,
-          source: "crypto_proposer_v2_ladder",
+          template_gate: tg,
+          source: "crypto_proposer_v3_template",
         };
         const features = {
           strike_value_k: sk,
