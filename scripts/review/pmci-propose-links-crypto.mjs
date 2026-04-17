@@ -107,6 +107,15 @@ function strikesWithinTolerance(a, b) {
 /**
  * Best Polymarket group for this Kalshi group: same asset bucket + max title/slug similarity.
  */
+function addVolumeToFeatures(k, p, features) {
+  return {
+    ...features,
+    volume_24h_a: k.volume_24h ?? null,
+    volume_24h_b: p.volume_24h ?? null,
+    volume_24h_combined: ((k.volume_24h ?? 0) + (p.volume_24h ?? 0)) || null,
+  };
+}
+
 function bestPolyMatch(kEventRef, kMarkets, polyEventMap, kalshiId, polyId) {
   const kRep = kMarkets.slice().sort((a, b) => Number(a.id) - Number(b.id))[0];
   const kBucket = cryptoAssetBucket(`${kRep.title || ""} ${kRep.provider_market_ref || ""}`);
@@ -158,7 +167,7 @@ async function main() {
 
     const { rows: kalshiRows } = await client.query(
       `
-      select id, provider_id, provider_market_ref, event_ref, title, status, close_time
+      select id, provider_id, provider_market_ref, event_ref, title, status, close_time, volume_24h
       from pmci.provider_markets
       where provider_id = $1 and ${baseWhere}
       order by id desc
@@ -168,7 +177,7 @@ async function main() {
     );
     const { rows: polyRows } = await client.query(
       `
-      select id, provider_id, provider_market_ref, event_ref, title, status, close_time
+      select id, provider_id, provider_market_ref, event_ref, title, status, close_time, volume_24h
       from pmci.provider_markets
       where provider_id = $1 and ${baseWhere}
       order by id desc
@@ -206,6 +215,9 @@ async function main() {
     let eventProposals = 0;
     let strikeProposals = 0;
 
+    /** @type {Array<{ k: object, p: object, confidence: number, reasons: object, features: object, kind: 'strike'|'event' }>} */
+    const pending = [];
+
     const MIN_EVENT_SIM = 0.14;
 
     async function tryInsert(k, p, confidence, reasons, features) {
@@ -226,14 +238,24 @@ async function main() {
       inserted += 1;
       verbose &&
         console.log(
-          `[insert] ${reasons.proposal_type} conf=${confidence.toFixed(3)} k=${k.provider_market_ref?.slice(0, 40)} p=${p.provider_market_ref?.slice(0, 40)}`,
+          `[insert] ${reasons.proposal_type} conf=${confidence.toFixed(3)} k=${k.provider_market_ref?.slice(0, 40)} p=${p.provider_market_ref?.slice(0, 40)} ` +
+            `volume_24h_a=${features?.volume_24h_a ?? "null"} volume_24h_b=${features?.volume_24h_b ?? "null"} combined=${features?.volume_24h_combined ?? "null"}`,
         );
       return true;
     }
 
-    for (const [kEventRef, kMarkets] of kalshiByEvent) {
-      if (inserted >= limit) break;
+    function enqueue(k, p, confidence, reasons, features, kind) {
+      pending.push({
+        k,
+        p,
+        confidence,
+        reasons,
+        features: addVolumeToFeatures(k, p, features),
+        kind,
+      });
+    }
 
+    for (const [kEventRef, kMarkets] of kalshiByEvent) {
       considered += polyByEvent.size;
       const match = bestPolyMatch(kEventRef, kMarkets, polyByEvent, kalshiId, polyId);
       if (!match || match.sim < MIN_EVENT_SIM) {
@@ -291,7 +313,7 @@ async function main() {
             title_k: one.k.title,
             title_p: one.p.title,
           };
-          if (await tryInsert(one.k, one.p, confidence, reasons, features)) strikeProposals += 1;
+          enqueue(one.k, one.p, confidence, reasons, features, "strike");
         } else {
           const reasons = {
             proposal_type: "event_group",
@@ -307,7 +329,7 @@ async function main() {
             title_k: repK.title,
             title_p: repP.title,
           };
-          if (await tryInsert(repK, repP, confEvent, reasons, features)) eventProposals += 1;
+          enqueue(repK, repP, confEvent, reasons, features, "event");
         }
         continue;
       }
@@ -327,11 +349,10 @@ async function main() {
           title_k: repK.title,
           title_p: repP.title,
         };
-        if (await tryInsert(repK, repP, confEvent, reasons, features)) eventProposals += 1;
+        enqueue(repK, repP, confEvent, reasons, features, "event");
       }
 
       for (const { k, p, sk, sp } of strikePairs) {
-        if (inserted >= limit) break;
         if (Number(k.id) === Number(repK.id) && Number(p.id) === Number(repP.id)) continue;
 
         const confidence = Math.max(0.75, confEvent);
@@ -351,7 +372,22 @@ async function main() {
           title_k: k.title,
           title_p: p.title,
         };
-        if (await tryInsert(k, p, confidence, reasons, features)) strikeProposals += 1;
+        enqueue(k, p, confidence, reasons, features, "strike");
+      }
+    }
+
+    pending.sort((a, b) => {
+      const va = a.features?.volume_24h_combined ?? 0;
+      const vb = b.features?.volume_24h_combined ?? 0;
+      return vb - va;
+    });
+
+    for (const item of pending) {
+      if (inserted >= limit) break;
+      const ok = await tryInsert(item.k, item.p, item.confidence, item.reasons, item.features);
+      if (ok) {
+        if (item.kind === "strike") strikeProposals += 1;
+        else eventProposals += 1;
       }
     }
 
