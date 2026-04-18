@@ -1,8 +1,9 @@
--- Phase E2 — auto-review cron jobs (crypto + economics).
--- Runs propose + auto-accept + audit for crypto and economics categories
--- a few hours offset from ingest so proposers have fresh provider_markets.
+-- Phase E2 — review cron jobs (crypto + economics).
+-- Invokes pmci-job-runner with review:crypto / review:economics. The Fly admin jobs
+-- (see src/routes/admin-jobs.mjs) run the full pipeline: propose → auto-accept → audit
+-- via scripts/review/pmci-review-category-pipeline.mjs.
 -- Invokes pmci-job-runner Edge Function (see supabase/functions/pmci-job-runner/index.ts).
--- NOTE (2026-04-17): Hardcoded URLs/keys — Supabase managed Postgres blocks current_setting() writes.
+-- NOTE: Hardcoded URLs/keys — rotate in Dashboard if compromised; vault/env not available in pg_cron SQL here.
 
 SELECT cron.schedule(
   'pmci-review-crypto',

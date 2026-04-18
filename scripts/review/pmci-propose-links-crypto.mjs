@@ -302,6 +302,7 @@ async function main() {
 
       const repK = kMarkets.find((m) => Number(m.id) === repMarketId(kMarkets));
       const repP = pMarkets.find((m) => Number(m.id) === repMarketId(pMarkets));
+      const tgRep = templateGate(repK, repP);
 
       const multiLadder = kMarkets.length > 1 || pMarkets.length > 1;
 
@@ -330,7 +331,7 @@ async function main() {
             event_ref_p: pEventRef,
             title_similarity: Math.round(sim * 10000) / 10000,
             asset_gate: pre,
-            template_gate: tg,
+            template_gate: templateGate(one.k, one.p),
             source: "crypto_proposer_v3_template",
           };
           const features = {
@@ -349,7 +350,7 @@ async function main() {
             event_ref_p: pEventRef,
             title_similarity: Math.round(sim * 10000) / 10000,
             asset_gate: pre,
-            template_gate: tg,
+            template_gate: tgRep,
             source: "crypto_proposer_v3_template",
           };
           const features = {
@@ -370,7 +371,7 @@ async function main() {
           event_ref_p: pEventRef,
           title_similarity: Math.round(sim * 10000) / 10000,
           asset_gate: pre,
-          template_gate: tg,
+          template_gate: tgRep,
           source: "crypto_proposer_v3_template",
         };
         const features = {
@@ -392,7 +393,7 @@ async function main() {
           event_ref_p: pEventRef,
           title_similarity: Math.round(sim * 10000) / 10000,
           asset_gate: pre,
-          template_gate: tg,
+          template_gate: templateGate(k, p),
           source: "crypto_proposer_v3_template",
         };
         const features = {

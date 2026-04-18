@@ -15,6 +15,8 @@ const JOB_MAP: Record<string, string> = {
   "review:economics":  "/v1/admin/jobs/review-economics",
   "auto-accept":       "/v1/admin/jobs/auto-accept",
   "auto-accept:audit": "/v1/admin/jobs/auto-accept-audit",
+  "status:digest":     "/v1/admin/jobs/status-digest",
+  "benchmark:coverage": "/v1/admin/jobs/benchmark-coverage",
 };
 
 serve(async (req: Request) => {

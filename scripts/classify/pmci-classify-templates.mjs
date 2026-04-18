@@ -2,6 +2,10 @@
 /**
  * Backfill pmci.provider_markets.market_template + template_params (Phase E4).
  * Rule-based first; Haiku batch for remainder.
+ *
+ * Sports rows use lib/matching/templates/sports-templates.mjs (market-type buckets only).
+ * For full vocabulary templates (draft-pick, esports-event, etc.), use
+ * scripts/classify/pmci-backfill-vocabulary-templates.mjs instead.
  */
 import pg from "pg";
 import { loadEnv } from "../../src/platform/env.mjs";

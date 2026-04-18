@@ -1,4 +1,16 @@
 #!/usr/bin/env node
+/**
+ * npm run pmci:status — API health (freshness, SLO, projection-ready) plus optional DB snapshot
+ * when DATABASE_URL is set: smoke counts, pending proposals by category, active links by category,
+ * observer heartbeat lag.
+ */
+import pg from "pg";
+import { loadEnv } from "../../src/platform/env.mjs";
+import { fetchPmciStatusBundle } from "../lib/pmci-status-queries.mjs";
+
+loadEnv();
+
+const { Client } = pg;
 
 const baseEnv = process.env.PMCI_API_URL;
 const argBase = process.argv[2];
@@ -24,7 +36,7 @@ async function main() {
       ? projRes.value
       : { ready: false, error: "fetch_failed" };
 
-  console.log(`\nPMCI Projection Status  —  ${new Date().toISOString()}`);
+  console.log(`\nPMCI Status  —  ${new Date().toISOString()}`);
   console.log(`API: ${baseUrl}\n`);
 
   const lagLabel =
@@ -35,8 +47,8 @@ async function main() {
     freshness?.status === "ok"
       ? "✓"
       : freshness?.status === "stale"
-      ? "⚠"
-      : "✗";
+        ? "⚠"
+        : "✗";
   console.log(`${freshIcon} Freshness       ${freshness?.status ?? "unknown"}  (lag: ${lagLabel})`);
 
   const projIcon = proj?.ready ? "✓" : "✗";
@@ -67,6 +79,49 @@ async function main() {
     });
   }
 
+  const dbUrl = process.env.DATABASE_URL?.trim();
+  if (dbUrl) {
+    const client = new Client({ connectionString: dbUrl });
+    await client.connect();
+    try {
+      const bundle = await fetchPmciStatusBundle(client);
+      console.log("\n— Database (DATABASE_URL) —");
+      const s = bundle.smoke;
+      console.log(
+        `  provider_markets: ${s.provider_markets ?? "?"}  snapshots: ${s.snapshots ?? "?"}  ` +
+          `families: ${s.families ?? "?"}  v_market_links_current: ${s.current_links ?? "?"}`,
+      );
+      if (bundle.pending_proposals?.length) {
+        console.log("  pending proposed_links (decision IS NULL) by category:");
+        for (const r of bundle.pending_proposals) {
+          console.log(`    ${r.category ?? "(null)"}: ${r.cnt}`);
+        }
+      } else {
+        console.log("  pending proposed_links: none");
+      }
+      if (bundle.active_links_by_category?.length) {
+        console.log("  active market_links by category:");
+        for (const r of bundle.active_links_by_category) {
+          console.log(`    ${r.category ?? "(null)"}: ${r.active_link_rows}`);
+        }
+      }
+      const ob = bundle.observer;
+      if (ob?.cycle_at) {
+        const lag = ob.lag_seconds != null ? `${ob.lag_seconds}s` : "?";
+        console.log(
+          `  observer_heartbeats: last cycle_at=${ob.cycle_at} lag≈${lag} ` +
+            `(pairs ok ${ob.pairs_succeeded ?? "?"}/${ob.pairs_attempted ?? "?"})`,
+        );
+      } else {
+        console.log("  observer_heartbeats: no rows");
+      }
+    } finally {
+      await client.end();
+    }
+  } else {
+    console.log("\n(DATABASE_URL unset — skipping DB counts / proposals / observer table.)");
+  }
+
   const overallOk =
     freshness?.status === "ok" && proj?.ready === true && slo?.status === "ok";
   console.log(
@@ -86,4 +141,3 @@ main().catch((err) => {
   console.log("\n⚠ Action required — see errors above\n");
   process.exit(1);
 });
-

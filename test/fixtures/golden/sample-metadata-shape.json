@@ -1,0 +1,13 @@
+{
+  "description": "Minimal Polymarket metadata contract for cross-category tooling",
+  "polymarket_metadata_fields": [
+    "source",
+    "provider",
+    "tag_id",
+    "market_id",
+    "slug",
+    "outcome_index",
+    "outcome_name"
+  ],
+  "event_ref": "uses Polymarket event slug string where applicable"
+}

@@ -13,10 +13,12 @@ const ADMIN_JOBS = {
   "stale-cleanup":    ["node", ["scripts/stale-cleanup.mjs"]],
   "verify-schema":    ["node", ["scripts/validation/verify-pmci-schema.mjs"]],
   "audit-live":       ["bash", ["scripts/run_pmci_live_audit.sh"]],
-  "review-crypto":    ["node", ["scripts/review/pmci-propose-links-crypto.mjs"]],
-  "review-economics": ["node", ["scripts/review/pmci-propose-links-economics.mjs"]],
+  "review-crypto":    ["node", ["scripts/review/pmci-review-category-pipeline.mjs"]],
+  "review-economics": ["node", ["scripts/review/pmci-review-category-pipeline.mjs", "--economics"]],
   "auto-accept":      ["node", ["scripts/review/pmci-auto-accept.mjs"]],
   "auto-accept-audit": ["node", ["scripts/review/pmci-auto-accept-audit.mjs"]],
+  "status-digest":    ["node", ["scripts/digest/pmci-daily-digest.mjs"]],
+  "benchmark-coverage": ["node", ["scripts/benchmark/coverage-benchmark.mjs"]],
 };
 
 export function registerAdminJobRoutes(app, deps) {
