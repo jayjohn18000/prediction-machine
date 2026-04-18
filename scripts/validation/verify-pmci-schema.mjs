@@ -18,6 +18,8 @@ const PMCI_TABLES = [
   'canonical_outcomes',
   'provider_markets',
   'provider_market_snapshots',
+  'provider_event_map',
+  'provider_market_map',
   'market_families',
   'market_links',
   'unmatched_markets',
@@ -58,6 +60,10 @@ const REQUIRED_COLUMNS = {
     'template_params',
   ],
   provider_market_snapshots: ['provider_market_id', 'observed_at', 'price_yes'],
+  provider_event_map: ['canonical_event_id', 'provider_id', 'provider_event_ref'],
+  provider_market_map: ['canonical_market_id', 'provider_market_id', 'provider_id'],
+  canonical_events: ['subcategory', 'event_date', 'participants', 'external_ref', 'external_source'],
+  canonical_markets: ['market_template', 'template_params'],
 };
 
 const REQUIRED_VIEW = 'v_market_links_current';

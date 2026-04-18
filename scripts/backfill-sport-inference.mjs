@@ -8,7 +8,7 @@ import { loadEnv } from '../src/platform/env.mjs';
 import pg from '../node_modules/pg/lib/index.js';
 import {
   inferSportFromKalshiTicker,
-  inferSportFromPolymarketTags,
+  resolvePolymarketSport,
 } from '../lib/ingestion/services/sport-inference.mjs';
 
 loadEnv();
@@ -69,10 +69,7 @@ async function backfillPolymarket() {
 
   for (const row of rows) {
     const tagBits = [row.tag_slug, row.tag_id].filter(Boolean).map(String);
-    let sport = inferSportFromPolymarketTags(tagBits);
-    if (sport === 'unknown') {
-      sport = inferSportFromKalshiTicker(row.title);
-    }
+    const sport = resolvePolymarketSport(tagBits, row.title);
     sportCounts[sport] = (sportCounts[sport] || 0) + 1;
     if (sport !== 'unknown') {
       await c.query('UPDATE pmci.provider_markets SET sport = $1 WHERE id = $2', [sport, row.id]);
