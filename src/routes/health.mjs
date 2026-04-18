@@ -2,13 +2,7 @@
  * /v1/health/* routes.
  */
 import { getObserverHealth } from "../services/observer-health.mjs";
-import { computeLiveFreshnessSnapshot, getRuntimeStatus } from "../services/runtime-status.mjs";
-
-// 10-second TTL cache for the freshness response.
-// Caching the full result eliminates repeated pmci_runtime_status reads on SLO
-// polls and back-to-back signal requests.
-const _freshnessCache = { data: null, fetchedAt: 0 };
-const FRESHNESS_TTL_MS = 10_000;
+import { computeLiveFreshnessSnapshot } from "../services/runtime-status.mjs";
 
 export function registerHealthRoutes(app, deps) {
   const {
@@ -23,18 +17,14 @@ export function registerHealthRoutes(app, deps) {
   } = deps;
 
   app.get("/v1/health/freshness", async () => {
-    const cacheAge = Date.now() - _freshnessCache.fetchedAt;
-    if (_freshnessCache.data && cacheAge < FRESHNESS_TTL_MS) {
-      return _freshnessCache.data;
-    }
-
     try {
-      let rts = await getRuntimeStatus({ query });
+      const rts = await computeLiveFreshnessSnapshot({ query });
       if (!rts) {
-        rts = await computeLiveFreshnessSnapshot({ query });
-      }
-      if (!rts) {
-        return { status: "error", error: "no_runtime_status", message: "pmci_runtime_status has no rows" };
+        return {
+          status: "error",
+          error: "no_freshness_snapshot",
+          message: "Could not compute live freshness aggregates",
+        };
       }
 
       const now = new Date();
@@ -63,7 +53,7 @@ export function registerHealthRoutes(app, deps) {
         status = "stale";
       }
 
-      const result = {
+      return {
         status,
         api_version: PMCI_API_VERSION,
         now: now.toISOString(),
@@ -77,9 +67,6 @@ export function registerHealthRoutes(app, deps) {
           current_links: rts.current_links_count ?? 0,
         },
       };
-      _freshnessCache.data = result;
-      _freshnessCache.fetchedAt = Date.now();
-      return result;
     } catch (err) {
       return {
         status: "error",
@@ -97,17 +84,18 @@ export function registerHealthRoutes(app, deps) {
     let freshness = null;
     let projection = null;
     try {
-      let rts = await getRuntimeStatus({ query });
+      const rts = await computeLiveFreshnessSnapshot({ query });
       if (!rts) {
-        rts = await computeLiveFreshnessSnapshot({ query });
-      }
-      if (!rts) {
-        freshness = { status: "error", error: "no_runtime_status", message: "pmci_runtime_status has no rows" };
+        freshness = {
+          status: "error",
+          error: "no_freshness_snapshot",
+          message: "Could not compute live freshness aggregates",
+        };
         projection = {
           ready: false,
-          error: "no_runtime_status",
-          message: "pmci_runtime_status has no rows",
-          missing_steps: ["Populate pmci_runtime_status"],
+          error: "no_freshness_snapshot",
+          message: "Could not compute live freshness aggregates",
+          missing_steps: ["Check DATABASE_URL and DB connectivity"],
         };
       } else {
         const now = new Date();
@@ -258,17 +246,14 @@ export function registerHealthRoutes(app, deps) {
 
   app.get("/v1/health/projection-ready", async (req, reply) => {
     try {
-      let rts = await getRuntimeStatus({ query });
-      if (!rts) {
-        rts = await computeLiveFreshnessSnapshot({ query });
-      }
+      const rts = await computeLiveFreshnessSnapshot({ query });
       if (!rts) {
         reply.code(503);
         return {
           ready: false,
-          error: "no_runtime_status",
-          message: "pmci_runtime_status has no rows",
-          missing_steps: ["Populate pmci_runtime_status"],
+          error: "no_freshness_snapshot",
+          message: "Could not compute live freshness aggregates",
+          missing_steps: ["Check DATABASE_URL and DB connectivity"],
         };
       }
 

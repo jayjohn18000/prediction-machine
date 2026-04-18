@@ -3,6 +3,14 @@
  */
 import { getTopDivergences } from "../services/signal-queries.mjs";
 
+function decodeEventRefParam(raw) {
+  try {
+    return decodeURIComponent(String(raw || "").trim());
+  } catch {
+    return String(raw || "").trim();
+  }
+}
+
 // Maps API interval param → postgres date_trunc field (whitelist prevents injection)
 const INTERVAL_MAP = { "1h": "hour", "1d": "day" };
 
@@ -54,6 +62,7 @@ export function registerSignalsRoutes(app, deps) {
       parsed.data.event_id ?? null,
       parsed.data.limit,
       parsed.data.category ?? null,
+      null,
     );
 
     const { rows: lagRows } = await query(
@@ -62,6 +71,38 @@ export function registerSignalsRoutes(app, deps) {
     const lag = lagRows[0]?.lag_seconds != null ? Number(lagRows[0].lag_seconds) : null;
 
     return { data_lag_seconds: lag, families: result };
+  });
+
+  app.get("/v1/signals/event/:eventRef", { rateLimit: RATE_LIMIT_CONFIG }, async (req) => {
+    const eventRef = decodeEventRefParam(req.params.eventRef);
+    if (!eventRef) {
+      return { error: "eventRef required" };
+    }
+    const schema = z.object({
+      category: z.string().optional(),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+    });
+    const parsed = schema.safeParse(req.query);
+    if (!parsed.success) return { error: parsed.error.flatten() };
+
+    const result = await getTopDivergences(
+      { query },
+      null,
+      parsed.data.limit,
+      parsed.data.category ?? null,
+      eventRef,
+    );
+
+    const { rows: lagRows } = await query(
+      `select extract(epoch from (now() - max(observed_at)))::int as lag_seconds from pmci.provider_market_snapshots`,
+    );
+    const lag = lagRows[0]?.lag_seconds != null ? Number(lagRows[0].lag_seconds) : null;
+
+    return {
+      event_slug: eventRef,
+      data_lag_seconds: lag,
+      families: result,
+    };
   });
 
   app.get("/v1/snapshots", { rateLimit: RATE_LIMIT_CONFIG }, async (req, reply) => {

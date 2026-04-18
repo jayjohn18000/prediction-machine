@@ -1,4 +1,4 @@
-import { getReviewQueue, applyReviewDecision, resolveLink } from "../services/review-service.mjs";
+import { getReviewQueue, applyReviewDecision, applyReviewBatch, resolveLink } from "../services/review-service.mjs";
 
 /**
  * /v1/review/queue, POST /v1/review/decision, POST /v1/resolve/link routes.
@@ -41,6 +41,27 @@ export function registerReviewRoutes(app, deps) {
       proposedId: parsed.data.proposed_id,
       decision: parsed.data.decision,
       relationshipType: parsed.data.relationship_type,
+      note: parsed.data.note,
+    });
+  });
+
+  app.post("/v1/review/batch", { rateLimit: RATE_LIMIT_CONFIG }, async (req) => {
+    const schema = z.object({
+      proposed_ids: z.array(z.number().int().positive()).min(1).max(100),
+      decision: z.enum(["accept", "reject", "skip"]),
+      relationship_type: z.enum(["equivalent", "proxy"]).optional(),
+      note: z.string().optional(),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return { error: parsed.error.flatten() };
+
+    return applyReviewBatch({
+      withTransaction,
+      resolveProviderIdByCode,
+      SQL,
+      proposedIds: parsed.data.proposed_ids,
+      decision: parsed.data.decision,
+      relationshipType: parsed.data.relationship_type ?? "equivalent",
       note: parsed.data.note,
     });
   });

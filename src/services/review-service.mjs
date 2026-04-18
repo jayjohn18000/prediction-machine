@@ -1,3 +1,19 @@
+async function upsertCanonicalEventForFamily(txQuery, slug, title, category) {
+  const s = String(slug || "").trim();
+  if (!s) return null;
+  const cat = String(category || "politics").trim() || "politics";
+  const res = await txQuery(
+    `INSERT INTO pmci.canonical_events (slug, title, category, metadata)
+     VALUES ($1, $2, $3, '{}'::jsonb)
+     ON CONFLICT (slug) DO UPDATE SET
+       title = COALESCE(NULLIF(EXCLUDED.title, ''), pmci.canonical_events.title),
+       updated_at = now()
+     RETURNING id`,
+    [s, title || s, cat],
+  );
+  return res.rows[0]?.id ?? null;
+}
+
 export async function getReviewQueue({ query, SQL, category, minConfidence, limit }) {
   const { rows: queueRows } = await query(SQL.review_queue, [category, minConfidence, limit]);
   if (queueRows.length === 0) return [];
@@ -71,7 +87,7 @@ export async function applyReviewDecision({
   if (decision === "accept") {
     return await withTransaction(async (txQuery) => {
       const propRes = await txQuery(
-        `SELECT id, provider_market_id_a, provider_market_id_b, confidence, reasons, decision
+        `SELECT id, category, provider_market_id_a, provider_market_id_b, confidence, reasons, decision
          FROM pmci.proposed_links WHERE id = $1 AND decision IS NULL FOR UPDATE`,
         [proposedId],
       );
@@ -82,7 +98,8 @@ export async function applyReviewDecision({
       const reasons = prop.reasons ?? {};
 
       const marketRes = await txQuery(
-        `SELECT pm.id, pm.provider_id, p.code, pm.provider_market_ref, pm.event_ref
+        `SELECT pm.id, pm.provider_id, p.code, pm.provider_market_ref, pm.event_ref, pm.category as market_category,
+                pm.market_template, pm.template_params, pm.close_time
          FROM pmci.provider_markets pm JOIN pmci.providers p ON p.id = pm.provider_id
          WHERE pm.id IN ($1, $2)`,
         [idA, idB],
@@ -96,19 +113,45 @@ export async function applyReviewDecision({
       let familyId = isAttach ? Number(reasons.target_family_id) : null;
 
       if (!familyId) {
-        const topicKey = (mb.event_ref || mb.provider_market_ref || "").split("#")[0].replace(/-/g, " ").split(/\s+/)[0] || "politics";
-        const entityKey = reasons.matched_tokens?.[0] || "unknown";
-        const label = `politics::${topicKey}::::${entityKey}`;
-        const notes = `ref_a=${ma.provider_market_ref} ref_b=${mb.provider_market_ref} review-accepted`;
+        const proposalCategory = String(prop.category || "politics").trim();
+        const eventSlug =
+          String(reasons.event_ref_k || reasons.event_ref_p || ma.event_ref || mb.event_ref || "")
+            .split("#")[0]
+            .trim() || null;
+
+        let label;
+        let notes;
+        if (proposalCategory === "crypto" || proposalCategory === "economics") {
+          label = `${proposalCategory}::${eventSlug || "unknown"}::review`;
+          notes = `ref_a=${ma.provider_market_ref} ref_b=${mb.provider_market_ref} review-accepted`;
+        } else {
+          const topicKey =
+            (mb.event_ref || mb.provider_market_ref || "").split("#")[0].replace(/-/g, " ").split(/\s+/)[0] ||
+            "politics";
+          const entityKey = reasons.matched_tokens?.[0] || "unknown";
+          label = `politics::${topicKey}::::${entityKey}`;
+          notes = `ref_a=${ma.provider_market_ref} ref_b=${mb.provider_market_ref} review-accepted`;
+        }
 
         const famRes = await txQuery(`SELECT id FROM pmci.market_families WHERE label = $1`, [label]);
         familyId = famRes.rows?.[0]?.id;
         if (!familyId) {
-          const ceRes = await txQuery(
-            `SELECT id FROM pmci.canonical_events WHERE slug = $1 LIMIT 1`,
-            [mb.event_ref?.split("#")[0] || ""],
-          );
-          const canonicalEventId = ceRes.rows?.[0]?.id ?? null;
+          const titleForCe = String(ma.title || mb.title || eventSlug || "event");
+          let canonicalEventId = null;
+          if (eventSlug) {
+            canonicalEventId = await upsertCanonicalEventForFamily(
+              txQuery,
+              eventSlug,
+              titleForCe,
+              proposalCategory,
+            );
+          }
+          if (canonicalEventId == null && (mb.event_ref || "").split("#")[0]) {
+            const ceRes = await txQuery(`SELECT id FROM pmci.canonical_events WHERE slug = $1 LIMIT 1`, [
+              mb.event_ref.split("#")[0],
+            ]);
+            canonicalEventId = ceRes.rows?.[0]?.id ?? null;
+          }
           const insFam = await txQuery(
             `INSERT INTO pmci.market_families (label, notes, canonical_event_id) VALUES ($1, $2, $3) RETURNING id`,
             [label, notes, canonicalEventId],
@@ -211,6 +254,31 @@ export async function applyReviewDecision({
     );
     return { ok: true, decision: dbDecision };
   });
+}
+
+export async function applyReviewBatch({
+  withTransaction,
+  resolveProviderIdByCode,
+  SQL,
+  proposedIds,
+  decision,
+  relationshipType,
+  note,
+}) {
+  const results = [];
+  for (const proposedId of proposedIds) {
+    const out = await applyReviewDecision({
+      withTransaction,
+      resolveProviderIdByCode,
+      SQL,
+      proposedId,
+      decision,
+      relationshipType: relationshipType ?? "equivalent",
+      note,
+    });
+    results.push({ proposed_id: proposedId, ...out });
+  }
+  return { ok: true, results };
 }
 
 export async function resolveLink({

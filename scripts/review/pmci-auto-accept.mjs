@@ -1,28 +1,17 @@
 #!/usr/bin/env node
 /**
- * PMCI auto-acceptor — Phase E2.
+ * PMCI auto-acceptor — Phase E2 (strict tier).
  *
- * Queries pmci.proposed_links for rows with decision IS NULL in the configured
- * categories (default: crypto, economics), then accepts each proposal that
- * passes all rules by POSTing to /v1/review/decision.
- *
- * Rules (all must hold):
- *   - confidence >= PMCI_AUTO_ACCEPT_MIN_CONFIDENCE (default 0.70)
- *   - decision IS NULL (not already rejected/accepted)
- *   - category in PMCI_AUTO_ACCEPT_CATEGORIES (default "crypto,economics")
- *   - no existing non-removed market_links row for either provider_market_id
- *     (dedup guard against already-linked markets)
- *   - proposed_relationship_type = 'equivalent' (no auto-accept of proxy)
+ * Tier: auto-accept only when confidence >= PMCI_AUTO_ACCEPT_STRICT_MIN (default 0.75)
+ * and category-specific gates (crypto: strike_match + template date alignment;
+ * economics: event_group + meeting_date alignment). All other pending rows are left
+ * for POST /v1/review/batch or manual review.
  *
  * Env:
  *   DATABASE_URL, PMCI_API_KEY required
- *   API_BASE_URL (default http://localhost:8787)
- *   PMCI_AUTO_ACCEPT_MIN_CONFIDENCE (default 0.70)
+ *   API_BASE_URL (default https://pmci-api.fly.dev)
+ *   PMCI_AUTO_ACCEPT_STRICT_MIN (default 0.75)
  *   PMCI_AUTO_ACCEPT_CATEGORIES (default "crypto,economics")
- *
- * Exit codes:
- *   0 = ran cleanly (may have zero accepts)
- *   1 = fatal error (DB down, API unreachable, bad config)
  */
 
 import pg from 'pg';
@@ -32,11 +21,45 @@ const { Client } = pg;
 loadEnv();
 
 const BASE = (process.env.API_BASE_URL || 'https://pmci-api.fly.dev').replace(/\/$/, '');
-const MIN_CONF = Number(process.env.PMCI_AUTO_ACCEPT_MIN_CONFIDENCE ?? 0.70);
+const STRICT_MIN = Number(process.env.PMCI_AUTO_ACCEPT_STRICT_MIN ?? 0.75);
 const CATEGORIES = (process.env.PMCI_AUTO_ACCEPT_CATEGORIES || 'crypto,economics')
   .split(',')
   .map((c) => c.trim())
   .filter(Boolean);
+
+function isoDateFromTemplateParams(tp) {
+  if (!tp || typeof tp !== 'object') return null;
+  const raw = tp.deadline || tp.date || tp.datetime_start || tp.meeting_date;
+  if (typeof raw !== 'string') return null;
+  const m = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+  return m ? m[1] : null;
+}
+
+function cryptoDatesAligned(ma, mb) {
+  const da = isoDateFromTemplateParams(ma.template_params);
+  const db = isoDateFromTemplateParams(mb.template_params);
+  if (da && db) return da === db;
+  if (ma.close_time && mb.close_time) {
+    const a = new Date(ma.close_time).toISOString().slice(0, 10);
+    const b = new Date(mb.close_time).toISOString().slice(0, 10);
+    return a === b;
+  }
+  return false;
+}
+
+function economicsMeetingsAligned(ma, mb) {
+  const pa = ma.template_params || {};
+  const pb = mb.template_params || {};
+  const a = pa.meeting_date ?? pa.meeting;
+  const b = pb.meeting_date ?? pb.meeting;
+  if (a != null && b != null) return String(a).trim() === String(b).trim();
+  if (ma.close_time && mb.close_time) {
+    const da = new Date(ma.close_time).toISOString().slice(0, 10);
+    const db = new Date(mb.close_time).toISOString().slice(0, 10);
+    return da === db;
+  }
+  return false;
+}
 
 async function main() {
   const databaseUrl = process.env.DATABASE_URL?.trim();
@@ -50,7 +73,7 @@ async function main() {
   }
 
   console.log(
-    `auto-accept: config min_confidence=${MIN_CONF} categories=${CATEGORIES.join(',')} base=${BASE}`,
+    `auto-accept: config strict_min=${STRICT_MIN} categories=${CATEGORIES.join(',')} base=${BASE}`,
   );
 
   const client = new Client({ connectionString: databaseUrl });
@@ -68,8 +91,9 @@ async function main() {
       [CATEGORIES],
     );
     candidates = res.rows;
-  } finally {
+  } catch (e) {
     await client.end();
+    throw e;
   }
 
   console.log(`auto-accept: found ${candidates.length} candidate proposal(s)`);
@@ -79,7 +103,7 @@ async function main() {
   let flagged = 0;
 
   for (const row of candidates) {
-    const reason = await checkRules(row);
+    const reason = await checkRules(client, row);
     if (reason) {
       skipped += 1;
       console.log(
@@ -109,46 +133,76 @@ async function main() {
     }
   }
 
+  await client.end();
+
   console.log(`auto-accept: done accepted=${accepted} skipped=${skipped} flagged=${flagged}`);
 }
 
-async function checkRules(row) {
-  if (row.confidence === null || Number(row.confidence) < MIN_CONF) {
-    return `confidence_below_threshold(${row.confidence})`;
+async function checkRules(client, row) {
+  if (row.confidence === null || Number(row.confidence) < STRICT_MIN) {
+    return `below_strict_threshold(${row.confidence}, need >= ${STRICT_MIN})`;
   }
   if (row.proposed_relationship_type !== 'equivalent') {
     return `relationship_type=${row.proposed_relationship_type}_not_equivalent`;
   }
-  // Dedup guard: fail if either provider_market_id already has a non-removed market_links row
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
-  await client.connect();
-  try {
-    const guard = await client.query(
-      `SELECT provider_market_id
-         FROM pmci.market_links
-        WHERE status <> 'removed'
-          AND provider_market_id = ANY($1::bigint[])
-        LIMIT 1`,
-      [[row.provider_market_id_a, row.provider_market_id_b]],
-    );
-    if (guard.rows.length > 0) {
-      return `already_linked_provider_market_id=${guard.rows[0].provider_market_id}`;
-    }
-  } finally {
-    await client.end();
+
+  const reasons = row.reasons ?? {};
+  const cat = String(row.category || '').trim();
+
+  const guard = await client.query(
+    `SELECT provider_market_id
+       FROM pmci.market_links
+      WHERE status <> 'removed'
+        AND provider_market_id = ANY($1::bigint[])
+      LIMIT 1`,
+    [[row.provider_market_id_a, row.provider_market_id_b]],
+  );
+  if (guard.rows.length > 0) {
+    return `already_linked_provider_market_id=${guard.rows[0].provider_market_id}`;
   }
-  return null;
+
+  const mres = await client.query(
+    `SELECT id, template_params, close_time
+       FROM pmci.provider_markets
+      WHERE id IN ($1, $2)`,
+    [row.provider_market_id_a, row.provider_market_id_b],
+  );
+  const byId = new Map(mres.rows.map((r) => [Number(r.id), r]));
+  const ma = byId.get(Number(row.provider_market_id_a));
+  const mb = byId.get(Number(row.provider_market_id_b));
+  if (!ma || !mb) return 'market_row_missing';
+
+  if (cat === 'crypto') {
+    if (reasons.proposal_type !== 'strike_match') {
+      return `crypto_requires_strike_match(got ${reasons.proposal_type || 'none'})`;
+    }
+    if (!cryptoDatesAligned(ma, mb)) {
+      return 'crypto_date_alignment_failed';
+    }
+    return null;
+  }
+
+  if (cat === 'economics') {
+    if (reasons.proposal_type !== 'event_group') {
+      return `economics_requires_event_group(got ${reasons.proposal_type || 'none'})`;
+    }
+    if (!economicsMeetingsAligned(ma, mb)) {
+      return 'economics_meeting_alignment_failed';
+    }
+    return null;
+  }
+
+  return `category_not_auto_accepted(${cat})`;
 }
 
 async function submitAccept(proposedId, relationshipType) {
   const url = `${BASE}/v1/review/decision`;
-  // pg returns bigint as string; Fastify/zod expects number. Coerce.
   const numericId = typeof proposedId === 'string' ? Number(proposedId) : proposedId;
   const body = {
     proposed_id: numericId,
     decision: 'accept',
     relationship_type: relationshipType || 'equivalent',
-    note: 'auto-accepted by pmci-auto-accept.mjs',
+    note: 'auto-accepted by pmci-auto-accept.mjs (strict tier)',
   };
   const res = await fetch(url, {
     method: 'POST',

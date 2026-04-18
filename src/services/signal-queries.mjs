@@ -1,4 +1,4 @@
-export async function getTopDivergences(db, eventId, limit, category = null) {
+export async function getTopDivergences(db, eventId, limit, category = null, canonicalEventSlug = null) {
   const params = [];
   const conditions = [];
 
@@ -6,12 +6,16 @@ export async function getTopDivergences(db, eventId, limit, category = null) {
     params.push(eventId);
     conditions.push(`f.canonical_event_id = $${params.length}`);
   }
+  if (canonicalEventSlug) {
+    params.push(canonicalEventSlug);
+    conditions.push(`ce.slug = $${params.length}`);
+  }
   if (category) {
     params.push(category);
     conditions.push(`ce.category = $${params.length}`);
   }
 
-  const ceJoin = category
+  const ceJoin = category || canonicalEventSlug
     ? "join pmci.canonical_events ce on ce.id = f.canonical_event_id"
     : "";
 
