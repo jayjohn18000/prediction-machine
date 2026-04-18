@@ -65,6 +65,7 @@
     "pmci:status": "node scripts/checks/pmci-projection-status.mjs",
     "pmci:digest": "node scripts/digest/pmci-daily-digest.mjs",
     "pmci:verify:cron": "node scripts/ops/verify-pg-cron.mjs",
+    "pmci:health-poll": "node scripts/ops/pmci-health-poll.mjs",
     "pmci:check:round-trip": "node scripts/checks/pmci-check-round-trip.mjs",
     "pmci:backfill:kalshi:typing": "node scripts/ingestion/pmci-backfill-kalshi-typing.mjs",
     "pmci:backfill:politics:normalization": "node scripts/ingestion/pmci-backfill-politics-normalization.mjs",

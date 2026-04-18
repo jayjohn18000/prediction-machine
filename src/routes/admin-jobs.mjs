@@ -1,6 +1,6 @@
 /**
  * POST /v1/admin/jobs/:jobName — triggered by Supabase Edge Function dispatcher.
- * Spawns the requested job as a detached child process; output goes to PM2 logs.
+ * Spawns the requested job as a detached child process; stdout/stderr inherit the API process (Fly logs).
  * Auth: global x-pmci-api-key hook (server.mjs) + admin key gate.
  */
 import { spawn } from "child_process";
@@ -19,6 +19,7 @@ const ADMIN_JOBS = {
   "auto-accept-audit": ["node", ["scripts/review/pmci-auto-accept-audit.mjs"]],
   "status-digest":    ["node", ["scripts/digest/pmci-daily-digest.mjs"]],
   "benchmark-coverage": ["node", ["scripts/benchmark/coverage-benchmark.mjs"]],
+  "health-poll":      ["node", ["scripts/ops/pmci-health-poll.mjs"]],
 };
 
 export function registerAdminJobRoutes(app, deps) {
@@ -49,7 +50,8 @@ export function registerAdminJobRoutes(app, deps) {
       const [cmd, args] = job;
       const child = spawn(cmd, args, {
         detached: true,
-        stdio: ["ignore", "pipe", "pipe"],
+        // Inherit stdout/stderr so job logs (e.g. pmci-health-poll) reach Fly/PM2; piped + unread drops them.
+        stdio: ["ignore", "inherit", "inherit"],
         cwd: process.cwd(),
         env: { ...process.env },
       });
