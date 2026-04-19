@@ -56,3 +56,9 @@ test("extractSportsMatchupTeamsFromTitle strips market type then parses vs", () 
   assert.equal(w.awayTeam, "Athletics");
   assert.equal(w.homeTeam, "New York Yankees");
 });
+
+test("extractSportsMatchupTeamsFromTitle cleans Winner? inside a team segment", () => {
+  const u = extractSportsMatchupTeamsFromTitle("Miami Winner? vs Boston Winner?");
+  assert.equal(u.awayTeam, "Miami");
+  assert.equal(u.homeTeam, "Boston");
+});

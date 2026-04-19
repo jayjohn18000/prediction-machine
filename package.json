@@ -43,6 +43,7 @@
     "pmci:discover:sports:poly": "node scripts/discovery/pmci-discover-polymarket-sports-tags.mjs",
     "pmci:ingest:sports": "node lib/ingestion/sports-universe.mjs",
     "pmci:ingest:schedule:sports": "node scripts/events/pmci-ingest-thesportsdb-schedule.mjs",
+    "pmci:seed:sports-events-from-markets": "node scripts/events/pmci-seed-canonical-sports-from-markets.mjs",
     "pmci:backfill:poly-sport-taxonomy": "node scripts/backfill/pmci-backfill-poly-sport-taxonomy.mjs",
     "pmci:ingest:economics": "node lib/ingestion/economics-universe.mjs",
     "pmci:ingest:crypto": "node lib/ingestion/crypto-universe.mjs",

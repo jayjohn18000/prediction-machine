@@ -17,6 +17,9 @@ if (!url) {
 const dry = process.env.DRY_RUN === "1";
 const batchSize = Math.max(50, Number(process.env.BATCH ?? 500) || 500);
 
+/** Must match verification queries (active + open are both tradable-ish in PMCI). */
+const STATUS_FILTER = "status IN ('active', 'open')";
+
 const client = new pg.Client({ connectionString: url });
 await client.connect();
 
@@ -34,7 +37,7 @@ try {
   const { rows: countRow } = await client.query(`
     SELECT count(*)::int AS n
     FROM pmci.provider_markets
-    WHERE category = 'sports' AND status = 'active'
+    WHERE category = 'sports' AND ${STATUS_FILTER}
   `);
   const total = countRow[0]?.n ?? 0;
   console.log(JSON.stringify({ active_sports_markets: total, dry_run: dry, batch: batchSize }));
@@ -49,7 +52,7 @@ try {
       `
       SELECT id, title, home_team, away_team
       FROM pmci.provider_markets
-      WHERE category = 'sports' AND status = 'active' AND id > $1
+      WHERE category = 'sports' AND ${STATUS_FILTER} AND id > $1
       ORDER BY id ASC
       LIMIT $2
     `,
@@ -107,7 +110,7 @@ try {
   const { rows: bad } = await client.query(`
     SELECT count(*)::int AS n
     FROM pmci.provider_markets
-    WHERE status = 'active' AND category = 'sports'
+    WHERE ${STATUS_FILTER} AND category = 'sports'
       AND (
         home_team LIKE '%?%' OR home_team LIKE '%runs%' OR home_team ILIKE '%winner%'
       )
