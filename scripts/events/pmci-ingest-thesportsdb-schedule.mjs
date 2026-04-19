@@ -36,9 +36,10 @@ async function main() {
     THESPORTSDB_LEAGUE_IDS.NHL,
   ];
 
+  const horizonDays = Number(process.env.THESPORTSDB_HORIZON_DAYS ?? "14") || 14;
   let total = 0;
   for (const leagueId of leagues) {
-    const raw = await fetchNextEventsForLeague({ leagueId });
+    const raw = await fetchNextEventsForLeague({ leagueId, horizonDays });
     const sub = SUBCATEGORY_BY_LEAGUE[leagueId] || "sports";
     const rows = raw
       .map((ev) => normalizeSportsDbEvent(ev, { subcategory: sub }))

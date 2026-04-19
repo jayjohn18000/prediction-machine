@@ -5,7 +5,11 @@ import {
   resolvePolymarketSport,
   inferSportFromPolymarketTitle,
 } from "../../lib/ingestion/services/sport-inference.mjs";
-import { classifyPhaseGSportsMarketType } from "../../lib/normalization/market-type-classifier.mjs";
+import {
+  classifyPhaseGSportsMarketType,
+  extractSportsMatchupTeamsFromTitle,
+  stripSportsMarketTypeSuffixForTeamTitle,
+} from "../../lib/normalization/market-type-classifier.mjs";
 
 test("mapPolymarketSportSlug maps opaque codes", () => {
   assert.equal(mapPolymarketSportSlug("wwoh"), "nhl");
@@ -35,4 +39,20 @@ test("classifyPhaseGSportsMarketType maps to vocabulary templates", () => {
   const t = classifyPhaseGSportsMarketType("Spread: Yankees (-1.5)");
   assert.ok(t);
   assert.equal(t.template, "sports-spread");
+});
+
+test("stripSportsMarketTypeSuffixForTeamTitle removes prop tails before team split", () => {
+  assert.equal(
+    stripSportsMarketTypeSuffixForTeamTitle("A's vs New York M first 5 innings runs?"),
+    "A's vs New York M",
+  );
+});
+
+test("extractSportsMatchupTeamsFromTitle strips market type then parses vs", () => {
+  const t = extractSportsMatchupTeamsFromTitle("A's vs New York M first 5 innings runs?");
+  assert.equal(t.awayTeam, "A's");
+  assert.equal(t.homeTeam, "New York M");
+  const w = extractSportsMatchupTeamsFromTitle("Athletics vs. New York Yankees Winner?");
+  assert.equal(w.awayTeam, "Athletics");
+  assert.equal(w.homeTeam, "New York Yankees");
 });

@@ -13,6 +13,7 @@
  */
 import pg from "pg";
 import { loadEnv } from "../../src/platform/env.mjs";
+import { kalshiProviderEventRefFromMarket } from "../../lib/kalshi/kalshi-series.mjs";
 import {
   classifyMarketTemplateForSlot,
   findOrCreateCanonicalMarketSlot,
@@ -21,12 +22,6 @@ import {
 import { runAutoLinkPass } from "../../lib/matching/auto-linker.mjs";
 
 loadEnv();
-
-function extractKalshiEventTicker(ref) {
-  const s = String(ref || "");
-  const idx = s.lastIndexOf("-");
-  return idx > 0 ? s.slice(0, idx) : s;
-}
 
 function extractPolyEventSlug(pm) {
   const er = pm.event_ref != null ? String(pm.event_ref) : "";
@@ -164,8 +159,7 @@ async function migrateOneFamily(client, familyId, dryRun) {
     const code = String(m.provider_code || "").toLowerCase();
     let pref = "";
     if (code === "kalshi") {
-      const st = m.metadata?.series_ticker ?? m.metadata?.seriesTicker;
-      pref = st ? String(st) : extractKalshiEventTicker(m.provider_market_ref);
+      pref = kalshiProviderEventRefFromMarket(m);
     } else if (code === "polymarket") {
       pref = extractPolyEventSlug(m) || String(m.event_ref || "").trim();
     }
