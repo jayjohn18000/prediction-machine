@@ -68,6 +68,8 @@
     "pmci:digest": "node scripts/digest/pmci-daily-digest.mjs",
     "pmci:verify:cron": "node scripts/ops/verify-pg-cron.mjs",
     "pmci:health-poll": "node scripts/ops/pmci-health-poll.mjs",
+    "pmci:auto-link": "node scripts/ops/pmci-auto-link-pass.mjs",
+    "pmci:phase-g:step7": "node scripts/migrations/pmci-phase-g-step7-migrate-bilateral-families.mjs",
     "pmci:check:round-trip": "node scripts/checks/pmci-check-round-trip.mjs",
     "pmci:backfill:kalshi:typing": "node scripts/ingestion/pmci-backfill-kalshi-typing.mjs",
     "pmci:backfill:politics:normalization": "node scripts/ingestion/pmci-backfill-politics-normalization.mjs",

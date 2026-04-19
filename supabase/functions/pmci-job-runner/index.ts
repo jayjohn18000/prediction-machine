@@ -18,6 +18,7 @@ const JOB_MAP: Record<string, string> = {
   "status:digest":     "/v1/admin/jobs/status-digest",
   "benchmark:coverage": "/v1/admin/jobs/benchmark-coverage",
   "health:poll":       "/v1/admin/jobs/health-poll",
+  "auto-link":         "/v1/admin/jobs/auto-link",
 };
 
 serve(async (req: Request) => {

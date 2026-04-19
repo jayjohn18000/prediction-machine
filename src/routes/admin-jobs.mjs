@@ -20,6 +20,7 @@ const ADMIN_JOBS = {
   "status-digest":    ["node", ["scripts/digest/pmci-daily-digest.mjs"]],
   "benchmark-coverage": ["node", ["scripts/benchmark/coverage-benchmark.mjs"]],
   "health-poll":      ["node", ["scripts/ops/pmci-health-poll.mjs"]],
+  "auto-link":        ["node", ["scripts/ops/pmci-auto-link-pass.mjs"]],
 };
 
 export function registerAdminJobRoutes(app, deps) {
