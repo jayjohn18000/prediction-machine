@@ -240,7 +240,7 @@
 ## Current milestone: E2 ∥ E3 — Crypto + Economics/macro (starting 2026-04-14)
 **Goals:** (E2) Extend PMCI cross-linking to crypto markets on Kalshi and Polymarket. (E3) Ingest and link binary macro templates (Fed, rates, CPI-style) with economics category tagging. Apply the same guard-first proposer + strict-audit gate loop proven in E1.
 
-**E1.6 sprint complete (2026-04-14):** 234 sports market_links across 117 accepted proposals with bilateral prices flowing. E1 strict-audit GREEN. See [`docs/plans/e1.6-sports-execution-readiness-sprint.md`](plans/e1.6-sports-execution-readiness-sprint.md) for historical sprint plan.
+**E1.6 sprint complete (2026-04-14):** **234** = active **`pmci.market_links` row count** for sports (`category='sports'` via family → canonical_event), i.e. **legs** (two per typical pair) plus a few duplicate-active-version rows on mis-merged families — **not** “234 pairs.” **`~108`** sports families had both providers in `v_market_links_current` at Phase 5 verification (2026-04-19); see **`docs/plans/phase-g-bilateral-linking-postmortem.md`** § *Open questions — resolved*. E1 strict-audit GREEN. See [`docs/plans/e1.6-sports-execution-readiness-sprint.md`](plans/e1.6-sports-execution-readiness-sprint.md) for historical sprint plan.
 
 **Carry-forward from E1.6 (non-blocking):**
 - `signals/top-divergences` endpoint returns 503 (1 test failure)

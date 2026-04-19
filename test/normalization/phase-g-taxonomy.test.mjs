@@ -41,6 +41,36 @@ test("classifyPhaseGSportsMarketType maps to vocabulary templates", () => {
   assert.equal(t.template, "sports-spread");
 });
 
+test("classifyPhaseGSportsMarketType maps soccer draw titles to sports-moneyline (Phase 3)", () => {
+  const poly = classifyPhaseGSportsMarketType(
+    "Will Silkeborg IF vs. Randers FC end in a draw?",
+  );
+  assert.ok(poly);
+  assert.equal(poly.template, "sports-moneyline");
+  assert.equal(poly.params.bucket, "moneyline_winner");
+  const kalshiish = classifyPhaseGSportsMarketType(
+    "Silkeborg IF vs Randers FC: end in a draw?",
+  );
+  assert.ok(kalshiish);
+  assert.equal(kalshiish.template, "sports-moneyline");
+});
+
+test("classifyPhaseGSportsMarketType classifies first-N-innings runs as totals with innings_cap (Phase 2)", () => {
+  const x = classifyPhaseGSportsMarketType("White Sox vs Cubs first 5 innings runs?");
+  assert.ok(x);
+  assert.equal(x.template, "sports-total");
+  assert.equal(x.params.innings_cap, 5);
+  assert.equal(x.params.bucket, "totals");
+});
+
+test("classifyPhaseGSportsMarketType attaches over/under line on totals", () => {
+  const x = classifyPhaseGSportsMarketType("Yankees vs Red Sox: Over 4.5 runs?");
+  assert.ok(x);
+  assert.equal(x.template, "sports-total");
+  assert.equal(x.params.line, 4.5);
+  assert.equal(x.params.side, "over");
+});
+
 test("stripSportsMarketTypeSuffixForTeamTitle removes prop tails before team split", () => {
   assert.equal(
     stripSportsMarketTypeSuffixForTeamTitle("A's vs New York M first 5 innings runs?"),

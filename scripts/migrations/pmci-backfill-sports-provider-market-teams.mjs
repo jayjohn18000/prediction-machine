@@ -88,7 +88,30 @@ try {
       }
 
       const { homeTeam, awayTeam } = extractSportsMatchupTeamsFromTitle(title);
-      if (homeTeam == null && awayTeam == null) continue;
+      if (homeTeam == null && awayTeam == null) {
+        // Phase G bugfix 2026-04-19: if the title LOOKS like a matchup (contains vs/at) but
+        // the extractor rejects (e.g. "Will X win the A vs B : Quarterfinal"), clear any
+        // polluted prior values so the auto-linker doesn't try to match on garbage teams.
+        const prevPolluted =
+          sqlPollutedHomeTeam(prevH) ||
+          sqlPollutedAwayTeam(prevA) ||
+          /\bwin\s+the\b/i.test(String(prevH || "")) ||
+          /\bwin\s+the\b/i.test(String(prevA || "")) ||
+          /:\s*(first|second|1st|2nd|quarter|semi|final|inning|period|set)/i.test(String(prevH || "")) ||
+          /:\s*(first|second|1st|2nd|quarter|semi|final|inning|period|set)/i.test(String(prevA || ""));
+        if (prevPolluted) {
+          if (dry) {
+            cleared++;
+            continue;
+          }
+          await client.query(
+            `UPDATE pmci.provider_markets SET home_team = NULL, away_team = NULL WHERE id = $1::bigint`,
+            [row.id],
+          );
+          cleared++;
+        }
+        continue;
+      }
 
       if (prevH === homeTeam && prevA === awayTeam) continue;
 
