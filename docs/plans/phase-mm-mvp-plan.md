@@ -290,9 +290,13 @@ Reusable directly:
 - MM deployment must be a single Fly instance. Never scale count > 1 without implementing leader election.
 - Toxicity kill-switch, once fired, requires manual human reset via a DB update. Never auto-unkill.
 
-## Open questions to resolve before W1
+## Decisions resolved 2026-04-24
 
-1. Does Kalshi's API expose L2 depth via WS, or only via REST polling? If REST-only at our API tier, the observer extension looks different (polling with rate respect vs true subscription).
-2. What's the MVP universe? Candidate picks: 2 soccer match winners (MLS only, no popular pairings), 1 MLB regular-season-win-total on a non-flagship team, 1 NBA regular-season-win-total on a non-flagship team, 1 Senate or Governor race outside the 2028 headline slate.
-3. What's our Kalshi API rate-limit tier? Determines safe quoting refresh cadence.
-4. Do we have a test account / sandbox mode on Kalshi, or do MVP first fills go straight to production at 1-contract size?
+1. **Kalshi L2 depth via WS: YES, confirmed.** Endpoint `wss://trading-api.../v2/ws`. Supports `orderbook_snapshot` and `orderbook_delta` messages. Use delta-maintained local book rather than full-snapshot polling. The `lib/ingestion/depth.mjs` extension subscribes to these channels for the 5-market universe.
+2. **MVP universe (5 markets, diversified across PMCI's currently-ingested categories — sports/politics/crypto/economics):**
+   - 2× retail-heavy sports: candidates in priority order — MLS individual match winners (non-flagship pairings only), NBA team regular-season win totals on non-playoff-contending teams. Final picks deferred to W1 based on what's active in `provider_markets`.
+   - 1× non-flagship politics: state-level race or specific bill passage. Explicitly NOT 2028 presidential.
+   - 1× crypto price-range: BTC daily/weekly close range from KXBTC series (retail-heavy, low sharp density).
+   - 1× economics: CPI reading range from the relevant KX series (NOT Fed Funds — sharp-dominated and tied tightly to SOFR futures).
+3. **Kalshi API rate limits:** confirmed free for verified users. Specific numeric limits live at `docs.kalshi.com/getting_started/rate_limits` — verify at start of W2 when writing auth layer. MVP design assumes conservative rates: ≥250ms between REST calls, continuous WS subscription.
+4. **Demo sandbox: YES, confirmed at `https://demo-api.kalshi.co/trade-api/v2` + WS at `wss://demo-api.kalshi.co/trade-api/v2/ws`.** Separate API keys, mock funds, full-featured. Weeks 1–3 (depth ingestion, write client plumbing, first fair-value + quoting live) run entirely in demo. Week 4 switches the runtime to production config at 1-contract size.

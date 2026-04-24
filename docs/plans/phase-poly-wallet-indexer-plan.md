@@ -226,9 +226,15 @@ Environment variables needed:
 - All financial decisions (MM quoting, market selection) consume only `final=true` rows. Unconfirmed data is informational-only.
 - Contract addresses are pinned in a constants file and verified on startup against expected bytecode hashes. If a contract is upgraded or migrated, indexer halts until config is updated (fails safe).
 
-## Open questions to resolve before W1
+## Decisions resolved 2026-04-24
 
-1. Which RPC provider? Alchemy vs Infura vs QuickNode — pick based on Polygon log-depth pricing.
-2. Does Polymarket's subgraph expose everything we need, or will we still need raw RPC for certain derivations (e.g., UMA resolution events)? Verify before relying on subgraph for backfill.
-3. What's the minimum `total_volume_usdc` threshold to include a wallet in the stats table at all? MVP suggestion: $100. Anything below is probably noise.
-4. Do we care about off-Polymarket events affecting a wallet's funded balance (MEV bots, bridging)? Probably not for sharpness classification; realized P&L on Polymarket trades is the relevant number regardless.
+1. **RPC provider: Chainstack (primary), Alchemy (fallback).**
+   - Chainstack offers flat ~$2.50/M requests pricing (no compute-unit weight games), which is the right shape for log-heavy backfill workloads. Alchemy and QuickNode use CU-weighted pricing where `eth_getLogs` can cost 75+ CU per call, making large historical backfills expensive.
+   - Budget: start with Chainstack free tier during W1 scaffolding, upgrade to the ~$50-100/mo Developer tier for W2 historical backfill and live tail.
+   - Fallback: Alchemy Supernode free tier for resilience against Chainstack downtime.
+2. **Subgraph for backfill, raw RPC for live tail + finality.**
+   - Polymarket maintains an official open-source subgraph (`github.com/Polymarket/polymarket-subgraph`). Use it for Phase 1 (historical backfill) — much faster than log-walking via RPC. Join against chain-state to verify critical rows.
+   - Raw RPC via WebSocket for Phase 2 (live tail). Subgraph has indexing lag that's unacceptable for real-time flow signals.
+   - Confirmed event names: `OrderFilled`, `OrdersMatched`, `TokenRegistered` on CTF Exchange contract at `0x4bfb41d5b3570defd03c39a9a4d8de6bd8b8982e` (Polygon). NegRisk_CTFExchange handles multi-outcome markets — same event shapes, different contract address (verify on-chain at W1).
+3. **Min wallet volume threshold for inclusion in stats: $100 USDC lifetime volume.** Anything below is likely noise (single-trade hobby wallets). Tightens the `poly_wallet_stats` dataset while preserving the long tail for later analysis. Can relax later if needed.
+4. **Off-chain balance effects (MEV, bridging) — out of scope for v1.** Realized P&L on Polymarket trades is the only signal that matters for sharp/degen classification; a wallet that's profitable on Poly is relevant regardless of what they do elsewhere on-chain.
