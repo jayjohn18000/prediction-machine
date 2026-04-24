@@ -33,6 +33,8 @@ const PMCI_TABLES = [
   // Observer + API request log tables (low criticality but part of pmci schema).
   'observer_heartbeats',
   'request_log',
+  // MM MVP W1 — Kalshi L2 depth ingestion (lib/ingestion/depth.mjs).
+  'provider_market_depth',
 ];
 
 const REQUIRED_COLUMNS = {
@@ -84,6 +86,14 @@ const REQUIRED_COLUMNS = {
   provider_market_map: ['canonical_market_id', 'provider_market_id', 'provider_id'],
   canonical_events: ['subcategory', 'event_date', 'participants', 'external_ref', 'external_source'],
   canonical_markets: ['market_template', 'template_params'],
+  provider_market_depth: [
+    'provider_market_id',
+    'observed_at',
+    'yes_levels',
+    'no_levels',
+    'mid_cents',
+    'spread_cents',
+  ],
 };
 
 const REQUIRED_VIEW = 'v_market_links_current';
