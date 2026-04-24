@@ -1,6 +1,6 @@
 # Prediction Machine — Claude Context
 
-> **ACTIVE PIVOT (2026-04-19): Realized-edge backtest.** The project is paused on category expansion (E2 crypto, E3 economics) and refocused on producing a ranked per-family net-P&L table against historical snapshot data. Read `docs/pivot/north-star.md` before starting any work. E2/E3 and new-provider onboarding are explicitly out of scope until the backtest decision lands. See `docs/pivot/dependency-map.md` for what's in scope and what's not.
+> **CURRENT PHASE (2026-04-24): Market Making MVP (scaffolding).** The realized-edge arb backtest closed RED terminal on 2026-04-24 — the Kalshi+Polymarket arb surface is structurally shallow, not tunable. Successor thesis is market making on Kalshi, with Polymarket on-chain data as an information source (no Poly execution; US-resident constraint). Closed-pivot archive: `docs/archive/pivot-2026-04/`. Do not revive the arb thesis on this provider pair.
 
 See `docs/architecture.md` for system structure.
 
@@ -25,7 +25,7 @@ After significant code/schema changes: update the relevant wiki page and bump `l
 
 `prediction-machine` is the PMCI backend. It owns ingestion, normalization, matching, schema, and the active machine-facing API.
 
-Current active phase: **Pivot to Realized Edge** (started 2026-04-19) — historical-backtest-driven go/no-go on a guarded live pilot. E2/E3 parallel expansion is paused. See `docs/pivot/north-star.md`. Prior milestone for reference: E1.6 validated 2026-04-14.
+Current active phase: **Market Making MVP** (scaffolding started 2026-04-24) — Kalshi-only order-book MM: fair-value model, inventory-aware quoting, new MM-specific backtest engine, adverse-selection tracking. Parallel workstream: Polymarket on-chain wallet indexer as information source (public Polygon data; no Polymarket account or trading). Reusable carryovers from the closed pivot: `lib/resolution/` (A1), `lib/execution/costs.mjs` (A2 — fees/lockup portion), `lib/backfill/polymarket-snapshot-recovery.mjs`, observer pattern. Prior milestones: E1.6 sports validated 2026-04-14; arb pivot closed RED terminal 2026-04-24 (see `docs/archive/pivot-2026-04/`).
 
 ## Deployment (Fly.io — ACTIVE PRODUCTION)
 
@@ -50,15 +50,8 @@ Both apps are live on Fly.io. All secrets are set. Do not use PM2 or local `node
 - Do not skip `npm run verify:schema` after any migration.
 - Do not add new PMCI routes to root `api.mjs`; use `src/api.mjs` only.
 - All new categories must use the guard-first proposer + strict-audit gate loop.
-- **Active markets only for the observer and proposer.** Historical/settled market ingestion is permitted *only* via the pivot's resolution-outcome path (see `docs/pivot/agents/a1-resolution-ingestion.md`), which is scoped to closed markets belonging to currently-linked families and writes to a dedicated `market_outcomes` dataset. Do not extend this exception to the observer, proposer, or any other ingestion code without explicit owner sign-off.
-
-## Pivot guardrails (active while the pivot is in progress)
-
-- Do not start or resume E2 (crypto) or E3 (economics) ingestion, proposer, or audit work.
-- Do not onboard new providers (DraftKings, Manifold, Myriad, Limitless, Metaculus, PredictIt).
-- Do not tune classifier / matcher / proposer / slot code to chase unlinked-slot coverage.
-- Do not clean up files outside `docs/pivot/` during the pivot.
-- Do not merge pivot work to `main` until the artifact integrates with the ranked per-family P&L table (the pivot's scoreboard).
+- **Active markets only for the observer and proposer.** Historical/settled market ingestion is permitted *only* via `lib/resolution/` (the resolution-outcome path, originally built as pivot A1; reusable for MM settlement accounting). Scoped to closed markets belonging to currently-linked families; writes to the dedicated `market_outcomes` dataset. Do not extend this exception to the observer, proposer, or any other ingestion code without explicit owner sign-off.
+- **Arb thesis is closed on Kalshi+Polymarket (RED, 2026-04-24).** Do not reintroduce arb-pivot code, plans, or rubrics onto this branch. Do not apply Lever D (NHL/MLB alias map), classifier finer-bucket subdivision, or A3/A5 re-runs. If a future provider pair becomes interesting, start from `docs/archive/pivot-2026-04/` as reference, not as a live workspace.
 
 ## Key Entrypoints
 
@@ -77,11 +70,7 @@ Both apps are live on Fly.io. All secrets are set. Do not use PM2 or local `node
 - `docs/plans/phase-e1-sports-plan.md` — detailed Phase E1 plan
 - `docs/db-schema-reference.md` — **DB column reference and API auth; read at session start before any DB queries or API calls**
 - `docs/plans/workflow-optimization-plan.md` — agentic workflow decisions (process patterns, agent split, gate verification)
-- `docs/pivot/north-star.md` — **pivot scoreboard; every pivot agent reads this first**
-- `docs/pivot/dependency-map.md` — pivot agent parallelism, critical path, out-of-scope register
-- `docs/pivot/success-rubric.md` — GREEN/YELLOW/RED decision zones for backtest output
-- `docs/pivot/agents/` — per-agent briefs (A1 resolution ingestion, A2 cost model, A3 equivalence audit, A4 execution-account readiness, A5 backtest engine)
-- `docs/pivot/cursor-prompt.md` — short launch prompt for Cursor parallel agents
+- `docs/archive/pivot-2026-04/` — closed arb pivot (RED terminal 2026-04-24). Reference only; do not revive without a new provider pair.
 
 ## Supabase Project
 
