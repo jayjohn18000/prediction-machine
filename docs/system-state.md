@@ -25,9 +25,10 @@ DB-backed pair discovery replaces mandatory large static JSON when enabled.
 
 ---
 
-## Current status (2026-04-17)
+## Current status (2026-04-19)
 
 - **Branch / phase:** `main`; **E2** (crypto) and **E3** (economics) in progress — ladder-style crypto proposer, economics event-group proposer, full review pipeline wired for admin/cron (`scripts/review/pmci-review-category-pipeline.mjs`).
+- **E1.7 Phase G bilateral-linking hygiene:** ✅ CLOSED 2026-04-19. Reslot migration applied in prod; 1,412 / 4,191 sports+politics pm rows moved to enriched slots; sports bilateral-ready 88 → 104 (+16); overfilled share 40.5% → 33.0%. Auto-link pass (10k batch) returned `{attached: 4381, skipped: 5619, linked: 0}` — `linked: 0` is steady-state since all 104 bilateral-ready slots were already paired in prior `link_version=117` family rows. See [`docs/plans/phase-g-phase2-results.md`](plans/phase-g-phase2-results.md).
 - **Production:** `pmci-api` and `pmci-observer` on Fly.io (see `deploy/fly.api.toml`, `deploy/fly.observer.toml`). Cron and scheduled jobs use Supabase `pmci-job-runner` Edge Function + `pg_cron`, not local PM2.
 - **Ops:** `npm run pmci:status` — API health plus, when `DATABASE_URL` is set, smoke counts, pending proposals by category, active links by category, and latest observer heartbeat. `npm run pmci:smoke` remains the lightweight DB smoke check.
 - **Automation:** pg_cron jobs include ingest (sports/politics), stale cleanup, schema verify, audit, crypto/economics review pipelines (full propose → auto-accept → audit), daily status digest, weekly coverage benchmark (apply latest migrations for digest/benchmark schedules).

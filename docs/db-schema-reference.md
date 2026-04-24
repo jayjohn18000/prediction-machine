@@ -1,7 +1,7 @@
 # PMCI DB Schema Reference
 
 _Read this at session start before writing any DB queries or making API calls._
-_Last updated: 2026-04-10 (E1.5 complete)_
+_Last updated: 2026-04-19 (A1 market_outcomes)_
 
 ---
 
@@ -27,6 +27,27 @@ _Last updated: 2026-04-10 (E1.5 complete)_
 | `updated_at` | timestamptz | |
 
 > **Gotcha:** `series_ticker` is stored in `metadata`, not as a column. Use `pm.metadata->>'series_ticker'` in SQL.
+
+### `market_outcomes` (pivot A1 — settled markets only)
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | bigint | PK |
+| `provider_market_id` | bigint | FK → `pmci.provider_markets(id)` — **unique** (one current row per venue market) |
+| `provider_id` | smallint | FK → `pmci.providers` |
+| `winning_outcome` | text | Provider-native winner (Kalshi `result`; Polymarket winning token `outcome` label) |
+| `winning_outcome_raw` | jsonb | Structured slice of the settlement response |
+| `resolved_at` | timestamptz | Venue-reported resolution time when available |
+| `resolution_source_observed` | text | e.g. Kalshi/Polymarket GET URL used |
+| `raw_settlement` | jsonb | Full JSON body returned by the provider for audit |
+| `ingested_at` | timestamptz | First insert |
+| `updated_at` | timestamptz | Last upsert |
+
+**Join path:** `pmci.v_market_links_current` → `provider_market_id` → `market_outcomes` (same `provider_markets.id` as `market_links.provider_market_id`).
+
+### `market_outcome_history` (append-only audit)
+
+Same semantic columns as the current row (minus `ingested_at` / `updated_at`), plus `recorded_at` (when this observation was written). **INSERT only** — updates/deletes are blocked by trigger. Every ingest refresh appends a row when a settlement is observed, then upserts `market_outcomes`.
 
 ### `proposed_links`
 | Column | Type | Notes |

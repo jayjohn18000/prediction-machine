@@ -25,6 +25,8 @@
     "pmci:check:poly": "node scripts/checks/pmci-check-polymarket-snapshots.mjs",
     "pmci:probe": "node scripts/ingestion/pmci-ingestion-probe.mjs",
     "pmci:smoke": "node scripts/ingestion/pmci-smoke.mjs",
+    "pmci:pivot:a3-export": "node scripts/pivot/a3-resolution-equivalence-export.mjs",
+    "pmci:ingest:outcomes": "node scripts/ingestion/pmci-ingest-market-outcomes.mjs",
     "pmci:check-top-divergences": "node scripts/checks/check-top-divergences.mjs",
     "pmci:check-coverage": "node scripts/checks/check-coverage.mjs",
     "pmci:watch": "node scripts/checks/pmci-watch.mjs",

@@ -117,6 +117,12 @@
   - OBSERVER_DB_DISCOVERY=1 active; bilateral prices flowing (104K Kalshi + 107K Polymarket snapshots on linked markets)
   - Spread dashboard + competitive baseline committed
   - See [`docs/plans/e1.6-sports-execution-readiness-sprint.md`](plans/e1.6-sports-execution-readiness-sprint.md) for full plan
+- [x] **E1.7 — Bilateral linking hygiene (Phase G workstream)** ✓ CLOSED (2026-04-19)
+  - Fixed three attachment-path bugs (polluted team strings, suffix-variant canonical events, provider-dominated batch ordering) — see [`phase-g-bilateral-linking-postmortem.md`](plans/phase-g-bilateral-linking-postmortem.md)
+  - Shipped classifier enrichment (political outcome key, sports-total line params, innings params, soccer-draw rule) + reslot migration
+  - Applied to prod 2026-04-19: reslot moved 1,412 / 4,191 (~34%) sports+politics pm rows; sports bilateral-ready slots 88 → 104 (+16); overfilled share 40.5% → 33.0%
+  - Phase 1 reconnaissance confirmed ~95% of solo-slot pool is true coverage gap, not classifier-fixable — de-prioritizes further Option A work in favor of ingestion breadth
+  - Full results appendix: [`phase-g-phase2-results.md`](plans/phase-g-phase2-results.md)
 - [ ] Define canonical event lifecycle for game markets (auto-archive on settle vs. delete)
 
 ### E2 — Crypto (parallel with E3)

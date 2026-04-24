@@ -1,0 +1,809 @@
+family_id,family_label,sport,event_type,kalshi_market_id,poly_market_id,kalshi_title,poly_title,kalshi_game_date,poly_game_date,both_sides_reference_same_event,kalshi_resolution_rules,poly_resolution_rules,resolution_source_kalshi,resolution_source_poly,timing_alignment,classification,classification_reason,rules_provenance
+3121,sports::mlb::Athletics vs. New York Yankees,mlb,game_result,KXMLBGAME-26APR121340ATHNYM-ATH,0x8a84bb5c5fa372da673eb5592a28b75dce7f2e83c5af1fbde254ad6a41b4384f,A's vs New York M Winner?,Athletics vs. New York Yankees,2026-04-15,2026-04-15,yes,"If A's wins the A's vs New York M professional baseball game originally scheduled for Apr 12, 2026 at 1:40 PM EDT, then the market resolves to Yes.
+
+The following market refers to the A's vs New York M professional baseball game originally scheduled for Apr 12, 2026 at 1:40 PM EDT. If this game is postponed or delayed, the market will remain open and close after the rescheduled game has finished (within two days). If the game is cancelled or rescheduled to over two days away, the market will resolve to a fair price in accordance with the rules.","In the upcoming MLB game between the Athletics and New York Yankees, scheduled for April 8 at 7:05PM ET:
+
+This market will resolve to ""Athletics"" if the Athletics win the game.
+
+This market will resolve to ""New York Yankees"" if the New York Yankees win the game.
+
+If the game is postponed, this market will remain open until the game has been completed. If the game is canceled entirely, with no make-up game, or ends in a tie, this market will resolve 50-50.
+
+The primary resolution source for this market is the official final statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 24 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3122,sports::mlb::Athletics vs. New York Yankees,mlb,game_result,KXMLBGAME-26APR121340ATHNYM-NYM,0x343a03146b14e68ad0eb62700c3c7e3001a67d584ec1ff435d3083abd056a4ba,A's vs New York M Winner?,Athletics vs. New York Yankees,2026-04-15,2026-04-14,yes,"If New York M wins the A's vs New York M professional baseball game originally scheduled for Apr 12, 2026 at 1:40 PM EDT, then the market resolves to Yes.
+
+The following market refers to the A's vs New York M professional baseball game originally scheduled for Apr 12, 2026 at 1:40 PM EDT. If this game is postponed or delayed, the market will remain open and close after the rescheduled game has finished (within two days). If the game is cancelled or rescheduled to over two days away, the market will resolve to a fair price in accordance with the rules.","In the upcoming MLB game between the Athletics and New York Yankees, scheduled for April 7 at 7:05PM ET:
+
+This market will resolve to ""Athletics"" if the Athletics win the game.
+
+This market will resolve to ""New York Yankees"" if the New York Yankees win the game.
+
+If the game is postponed, this market will remain open until the game has been completed. If the game is canceled entirely, with no make-up game, or ends in a tie, this market will resolve 50-50.
+
+The primary resolution source for this market is the official final statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 24 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3123,sports::soccer::Will Bucheon FC 1995 vs. Gimcheon Sangmu,soccer,game_result,KXKLEAGUEGAME-26APR12GISANY-TIE,0x35f4b1a1e07e454d0ca7e4bde33bced91dee96a9e44d819bc31a969d3c59f187,Gimcheon Sangmu vs FC Anyang Winner?,Will Bucheon FC 1995 vs. Gimcheon Sangmu FC end in a draw?,2026-04-26,2026-04-25,yes,"If Tie wins the Gimcheon Sangmu vs FC Anyang professional Korea K League 1 soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Gimcheon Sangmu vs FC Anyang professional Korea K League 1 soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 25, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3124,sports::soccer::Will Fluminense FC vs. Associação Chapec,soccer,game_result,KXBRASILEIROGAME-26APR11FLUFLA-FLU,0x7a055d29efd6f534345c58676b6206717580e9ff227b026717f7bfeed05346b9,Fluminense vs Flamengo Winner?,Will Fluminense FC vs. Associação Chapecoense de Futebol end in a draw?,2026-04-25,2026-04-26,yes,"If Fluminense wins the Fluminense vs Flamengo professional Brasileiro Serie A soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Fluminense vs Flamengo professional Brasileiro Serie A soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 26, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3125,sports::soccer::Will Silkeborg IF vs. Randers FC end in ,soccer,game_result,KXDENSUPERLIGAGAME-26APR12RANFCC-FCC,0xd7d731b524b0d95d574101a2508400e5f22730a6584085b84c32d2c9e89b3997,Randers vs Copenhagen Winner?,Will Silkeborg IF vs. Randers FC end in a draw?,2026-04-26,2026-04-26,yes,"If Copenhagen wins the Randers vs Copenhagen professional Danish Superliga soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Randers vs Copenhagen professional Danish Superliga soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 26, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3126,sports::soccer::Will Gwangju FC vs. FC Anyang end in a d,soccer,game_result,KXKLEAGUEGAME-26APR12GISANY-GIS,0xde969ea8da3d2802d308258dca4f6d057434d0f58dd8ee53926a6d293a676526,Gimcheon Sangmu vs FC Anyang Winner?,Will Gwangju FC vs. FC Anyang end in a draw?,2026-04-26,2026-04-26,yes,"If Gimcheon Sangmu wins the Gimcheon Sangmu vs FC Anyang professional Korea K League 1 soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Gimcheon Sangmu vs FC Anyang professional Korea K League 1 soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 26, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3127,sports::soccer::Will Gangwon FC vs. FC Seoul end in a dr,soccer,game_result,KXKLEAGUEGAME-26APR12DAJGAW-TIE,0x999f375e7f5528c11901ad6e090043ae7324d88f373edceab5f5cf3b5ebaa631,Daejeon Citizen vs Gangwon Winner?,Will Gangwon FC vs. FC Seoul end in a draw?,2026-04-26,2026-04-25,yes,"If Tie wins the Daejeon Citizen vs Gangwon professional Korea K League 1 soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Daejeon Citizen vs Gangwon professional Korea K League 1 soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 25, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3128,sports::soccer::Will Ulsan HD FC vs. Daejeon Hana Citize,soccer,game_result,KXKLEAGUEGAME-26APR11INCULS-ULS,0x577fbe14cad35efb518c808ad8f4971f63bf03a76e070a3a034a76564851b6cc,Incheon Utd vs Ulsan HD Winner?,Will Ulsan HD FC vs. Daejeon Hana Citizen FC end in a draw?,2026-04-25,2026-04-26,yes,"If Ulsan HD wins the Incheon Utd vs Ulsan HD professional Korea K League 1 soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Incheon Utd vs Ulsan HD professional Korea K League 1 soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 26, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3129,sports::soccer::Will Jeonbuk Hyundai Motors FC vs. Pohan,soccer,game_result,KXKLEAGUEGAME-26APR11POHJEJ-TIE,0xf35f3d083477a65e0883dad02b4291eb8491bcbdb594ceb79ba5c17a12ccb6d3,Pohang Steelers vs Jeju SK Winner?,Will Jeonbuk Hyundai Motors FC vs. Pohang Steelers FC end in a draw?,2026-04-25,2026-04-26,yes,"If Tie wins the Pohang Steelers vs Jeju SK professional Korea K League 1 soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Pohang Steelers vs Jeju SK professional Korea K League 1 soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 26, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3130,sports::soccer::Will Incheon United FC vs. Jeju SK FC en,soccer,game_result,KXKLEAGUEGAME-26APR11POHJEJ-POH,0xa715c491394f69ac1e288fef7ceac81667b0024e1fc7ab968c40ebe0ed6b9388,Pohang Steelers vs Jeju SK Winner?,Will Incheon United FC vs. Jeju SK FC end in a draw?,2026-04-25,2026-04-25,uncertain,"If Pohang Steelers wins the Pohang Steelers vs Jeju SK professional Korea K League 1 soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Pohang Steelers vs Jeju SK professional Korea K League 1 soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 25, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3131,sports::soccer::Will Dalian Yingbo FC vs. Yunnan Yukun F,soccer,game_result,KXCHNSLGAME-26APR12SHEYUN-SHE,0x3133231b223415bb6441602cf5b74d6767ce8fa22d459d6db43fbb3d230c95e7,Shenzhen Peng City vs Yunnan Yukun Winner?,Will Dalian Yingbo FC vs. Yunnan Yukun FC end in a draw?,2026-04-26,2026-04-26,yes,"If Shenzhen Peng City wins the Shenzhen Peng City vs Yunnan Yukun professional Chinese Super League soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Shenzhen Peng City vs Yunnan Yukun professional Chinese Super League soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 26, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3132,sports::soccer::Will Chengdu Rongcheng FC vs. Zhejiang Z,soccer,game_result,KXCHNSLGAME-26APR12BJGCHR-BJG,0xd77265f8c692a6a8d2296f502ab10f3f1f4a30cc03fa66de153561c38eb3bf14,Beijing Guoan vs Chengdu Rongcheng Winner?,Will Chengdu Rongcheng FC vs. Zhejiang Zhiye FC end in a draw?,2026-04-26,2026-04-25,yes,"If Beijing Guoan wins the Beijing Guoan vs Chengdu Rongcheng professional Chinese Super League soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Beijing Guoan vs Chengdu Rongcheng professional Chinese Super League soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 25, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3133,sports::soccer::Will Beijing Guoan FC vs. Tianjin Jinmen,soccer,game_result,KXCHNSLGAME-26APR12BJGCHR-TIE,0xdae8cc64d4783311b502d8f4e5f9c2ac0fac9328972c9c10980c6d80956c53c5,Beijing Guoan vs Chengdu Rongcheng Winner?,Will Beijing Guoan FC vs. Tianjin Jinmen Hu FC end in a draw?,2026-04-26,2026-04-25,yes,"If Tie wins the Beijing Guoan vs Chengdu Rongcheng professional Chinese Super League soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Beijing Guoan vs Chengdu Rongcheng professional Chinese Super League soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 25, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3134,sports::soccer::Will Qingdao Hainiu FC vs. Shandong Tais,soccer,game_result,KXCHNSLGAME-26APR12TTTQIN-QIN,0xeaeef8697de97c1175dc98d015f1a0561cb8a14338f009ae9ab9f281625ff59b,Tianjin Jinmen Tiger vs Qingdao Hainiu Winner?,Will Qingdao Hainiu FC vs. Shandong Taishan FC end in a draw?,2026-04-26,2026-04-26,yes,"If Qingdao Hainiu wins the Tianjin Jinmen Tiger vs Qingdao Hainiu professional Chinese Super League soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Tianjin Jinmen Tiger vs Qingdao Hainiu professional Chinese Super League soccer game originally scheduled for Apr 12, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 26, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3135,sports::soccer::Will Henan FC vs. Shanghai Shenhua FC en,soccer,game_result,KXCHNSLGAME-26APR11SHSSHP-TIE,0x5578a26c12938ebe80adbb93d5c8d114ec5612aff639bc663dd378b84c240a17,Shanghai Shenhua vs Shanghai Port Winner?,Will Henan FC vs. Shanghai Shenhua FC end in a draw?,2026-04-25,2026-04-26,yes,"If Tie wins the Shanghai Shenhua vs Shanghai Port professional Chinese Super League soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Shanghai Shenhua vs Shanghai Port professional Chinese Super League soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 26, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3136,sports::soccer::Will Shenzhen Xinpengcheng FC vs. Liaoni,soccer,game_result,KXCHNSLGAME-26APR11QWCLIT-LIT,0x3e81829f8b86ba693aa0533b07b5fafd12433a6bd7b2dec82fc374ba862fd738,Qingdao West Coast FC vs Liaoning Tieren Winner?,Will Shenzhen Xinpengcheng FC vs. Liaoning Tieren FC end in a draw?,2026-04-25,2026-04-26,yes,"If Liaoning Tieren wins the Qingdao West Coast FC vs Liaoning Tieren professional Chinese Super League soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Qingdao West Coast FC vs Liaoning Tieren professional Chinese Super League soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 26, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3137,sports::soccer::Will Chongqing Tonglianglong FC vs. Qing,soccer,game_result,KXCHNSLGAME-26APR11CHOWUH-WUH,0xe3a5ae4ba8057b5bbd351e740fbad2ae8f6dd6c4d9508c5f6bf237b522969e69,Chongqing Tonglianglong FC vs Wuhan Three Towns FC Winner?,Will Chongqing Tonglianglong FC vs. Qingdao Xihaian FC end in a draw?,2026-04-25,2026-04-26,yes,"If Wuhan Three Towns FC wins the Chongqing Tonglianglong FC vs Wuhan Three Towns FC professional Chinese Super League soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Chongqing Tonglianglong FC vs Wuhan Three Towns FC professional Chinese Super League soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 26, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3138,sports::soccer::Will EC Bahia vs. Santos FC end in a dra,soccer,game_result,KXBRASILEIROGAME-26APR11SANATL-TIE,0xc5a1d79a277cca92faffae40c63a8cce666ead314be1a7718fc934aefdf53475,Santos vs Atletico Mineiro Winner?,Will EC Bahia vs. Santos FC end in a draw?,2026-04-25,2026-04-25,yes,"If Tie wins the Santos vs Atletico Mineiro professional Brasileiro Serie A soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Santos vs Atletico Mineiro professional Brasileiro Serie A soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 25, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3139,sports::soccer::Will São Paulo FC vs. Mirassol FC end in,soccer,game_result,KXBRASILEIROGAME-26APR11MIRBAH-MIR,0xccb7bafda5f7f4e2f4d17cfa68350e0c42bc8de7ba92e53c69fd5905392c5631,Mirassol vs Bahia Winner?,Will São Paulo FC vs. Mirassol FC end in a draw?,2026-04-25,2026-04-26,yes,"If Mirassol wins the Mirassol vs Bahia professional Brasileiro Serie A soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.
+
+The following market refers to the Mirassol vs Bahia professional Brasileiro Serie A soccer game originally scheduled for Apr 11, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called ""Tie"" resolves to Yes. If the game is cancelled or rescheduled to over two weeks away, the market will resolve to a fair price in accordance with the rules.","In the upcoming game, scheduled for April 25, 2026
+If the game ends in a draw, this market will resolve to ""Yes"".
+Otherwise, this market will resolve to ""No"".
+If the game is postponed, this market will remain open until the game has been completed.
+If the game is canceled entirely, with no make-up game, this market will resolve to ""Yes"".
+This market refers only to the outcome within the first 90 minutes of regular play plus stoppage time.
+
+The primary resolution source for this market is the official statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3140,sports::Will Inter win the Serie A?::Will Inter win the 2025–26 Ser,soccer,game_result,KXSERIEA-26-INT,0x43c65b8e05b1c04b83a3022e37c250f10334b4b0cb7a8f1594e2c4990d09de15,Will Inter win the Serie A?,Will Inter win the 2025–26 Serie A league?,2026-06-06,2026-05-28,yes,"If Inter wins the Serie A, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 Serie A.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 Serie A. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 Serie A season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from Serie A. A consensus of credible reporting may also be used.",,resolution source will be official information from Serie A,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3141,sports::Will Atlanta win the 2026 Pro ::Will the Atlanta Braves win th,mlb,game_result,KXMLB-26-ATL,0x7c6d624563d7efee94f7ef54da8d35fd794b3cde9ead02df0d413d6ad3886570,Will Atlanta win the 2026 Pro Baseball Championship?,Will the Atlanta Braves win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Atlanta wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3142,sports::Will Seattle win the 2026 Pro ::Will the Seattle Mariners win ,mlb,game_result,KXMLB-26-SEA,0x8a638b539c43375ea04e0e2501f4a877df4ab35ae67a1f60d0e034d75c8c38ef,Will Seattle win the 2026 Pro Baseball Championship?,Will the Seattle Mariners win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Seattle wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3143,sports::Will Detroit win the 2026 Pro ::Will the Detroit Tigers win th,mlb,game_result,KXMLB-26-DET,0xb6fbcf89aba1425be426b04cc001cdee86672e181ef4d665a39ed980300e4f45,Will Detroit win the 2026 Pro Baseball Championship?,Will the Detroit Tigers win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Detroit wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3144,sports::Will Los Angeles A win the 202::Will the Los Angeles Angels wi,mlb,game_result,KXMLB-26-LAA,0x36f3d99fb629ebbad8bc559f922da1b1e8333496fe6322308bff647926ac15f0,Will Los Angeles A win the 2026 Pro Baseball Championship?,Will the Los Angeles Angels win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Los Angeles A wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3145,sports::Will Atletico Madrid win the L::Will Atletico Madrid win the 2,soccer,game_result,KXLALIGA-26-ATM,0xad9cf9a89f41009718b3858c47ea30c88491dbf9f043b8fcd704c4ba65be8edf,Will Atletico Madrid win the La Liga?,Will Atletico Madrid win the 2025–26 La Liga?,2028-05-23,2026-05-30,yes,"If Atletico Madrid wins the La Liga, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 La Liga.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 La Liga. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 La Liga season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from La Liga. A consensus of credible reporting may also be used.",,resolution source will be official information from La Liga,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3146,sports::Will Real Madrid win the La Li::Will Real Madrid win the 2025–,soccer,game_result,KXLALIGA-26-RMA,0xa1f08ec3bcc1434cb0b695bd5ee9f81268ef45fb73f752b3a1c1fb1d35750866,Will Real Madrid win the La Liga?,Will Real Madrid win the 2025–26 La Liga?,2028-05-23,2026-05-30,yes,"If Real Madrid wins the La Liga, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 La Liga.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 La Liga. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 La Liga season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from La Liga. A consensus of credible reporting may also be used.",,resolution source will be official information from La Liga,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3147,sports::Will Barcelona win the La Liga::Will Barcelona win the 2025–26,soccer,game_result,KXLALIGA-26-BAR,0x069fef06f8b32dee6a22fab6189249dc83582f22cb737a85225b114770d7da05,Will Barcelona win the La Liga?,Will Barcelona win the 2025–26 La Liga?,2028-05-23,2026-05-30,yes,"If Barcelona wins the La Liga, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 La Liga.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 La Liga. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 La Liga season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from La Liga. A consensus of credible reporting may also be used.",,resolution source will be official information from La Liga,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3148,sports::Will San Diego win the 2026 Pr::Will the San Diego Padres win ,mlb,game_result,KXMLB-26-SD,0x99ff023a3b1149189fd0993f5a06b05b59e91d370df456c54db69bbd8875bf65,Will San Diego win the 2026 Pro Baseball Championship?,Will the San Diego Padres win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If San Diego wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3149,sports::Will Aston Villa win the Engli::Will Aston Villa win the 2025–,soccer,game_result,KXPREMIERLEAGUE-26-AVL,0x2ca58175aa8080357d9706c535bb0be218ce7bb156dc48753e0d8b8ee6b56635,Will Aston Villa win the English Premier League?,Will Aston Villa win the 2025–26 English Premier League?,2028-05-23,2026-05-27,yes,"If Aston Villa wins the English Premier League, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 English Premier League.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 English Premier League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 English Premier League season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from the English Premier League. A consensus of credible reporting may also be used.",,resolution source will be official information from the English Premier League,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3150,sports::Will Arsenal win the English P::Will Arsenal win the 2025–26 E,soccer,game_result,KXPREMIERLEAGUE-26-ARS,0xcba24842ceac7a40d2a8b9adde1f4407999b6505193b9fd68156ae76fbffa706,Will Arsenal win the English Premier League?,Will Arsenal win the 2025–26 English Premier League?,2028-05-23,2026-05-27,yes,"If Arsenal wins the English Premier League, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 English Premier League.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 English Premier League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 English Premier League season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from the English Premier League. A consensus of credible reporting may also be used.",,resolution source will be official information from the English Premier League,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3151,sports::Will New York Y win the 2026 P::Will the New York Yankees win ,mlb,game_result,KXMLB-26-NYY,0x3df7be753c8b6ebbddf31d6d63535c4b31c836cb25b1a73085508a271bc103db,Will New York Y win the 2026 Pro Baseball Championship?,Will the New York Yankees win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If New York Y wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3152,sports::Will Minnesota win the 2026 Pr::Will the Minnesota Twins win t,mlb,game_result,KXMLB-26-MIN,0xe4d4d5e3f6a9cc989d05679a66b3f871ba9075155e4e37dac9f684623e501222,Will Minnesota win the 2026 Pro Baseball Championship?,Will the Minnesota Twins win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Minnesota wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3153,sports::Will San Francisco win the 202::Will the San Francisco Giants ,mlb,game_result,KXMLB-26-SF,0x20ad75028f28b5bced0e807f25289a57ea8060ddd716a60bafb9eba1cf0e58e9,Will San Francisco win the 2026 Pro Baseball Championship?,Will the San Francisco Giants win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If San Francisco wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3154,sports::Will Houston win the 2026 Pro ::Will the Houston Astros win th,mlb,game_result,KXMLB-26-HOU,0x6470402973d292487fba2f61fd46967707b8327b9eab38a759da5ca5dc9ccec4,Will Houston win the 2026 Pro Baseball Championship?,Will the Houston Astros win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Houston wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3155,sports::Will Texas win the 2026 Pro Ba::Will the Texas Rangers win the,mlb,game_result,KXMLB-26-TEX,0xa9a6f91142311378d1227a7b245069ecca68e7cfc825db8613d9bb0c8c42d3a1,Will Texas win the 2026 Pro Baseball Championship?,Will the Texas Rangers win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Texas wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3156,sports::Will Cleveland win the 2026 Pr::Will the Cleveland Guardians w,mlb,game_result,KXMLB-26-CLE,0x67a229c77a9ac893f3895ed4dd1dfd1f89a6145da408bba530a544ec77ff6bfb,Will Cleveland win the 2026 Pro Baseball Championship?,Will the Cleveland Guardians win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Cleveland wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3157,sports::Will Chicago C win the 2026 Pr::Will the Chicago Cubs win the ,mlb,game_result,KXMLB-26-CHC,0xae0363bfe26b7de87f4526c47d5de9b324bab3d14690112bd89b34c9ed3552fc,Will Chicago C win the 2026 Pro Baseball Championship?,Will the Chicago Cubs win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Chicago C wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3158,sports::Will Colorado win the 2026 Pro::Will the Colorado Rockies win ,mlb,game_result,KXMLB-26-COL,0x190d98a8009045e55fdef0923372d308086469ba1c5286ea5a76a744f6496fa0,Will Colorado win the 2026 Pro Baseball Championship?,Will the Colorado Rockies win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Colorado wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3159,sports::Will Miami win the 2026 Pro Ba::Will the Miami Marlins win the,mlb,game_result,KXMLB-26-MIA,0xa5f1c7110b05fde645258c7c9e58d3ddbec94631db35b22f7a02db94d4571a29,Will Miami win the 2026 Pro Baseball Championship?,Will the Miami Marlins win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Miami wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3160,sports::Will New York M win the 2026 P::Will the New York Mets win the,mlb,game_result,KXMLB-26-NYM,0x98b595f40feccf49ded360d1eb15b9bb81041cc6006da00441a743dcef74f0e7,Will New York M win the 2026 Pro Baseball Championship?,Will the New York Mets win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If New York M wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3161,sports::Will Toronto win the 2026 Pro ::Will the Toronto Blue Jays win,mlb,game_result,KXMLB-26-TOR,0x6df5c681e14dadf57c0ba0a7c01d6e2cb04f0f97528e76d39875320aec40fddf,Will Toronto win the 2026 Pro Baseball Championship?,Will the Toronto Blue Jays win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Toronto wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3162,sports::Will Boston win the 2026 Pro B::Will the Boston Red Sox win th,mlb,game_result,KXMLB-26-BOS,0x3e38887e936b8fedd5373852777e7a3e90805affd8139971ebeb4b4956f000f5,Will Boston win the 2026 Pro Baseball Championship?,Will the Boston Red Sox win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Boston wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3163,sports::Will St. Louis win the 2026 Pr::Will the St. Louis Cardinals w,mlb,game_result,KXMLB-26-STL,0x728ed3e64f1f6b67d9b3dcd545ae574aaf0dfd3b0fb6df433d0c07c253981ec0,Will St. Louis win the 2026 Pro Baseball Championship?,Will the St. Louis Cardinals win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If St. Louis wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3164,sports::Will Tampa Bay win the 2026 Pr::Will the Tampa Bay Rays win th,mlb,game_result,KXMLB-26-TB,0x4d9567b9fa71a94b6e43ddb62ea6104cbb01926813938d241cce336bd72a8ba5,Will Tampa Bay win the 2026 Pro Baseball Championship?,Will the Tampa Bay Rays win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Tampa Bay wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3165,sports::Will Philadelphia win the 2026::Will the Philadelphia Phillies,mlb,game_result,KXMLB-26-PHI,0x9e238daa4cc2b89379314f5c1873e3c0d07d26bf2eb69a3d618a7b5d13b165a0,Will Philadelphia win the 2026 Pro Baseball Championship?,Will the Philadelphia Phillies win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Philadelphia wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3166,sports::Will Liverpool win the English::Will Liverpool win the 2025–26,soccer,game_result,KXPREMIERLEAGUE-26-LFC,0x65a2dd0af5f4155915a701e8fdbcdb2f547fb5925d0bcef0b373a8c39a16613e,Will Liverpool win the English Premier League?,Will Liverpool win the 2025–26 English Premier League?,2028-05-23,2026-05-27,yes,"If Liverpool wins the English Premier League, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 English Premier League.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 English Premier League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 English Premier League season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from the English Premier League. A consensus of credible reporting may also be used.",,resolution source will be official information from the English Premier League,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3167,sports::Will Cincinnati win the 2026 P::Will the Cincinnati Reds win t,mlb,game_result,KXMLB-26-CIN,0xf9a6f017f72960b267bd398f32f4f4b20a163586ba49930e3533f8bd003dd507,Will Cincinnati win the 2026 Pro Baseball Championship?,Will the Cincinnati Reds win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Cincinnati wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3168,sports::Will Milwaukee win the 2026 Pr::Will the Milwaukee Brewers win,mlb,game_result,KXMLB-26-MIL,0x3db74f14fa0c4d8acb19ff4ffa18d523597a8e553ec565d494290a908d99395a,Will Milwaukee win the 2026 Pro Baseball Championship?,Will the Milwaukee Brewers win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Milwaukee wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3169,sports::Will A's win the 2026 Pro Base::Will the Athletics win the 202,mlb,game_result,KXMLB-26-ATH,0x618f23aef4bb8eb98a292a0674ed5aee012164f9a762e4bc7f9a2929aa3620d1,Will A's win the 2026 Pro Baseball Championship?,Will the Athletics win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If A's wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3170,sports::Will Washington win the 2026 P::Will the Washington Nationals ,mlb,game_result,KXMLB-26-WSH,0x99b0984b690ad49fb2bdef1d31dc398516d3318740c8595995bd37539d49afce,Will Washington win the 2026 Pro Baseball Championship?,Will the Washington Nationals win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Washington wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3171,sports::Will Pittsburgh win the 2026 P::Will the Pittsburgh Pirates wi,mlb,game_result,KXMLB-26-PIT,0x598654e5e8ad06b44107cb541773c459580dfc208fc74e4694d1ada41d679c1d,Will Pittsburgh win the 2026 Pro Baseball Championship?,Will the Pittsburgh Pirates win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Pittsburgh wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3172,sports::Will Chicago WS win the 2026 P::Will the Chicago White Sox win,mlb,game_result,KXMLB-26-CWS,0x7279005cdc5f4533b0cf53ce94a6c4fd43039c721ba39a3ad02dddacabd47d93,Will Chicago WS win the 2026 Pro Baseball Championship?,Will the Chicago White Sox win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Chicago WS wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3173,sports::Will Arizona win the 2026 Pro ::Will the Arizona Diamondbacks ,mlb,game_result,KXMLB-26-AZ,0xacbb6cf8293c413dd27561009e7fedce5eea0d6914f5f94fc2bb81d08b60be3e,Will Arizona win the 2026 Pro Baseball Championship?,Will the Arizona Diamondbacks win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Arizona wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3174,sports::Will Columbus Blue Jackets win::Will the Columbus Blue Jackets,nhl,game_result,KXNHL-26-CBJ,0x4c317ee82d81e0a49aa9862a8c2d876fee322064acf02cd8e1346fbed36083e8,Will Columbus Blue Jackets win the 2025-26 Stanley Cup Finals?,Will the Columbus Blue Jackets win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Columbus Blue Jackets win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Columbus Blue Jackets win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3175,sports::Will Buffalo Sabres win the 20::Will the Buffalo Sabres win th,nhl,game_result,KXNHL-26-BUF,0xbefea6668e49e328db4d5c792bc15cea309bbc06101dfd6ced1e0556ad3ea301,Will Buffalo Sabres win the 2025-26 Stanley Cup Finals?,Will the Buffalo Sabres win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Buffalo Sabres win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Buffalo Sabres win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3176,sports::Will Edmonton Oilers win the 2::Will the Edmonton Oilers win t,nhl,game_result,KXNHL-26-EDM,0x4a67e1270a2ed86be8fc524b6114640e41b0c56303ecaa9584deacd62402650a,Will Edmonton Oilers win the 2025-26 Stanley Cup Finals?,Will the Edmonton Oilers win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Edmonton Oilers win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Edmonton Oilers win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3177,sports::Will Carolina Hurricanes win t::Will the Carolina Hurricanes w,nhl,game_result,KXNHL-26-CAR,0xf7b5491e70b477d451afe7d9c1fde4bf1a927e69ff289d294b96df164f6c10f0,Will Carolina Hurricanes win the 2025-26 Stanley Cup Finals?,Will the Carolina Hurricanes win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Carolina Hurricanes win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Carolina Hurricanes win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3178,sports::Will Dallas Stars win the 2025::Will the Dallas Stars win the ,nhl,game_result,KXNHL-26-DAL,0x44887f53abbfe7531b1384420b185a5f10ee42a4e6c9441d5883abd4f3c1e5ef,Will Dallas Stars win the 2025-26 Stanley Cup Finals?,Will the Dallas Stars win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Dallas Stars win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Dallas Stars win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3179,sports::Will Vegas Golden Knights win ::Will the Vegas Golden Knights ,nhl,game_result,KXNHL-26-VGK,0x89389a6b1439856a8d366234c795d72865c927a1aa3cf9d4cc04a3a400defde1,Will Vegas Golden Knights win the 2025-26 Stanley Cup Finals?,Will the Vegas Golden Knights win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Vegas Golden Knights win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Vegas Golden Knights win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3180,sports::Will Ottawa Senators win the 2::Will the Ottawa Senators win t,nhl,game_result,KXNHL-26-OTT,0x139b893a7ae21eaec72e887ba88910831944b4662512428c122c4ad0a5c125ac,Will Ottawa Senators win the 2025-26 Stanley Cup Finals?,Will the Ottawa Senators win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Ottawa Senators win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Ottawa Senators win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3181,sports::Will Colorado Avalanche win th::Will the Colorado Avalanche wi,nhl,game_result,KXNHL-26-COL,0xf8f63bb47b2a7c2e0c1be3cedf4075079b11c07476d76a9469065b0c4791961a,Will Colorado Avalanche win the 2025-26 Stanley Cup Finals?,Will the Colorado Avalanche win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Colorado Avalanche win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Colorado Avalanche win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3182,sports::Will Tampa Bay Lightning win t::Will the Tampa Bay Lightning w,nhl,game_result,KXNHL-26-TB,0xbdd688664b4f3cf7ec4ec011607934fe8ae720c08353fc14a6e9dfbf6bbcf11a,Will Tampa Bay Lightning win the 2025-26 Stanley Cup Finals?,Will the Tampa Bay Lightning win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Tampa Bay Lightning win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Tampa Bay Lightning win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3183,sports::Will Minnesota Wild win the 20::Will the Minnesota Wild win th,nhl,game_result,KXNHL-26-MIN,0x0d082a85f48a5226b1205acdb6e95ead2fe373acabcf6c471f5895f86f42a276,Will Minnesota Wild win the 2025-26 Stanley Cup Finals?,Will the Minnesota Wild win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Minnesota Wild win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Minnesota Wild win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3184,sports::Will Nashville Predators win t::Will the Nashville Predators w,nhl,game_result,KXNHL-26-NSH,0x54cb2293de4ce01c85b62b0c43911a36614c8558b02b70703326ca4b938a83d4,Will Nashville Predators win the 2025-26 Stanley Cup Finals?,Will the Nashville Predators win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Nashville Predators win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Nashville Predators win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3185,sports::Will Boston Bruins win the 202::Will the Boston Bruins win the,nhl,game_result,KXNHL-26-BOS,0x82d8c535c037a779ffbd2eb94704b093a5341350b49ca68128fc1c16a0901e4a,Will Boston Bruins win the 2025-26 Stanley Cup Finals?,Will the Boston Bruins win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Boston Bruins win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Boston Bruins win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3186,sports::Will New York Islanders win th::Will the New York Islanders wi,nhl,game_result,KXNHL-26-NYI,0x99d0ce2ab858154ba1ec511863dae5a9fe41731457022cf2ef8b1024cf97405a,Will New York Islanders win the 2025-26 Stanley Cup Finals?,Will the New York Islanders win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the New York Islanders win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the New York Islanders win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3187,sports::Will Pittsburgh Penguins win t::Will the Pittsburgh Penguins w,nhl,game_result,KXNHL-26-PIT,0x9e54856d758cd7de25b75c97273a38d711642f16eacad57e61982028f2791206,Will Pittsburgh Penguins win the 2025-26 Stanley Cup Finals?,Will the Pittsburgh Penguins win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Pittsburgh Penguins win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Pittsburgh Penguins win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3188,sports::Will Washington Capitals win t::Will the Washington Capitals w,nhl,game_result,KXNHL-26-WSH,0x08fa7d350c801391e7ec81d0da90f1fb05ec365f98d16d27e6d64a18d7118973,Will Washington Capitals win the 2025-26 Stanley Cup Finals?,Will the Washington Capitals win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Washington Capitals win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Washington Capitals win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3189,sports::Will St. Louis Blues win the 2::Will the St. Louis Blues win t,nhl,game_result,KXNHL-26-STL,0x1c36595d8a1726549acca61c5eb8c9173de87c780ee1cee660ceb5b517530ab7,Will St. Louis Blues win the 2025-26 Stanley Cup Finals?,Will the St. Louis Blues win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the St. Louis Blues win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the St. Louis Blues win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3190,sports::Will Utah Mammoth win the 2025::Will the Utah Mammoth win the ,nhl,game_result,KXNHL-26-UTA,0xfdc1041ba84bfd8f741eee0bdafce8b1887626c83afd017d18ee9b1f77008b9f,Will Utah Mammoth win the 2025-26 Stanley Cup Finals?,Will the Utah Mammoth win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Utah Mammoth win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Utah Mammoth win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3191,sports::Will Los Angeles Kings win the::Will the Los Angeles Kings win,nhl,game_result,KXNHL-26-LA,0x3b6cdd4f72cef7f29ff7e054444095564dc582266b7230be3c2b5f194d89f37d,Will Los Angeles Kings win the 2025-26 Stanley Cup Finals?,Will the Los Angeles Kings win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Los Angeles Kings win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Los Angeles Kings win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3192,sports::Will Philadelphia Flyers win t::Will the Philadelphia Flyers w,nhl,game_result,KXNHL-26-PHI,0xd66cbb60c333c2eed61717370755c18bc7e494fed90cb507cd9b49c77100951d,Will Philadelphia Flyers win the 2025-26 Stanley Cup Finals?,Will the Philadelphia Flyers win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Philadelphia Flyers win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Philadelphia Flyers win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3193,sports::Will Chicago Blackhawks win th::Will the Chicago Blackhawks wi,nhl,game_result,KXNHL-26-CHI,0x3cec1aa0f2496c59cfcd2fd1270ce798e2d7de14ea55d6fdc747cc814a4b9262,Will Chicago Blackhawks win the 2025-26 Stanley Cup Finals?,Will the Chicago Blackhawks win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Chicago Blackhawks win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Chicago Blackhawks win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3194,sports::Will New Jersey Devils win the::Will the New Jersey Devils win,nhl,game_result,KXNHL-26-NJ,0x1e03cd6255e4dec87c7c85d2267b7b4104beba48abf50e2fc15acabbf233b308,Will New Jersey Devils win the 2025-26 Stanley Cup Finals?,Will the New Jersey Devils win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the New Jersey Devils win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the New Jersey Devils win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3195,sports::Will Calgary Flames win the 20::Will the Calgary Flames win th,nhl,game_result,KXNHL-26-CGY,0x41d6f86edc88c14aa83373e72b4c26a403b159208f8973c093b928fe16d72930,Will Calgary Flames win the 2025-26 Stanley Cup Finals?,Will the Calgary Flames win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Calgary Flames win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Calgary Flames win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3196,sports::Will San Jose Sharks win the 2::Will the San Jose Sharks win t,nhl,game_result,KXNHL-26-SJ,0x9a3436e94742acc7049aa0ff10992dc1c6a574535c3150ea157b7631cad83e2c,Will San Jose Sharks win the 2025-26 Stanley Cup Finals?,Will the San Jose Sharks win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the San Jose Sharks win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the San Jose Sharks win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3197,sports::Will Real Madrid win the Champ::Will Real Madrid win the 2025–,soccer,game_result,KXUCL-26-RMA,0x52a5ce595e0f0816e17e5f40dbd5967c88beb4b9f21000bfdd9a1ff26c281fdd,Will Real Madrid win the Champions League Winner?,Will Real Madrid win the 2025–26 Champions League?,2028-05-29,2026-05-31,yes,"If the Real Madrid win the Champions League Winner, then the market resolves to Yes.","This is a polymarket on whether the listed team will win the 2025–26 UEFA Champions League.
+
+This market will resolve to ""Yes"" if the listed team is officially crowned the winner of the 2025–26 UEFA Champions League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed team to win the tournament (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 UEFA Champions League is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from UEFA Champions League (https://www.uefa.com/uefachampionsleague/). A consensus of credible reporting may also be used.",,resolution source will be official information from UEFA Champions League (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3198,sports::Will PSG win the Champions Lea::Will PSG win the 2025–26 Champ,soccer,game_result,KXUCL-26-PSG,0x6e9f90a6f471b52d03499a81586ca478519474eb152f1327c8c767f020d62529,Will PSG win the Champions League Winner?,Will PSG win the 2025–26 Champions League?,2028-05-29,2026-05-31,yes,"If the PSG win the Champions League Winner, then the market resolves to Yes.","This is a polymarket on whether the listed team will win the 2025–26 UEFA Champions League.
+
+This market will resolve to ""Yes"" if the listed team is officially crowned the winner of the 2025–26 UEFA Champions League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed team to win the tournament (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 UEFA Champions League is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from UEFA Champions League (https://www.uefa.com/uefachampionsleague/). A consensus of credible reporting may also be used.",,resolution source will be official information from UEFA Champions League (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3199,sports::Will Arsenal win the Champions::Will Arsenal win the 2025–26 C,soccer,game_result,KXUCL-26-ARS,0x8df5a4256840dee05851250c0490da7593597faff3a7f9a156ccbbda7fec76f8,Will Arsenal win the Champions League Winner?,Will Arsenal win the 2025–26 Champions League?,2028-05-29,2026-05-31,yes,"If the Arsenal win the Champions League Winner, then the market resolves to Yes.","This is a polymarket on whether the listed team will win the 2025–26 UEFA Champions League.
+
+This market will resolve to ""Yes"" if the listed team is officially crowned the winner of the 2025–26 UEFA Champions League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed team to win the tournament (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 UEFA Champions League is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from UEFA Champions League (https://www.uefa.com/uefachampionsleague/). A consensus of credible reporting may also be used.",,resolution source will be official information from UEFA Champions League (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3200,sports::Will Barcelona win the Champio::Will Barcelona win the 2025–26,soccer,game_result,KXUCL-26-BAR,0x43268d56a20113679be36c84dd22550174c6d6bc9d0f4376e882ce61dac3c635,Will Barcelona win the Champions League Winner?,Will Barcelona win the 2025–26 Champions League?,2028-05-29,2026-05-31,yes,"If the Barcelona win the Champions League Winner, then the market resolves to Yes.","This is a polymarket on whether the listed team will win the 2025–26 UEFA Champions League.
+
+This market will resolve to ""Yes"" if the listed team is officially crowned the winner of the 2025–26 UEFA Champions League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed team to win the tournament (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 UEFA Champions League is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from UEFA Champions League (https://www.uefa.com/uefachampionsleague/). A consensus of credible reporting may also be used.",,resolution source will be official information from UEFA Champions League (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3201,sports::Will Bayern Munich win the Cha::Will Bayern Munich win the 202,soccer,game_result,KXUCL-26-BMU,0x852fcfca1dfa1372b768aa6df2269d20564378bb6fe9c64bba3bc040370c1efd,Will Bayern Munich win the Champions League Winner?,Will Bayern Munich win the 2025–26 Champions League?,2028-05-29,2026-05-31,yes,"If the Bayern Munich win the Champions League Winner, then the market resolves to Yes.","This is a polymarket on whether the listed team will win the 2025–26 UEFA Champions League.
+
+This market will resolve to ""Yes"" if the listed team is officially crowned the winner of the 2025–26 UEFA Champions League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed team to win the tournament (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 UEFA Champions League is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from UEFA Champions League (https://www.uefa.com/uefachampionsleague/). A consensus of credible reporting may also be used.",,resolution source will be official information from UEFA Champions League (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3202,sports::Will Villarreal win the La Lig::Will Villarreal win the 2025–2,soccer,game_result,KXLALIGA-26-VIL,0x683b0254bde8d1ef08206953015629f25b9869d9770807baab939f6aaba4ae5c,Will Villarreal win the La Liga?,Will Villarreal win the 2025–26 La Liga?,2028-05-23,2026-05-30,yes,"If Villarreal wins the La Liga, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 La Liga.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 La Liga. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 La Liga season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from La Liga. A consensus of credible reporting may also be used.",,resolution source will be official information from La Liga,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3203,sports::Will Como win the Serie A?::Will Como win the 2025–26 Seri,soccer,game_result,KXSERIEA-26-COM,0xe52d409c15bed19d2c26c3677ede8fa49e0fb6f9a977b9ce5875279abc6fba5b,Will Como win the Serie A?,Will Como win the 2025–26 Serie A league?,2026-06-06,2026-05-28,yes,"If Como wins the Serie A, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 Serie A.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 Serie A. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 Serie A season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from Serie A. A consensus of credible reporting may also be used.",,resolution source will be official information from Serie A,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3204,sports::Will Napoli win the Serie A?::Will Napoli win the 2025–26 Se,soccer,game_result,KXSERIEA-26-NAP,0x9883c17e49888b1e1fc4227d3eca7f4dc7d8394157073714f57965cb31ae5f57,Will Napoli win the Serie A?,Will Napoli win the 2025–26 Serie A league?,2026-06-06,2026-05-28,yes,"If Napoli wins the Serie A, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 Serie A.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 Serie A. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 Serie A season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from Serie A. A consensus of credible reporting may also be used.",,resolution source will be official information from Serie A,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3205,sports::Will Roma win the Serie A?::Will Roma win the 2025–26 Seri,soccer,game_result,KXSERIEA-26-ROM,0x79c4a31e70083d1994ce2332db5fcbf0e483a98ea6dffa0505169c02f0d5459c,Will Roma win the Serie A?,Will Roma win the 2025–26 Serie A league?,2026-06-06,2026-05-28,yes,"If Roma wins the Serie A, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 Serie A.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 Serie A. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 Serie A season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from Serie A. A consensus of credible reporting may also be used.",,resolution source will be official information from Serie A,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3206,sports::Will Juventus win the Serie A?::Will Juventus win the 2025–26 ,soccer,game_result,KXSERIEA-26-JUV,0x5fca56b7401a55ea5753bc833cd5bd739580d065539d45ae2da1c287e78f137c,Will Juventus win the Serie A?,Will Juventus win the 2025–26 Serie A league?,2026-06-06,2026-05-28,yes,"If Juventus wins the Serie A, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 Serie A.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 Serie A. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 Serie A season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from Serie A. A consensus of credible reporting may also be used.",,resolution source will be official information from Serie A,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3207,sports::Will Atalanta win the Serie A?::Will Atalanta win the 2025–26 ,soccer,game_result,KXSERIEA-26-ATA,0x8fcbf8548820c9330d8a7de0c0cf22cda7eb7d24d453b962f3421379392e30b5,Will Atalanta win the Serie A?,Will Atalanta win the 2025–26 Serie A league?,2026-06-06,2026-05-28,yes,"If Atalanta wins the Serie A, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 Serie A.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 Serie A. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 Serie A season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from Serie A. A consensus of credible reporting may also be used.",,resolution source will be official information from Serie A,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3208,sports::Will Anaheim Ducks win the 202::Will the Anaheim Ducks win the,nhl,game_result,KXNHL-26-ANA,0xceb5e0c99a9195da148d79693f3c6819d44d4d3d7e5be77931e174a3eebe4a85,Will Anaheim Ducks win the 2025-26 Stanley Cup Finals?,Will the Anaheim Ducks win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Anaheim Ducks win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Anaheim Ducks win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3209,sports::Will Winnipeg Jets win the 202::Will the Winnipeg Jets win the,nhl,game_result,KXNHL-26-WPG,0xa8b42e207814d2844997523ba83e708b5bfe19cf5d2203325e4eb3ed459a9ded,Will Winnipeg Jets win the 2025-26 Stanley Cup Finals?,Will the Winnipeg Jets win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Winnipeg Jets win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Winnipeg Jets win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3210,sports::Will Toronto Maple Leafs win t::Will the Toronto Maple Leafs w,nhl,game_result,KXNHL-26-TOR,0xc61a442adb770e35e193973c4fc1e16b219490028b792257aa5cb46619d5d977,Will Toronto Maple Leafs win the 2025-26 Stanley Cup Finals?,Will the Toronto Maple Leafs win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Toronto Maple Leafs win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Toronto Maple Leafs win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3211,sports::Will Florida Panthers win the ::Will the Florida Panthers win ,nhl,game_result,KXNHL-26-FLA,0xd01354f96db7fc2184cc34ac463a80cc65e7ff5de64c8a2f3e07e8433317d75f,Will Florida Panthers win the 2025-26 Stanley Cup Finals?,Will the Florida Panthers win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Florida Panthers win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Florida Panthers win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3212,sports::Will Detroit Red Wings win the::Will the Detroit Red Wings win,nhl,game_result,KXNHL-26-DET,0x7014b40f62a559be0a0abd2bf1ca1ef16e44674b2c505bb5243c752f2e0d351f,Will Detroit Red Wings win the 2025-26 Stanley Cup Finals?,Will the Detroit Red Wings win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Detroit Red Wings win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Detroit Red Wings win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3213,sports::Will Baltimore win the 2026 Pr::Will the Baltimore Orioles win,mlb,game_result,KXMLB-26-BAL,0xae8cf6ba7bd936d12c4c77b77b800dc378a76f02d0276fbc1dc1932f01f8eb9e,Will Baltimore win the 2026 Pro Baseball Championship?,Will the Baltimore Orioles win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Baltimore wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3214,sports::Will Los Angeles D win the 202::Will the Los Angeles Dodgers w,mlb,game_result,KXMLB-26-LAD,0x749d8eccbc0a99447e71fc5e40a0096842774bef4d5c8838b8adb39af068b3cb,Will Los Angeles D win the 2026 Pro Baseball Championship?,Will the Los Angeles Dodgers win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Los Angeles D wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3215,sports::Will Hoffenheim win the Bundes::Will Hoffenheim win the 2025–2,soccer,game_result,KXBUNDESLIGA-26-TSG,0x1c9b8280966d8a80ed56ba8d4d562086a36ecd1f1a1720443dd792fc919811c2,Will Hoffenheim win the Bundesliga?,Will Hoffenheim win the 2025–26 Bundesliga?,2026-06-01,2026-05-28,yes,"If Hoffenheim wins the Bundesliga, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 Bundesliga.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 Bundesliga. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 Bundesliga season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from the Bundesliga. A consensus of credible reporting may also be used.",,resolution source will be official information from the Bundesliga,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3216,sports::Will Stuttgart win the Bundesl::Will Stuttgart win the 2025–26,soccer,game_result,KXBUNDESLIGA-26-VFB,0x4296266f53577d634cc08b0a2f6ebfb43377e9c10b19aad4638e10b76c0de498,Will Stuttgart win the Bundesliga?,Will Stuttgart win the 2025–26 Bundesliga?,2026-06-01,2026-05-28,yes,"If Stuttgart wins the Bundesliga, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 Bundesliga.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 Bundesliga. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 Bundesliga season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from the Bundesliga. A consensus of credible reporting may also be used.",,resolution source will be official information from the Bundesliga,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3217,sports::Will Dortmund win the Bundesli::Will Dortmund win the 2025–26 ,soccer,game_result,KXBUNDESLIGA-26-BVB,0xb93112768ee56b2b81f49c333407eb2d652976e0d88e63844e80066168b4127a,Will Dortmund win the Bundesliga?,Will Dortmund win the 2025–26 Bundesliga?,2026-06-01,2026-05-28,yes,"If Dortmund wins the Bundesliga, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 Bundesliga.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 Bundesliga. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 Bundesliga season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from the Bundesliga. A consensus of credible reporting may also be used.",,resolution source will be official information from the Bundesliga,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3218,sports::Will Bayern Munich win the Bun::Will Bayern Munich win the 202,soccer,game_result,KXBUNDESLIGA-26-BMU,0xf2a4a7765e2f05824fce5cd598c6c4a636a5aadc12607c05527b340f161fd2f9,Will Bayern Munich win the Bundesliga?,Will Bayern Munich win the 2025–26 Bundesliga?,2026-06-01,2026-05-28,yes,"If Bayern Munich wins the Bundesliga, then the market resolves to Yes.","This is a polymarket on whether the listed club will win the 2025–26 Bundesliga.
+
+This market will resolve to ""Yes"" if the listed club is officially crowned the winner of the 2025–26 Bundesliga. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed club to win the league (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 Bundesliga season is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from the Bundesliga. A consensus of credible reporting may also be used.",,resolution source will be official information from the Bundesliga,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3219,sports::Will Real Betis win the Europa::Will Real Betis win the 2025-2,soccer,game_result,KXUEL-26-RBB,0x667916946520b25103026bb80edd0347154f7ac896fd3b564775dabc304f93d5,Will Real Betis win the Europa League?,Will Real Betis win the 2025-26 UEFA Europa League?,2026-06-03,2026-05-24,yes,"If Real Betis is the 2026 Europa League champion, then the market resolves to Yes.","This is a polymarket on whether the listed team will win the 2025–26 UEFA Europa League.
+
+This market will resolve to ""Yes"" if the listed team is officially crowned the winner of the 2025–26 UEFA Europa League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed team to win the tournament (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 UEFA Europa League is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from UEFA Europa League (https://www.uefa.com/uefaeuropaleague/). A consensus of credible reporting may also be used.",,resolution source will be official information from UEFA Europa League (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3220,sports::Will Porto win the Europa Leag::Will Porto win the 2025-26 UEF,soccer,game_result,KXUEL-26-FCP,0x6bdf9053805fc0a7e15b0a265648385eedfab474366fb450d120f95da04672b8,Will Porto win the Europa League?,Will Porto win the 2025-26 UEFA Europa League?,2026-06-03,2026-05-24,yes,"If Porto is the 2026 Europa League champion, then the market resolves to Yes.","This is a polymarket on whether the listed team will win the 2025–26 UEFA Europa League.
+
+This market will resolve to ""Yes"" if the listed team is officially crowned the winner of the 2025–26 UEFA Europa League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed team to win the tournament (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 UEFA Europa League is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from UEFA Europa League (https://www.uefa.com/uefaeuropaleague/). A consensus of credible reporting may also be used.",,resolution source will be official information from UEFA Europa League (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3221,sports::Will Liverpool win the Champio::Will Liverpool win the 2025–26,soccer,game_result,KXUCL-26-LFC,0x4c7db7768547a220d3e26359952d8b2eb9094f5ad02fcc32e70d9361d8491ab5,Will Liverpool win the Champions League Winner?,Will Liverpool win the 2025–26 Champions League?,2028-05-29,2026-05-31,yes,"If the Liverpool win the Champions League Winner, then the market resolves to Yes.","This is a polymarket on whether the listed team will win the 2025–26 UEFA Champions League.
+
+This market will resolve to ""Yes"" if the listed team is officially crowned the winner of the 2025–26 UEFA Champions League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed team to win the tournament (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 UEFA Champions League is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from UEFA Champions League (https://www.uefa.com/uefachampionsleague/). A consensus of credible reporting may also be used.",,resolution source will be official information from UEFA Champions League (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3222,sports::Will Kansas City win the 2026 ::Will the Kansas City Royals wi,mlb,game_result,KXMLB-26-KC,0xf134705aea567d66f664016d8522ef98e42aefe6a305c22447695a9462857ccd,Will Kansas City win the 2026 Pro Baseball Championship?,Will the Kansas City Royals win the 2026 World Series?,2028-10-31,2026-10-31,yes,"If Kansas City wins the 2026 Pro Baseball Championship, then the market resolves to Yes.","This market will resolve according to the team that wins the 2026 MLB World Series. 
+
+If at any point it becomes impossible for a listed team to win the 2026 MLB World Series per the rules of MLB (e.g., they are eliminated in the playoffs), the corresponding market will resolve to “No”.
+
+If the 2026 MLB season is cancelled, postponed after December 31, 2026 ET, or there is otherwise no winner declared within that timeframe, this market will resolve to “Other”.
+
+The primary resolution source will be official information from MLB (https://www.mlb.com/); however, a consensus of credible reporting may also be used.",,resolution source will be official information from MLB (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3223,sports::Will Seattle Kraken win the 20::Will the Seattle Kraken win th,nhl,game_result,KXNHL-26-SEA,0x48dd35aba75f4ffb52d3d19e6665925512e6462ba25232536aa1e7c5ad3dad7b,Will Seattle Kraken win the 2025-26 Stanley Cup Finals?,Will the Seattle Kraken win the 2026 NHL Stanley Cup?,2028-06-30,2026-06-30,yes,"If the Seattle Kraken win the 2025-26 Stanley Cup Finals, then the market resolves to Yes.","This market will resolve to “Yes” if the Seattle Kraken win the 2026 NHL Stanley Cup. Otherwise, this market will resolve to “No”.
+
+This market will resolve to “No” if it becomes impossible for this team to win the 2026 NHL Stanley Cup based off the rules of the NHL.
+
+The resolution source for this market will be information from the NHL.",,,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3224,sports::Will Freiburg win the Europa L::Will Freiburg win the 2025-26 ,soccer,game_result,KXUEL-26-SCF,0xe7963b4fb6cf046dc79ad1a044a9fa4a028c479ad13300559d3811ff1b5e761d,Will Freiburg win the Europa League?,Will Freiburg win the 2025-26 UEFA Europa League?,2026-06-03,2026-05-24,yes,"If Freiburg is the 2026 Europa League champion, then the market resolves to Yes.","This is a polymarket on whether the listed team will win the 2025–26 UEFA Europa League.
+
+This market will resolve to ""Yes"" if the listed team is officially crowned the winner of the 2025–26 UEFA Europa League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed team to win the tournament (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 UEFA Europa League is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from UEFA Europa League (https://www.uefa.com/uefaeuropaleague/). A consensus of credible reporting may also be used.",,resolution source will be official information from UEFA Europa League (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3225,sports::Will Braga win the Europa Leag::Will Braga win the 2025-26 UEF,soccer,game_result,KXUEL-26-BRA,0xe21ea1ef6d61c6209f77b970f49d536523c922cc58e0049f7b2993a6c6c835ef,Will Braga win the Europa League?,Will Braga win the 2025-26 UEFA Europa League?,2026-06-03,2026-05-24,yes,"If Braga is the 2026 Europa League champion, then the market resolves to Yes.","This is a polymarket on whether the listed team will win the 2025–26 UEFA Europa League.
+
+This market will resolve to ""Yes"" if the listed team is officially crowned the winner of the 2025–26 UEFA Europa League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed team to win the tournament (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 UEFA Europa League is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from UEFA Europa League (https://www.uefa.com/uefaeuropaleague/). A consensus of credible reporting may also be used.",,resolution source will be official information from UEFA Europa League (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3226,sports::Will Aston Villa win the Europ::Will Aston Villa win the 2025-,soccer,game_result,KXUEL-26-AVL,0x93709d7acb31d264541c3447e38c1772ea113f096423cf24279eebd44856c9b9,Will Aston Villa win the Europa League?,Will Aston Villa win the 2025-26 UEFA Europa League?,2026-06-03,2026-05-24,yes,"If Aston Villa is the 2026 Europa League champion, then the market resolves to Yes.","This is a polymarket on whether the listed team will win the 2025–26 UEFA Europa League.
+
+This market will resolve to ""Yes"" if the listed team is officially crowned the winner of the 2025–26 UEFA Europa League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed team to win the tournament (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 UEFA Europa League is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from UEFA Europa League (https://www.uefa.com/uefaeuropaleague/). A consensus of credible reporting may also be used.",,resolution source will be official information from UEFA Europa League (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
+3227,sports::Will Bologna win the Europa Le::Will Bologna win the 2025-26 U,soccer,game_result,KXUEL-26-BFC,0x74a2d2cadd9ebffdb7c235228782e0aa61a414572caf30160c02e87d30309a20,Will Bologna win the Europa League?,Will Bologna win the 2025-26 UEFA Europa League?,2026-06-03,2026-05-24,yes,"If Bologna is the 2026 Europa League champion, then the market resolves to Yes.","This is a polymarket on whether the listed team will win the 2025–26 UEFA Europa League.
+
+This market will resolve to ""Yes"" if the listed team is officially crowned the winner of the 2025–26 UEFA Europa League. Otherwise, it will resolve to ""No"".
+
+If at any point it becomes impossible for the listed team to win the tournament (e.g. they are mathematically eliminated), the market will resolve to ""No"".
+
+If the 2025–26 UEFA Europa League is canceled or not completed by October 1, 2026, this market will resolve to ""Other"".
+
+The primary resolution source will be official information from UEFA Europa League (https://www.uefa.com/uefaeuropaleague/). A consensus of credible reporting may also be used.",,resolution source will be official information from UEFA Europa League (https://www,unclear,ambiguous,Rules text retrieved; automated pass did not establish strict equivalence — owner review required before counting as equivalent.,api;api
