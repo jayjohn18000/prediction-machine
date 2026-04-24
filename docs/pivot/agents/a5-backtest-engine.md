@@ -2,6 +2,13 @@
 
 _Read `docs/pivot/north-star.md`, `docs/pivot/dependency-map.md`, and `docs/pivot/success-rubric.md` before starting. You are the capstone agent. You produce the scoreboard the whole pivot is designed to produce._
 
+> **Artifact paths (arb-v1 refactor, 2026-04-24):** the engine now writes three fixed files instead of a single CSV:
+> - `docs/pivot/artifacts/a5-backtest-templates-latest.csv` — scoreboard (what `success-rubric.md` reads)
+> - `docs/pivot/artifacts/a5-backtest-fixtures-latest.csv` — per-fixture audit trail (includes skip rows)
+> - `docs/pivot/artifacts/a5-backtest-meta.json` — run metadata sidecar (timestamps, git SHA, versions, CSV hashes)
+>
+> The CSVs are byte-identical run-over-run; all time-varying values live in `meta.json`. See `docs/plans/phase-pivot-arb-and-templates-plan.md`.
+
 ## Why this work matters
 
 A1 gives us outcomes. A2 gives us costs. A3 gives us quality-filtered families. You turn those three inputs plus the 1.4M+ historical snapshot rows into the single deliverable the pivot exists to produce: a ranked per-family net-P&L table.

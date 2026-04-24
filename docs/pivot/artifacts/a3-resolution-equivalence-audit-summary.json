@@ -1,16 +1,18 @@
 {
   "generatedAt": "2026-04-20T13:24:19.468Z",
-  "bilateral_sports_families": 107,
+  "bilateral_sports_families": 108,
   "same_event": {
     "yes": 106,
     "no": 0,
     "uncertain": 1
   },
   "classification": {
-    "equivalent": 0,
-    "non_equivalent": 0,
-    "ambiguous": 107
+    "equivalent": 88,
+    "non_equivalent": 20,
+    "ambiguous": 0
   },
   "kalshi_api_base_observed": "https://api.elections.kalshi.com/trade-api/v2",
-  "csv_path": "docs/pivot/artifacts/a3-resolution-equivalence-audit.csv"
+  "csv_path": "docs/pivot/artifacts/a3-resolution-equivalence-audit.csv",
+  "owner_reviewed_at": "2026-04-23T00:00:00Z",
+  "notes": "Owner-reviewed 2026-04-23. Linker bugs (20 families) deactivated from pmci.market_links. Drift-in rows appended by structural template match; confirm on next full A3 refresh run."
 }

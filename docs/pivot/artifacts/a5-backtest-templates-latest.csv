@@ -1,0 +1,3 @@
+template_id,template_label,category,trades_simulated,win_rate,mean_net_edge_per_100,total_pnl_history,median_hold_days,disagreement_rate,void_rate,resolution_equivalence
+sports.soccer.kalshi-polymarket,Sports — Soccer (kalshi/polymarket),sports,8,0.625,0.25,2.02,55,0,0,equivalent
+sports.nhl.kalshi-polymarket,Sports — NHL (kalshi/polymarket),sports,1,1,0.56,0.56,88,0,0,equivalent

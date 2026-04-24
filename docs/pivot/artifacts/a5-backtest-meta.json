@@ -1,0 +1,25 @@
+{
+  "created_at": "2026-04-24T14:02:52.960Z",
+  "git_sha": "33741ca5fe1ad8dffb9a2e67a0a65d57a8e98669",
+  "engine_version": "arb-v1",
+  "cost_model_version": "v1",
+  "template_definition_version": "sports-v1",
+  "entry_threshold_abs": 0.01,
+  "interval_ms": 3600000,
+  "premium_per_trade_usd": 100,
+  "void_refund_model": "full_refund_v1",
+  "a3_csv_path": "docs/pivot/artifacts/a3-resolution-equivalence-audit.csv",
+  "a3_csv_sha256": "096f335b483cdea404a70037b4b7624a4c2af6185a40c586ae98af9a842f8d65",
+  "settled_family_count": 24,
+  "total_family_count": 88,
+  "templates_csv_sha256": "2f5eec97e7956b4f74df2a796d544ca281372c9f47fc404b03172f072dada91d",
+  "fixtures_csv_sha256": "ab82f2e44f55c39554d8733753ddc54ddeadfc3d856745a2d5c29e8ca94a5248",
+  "engine_config": {
+    "snapshot_table": "pmci.provider_market_snapshots",
+    "entry_threshold_abs": 0.01,
+    "interval_ms": 3600000,
+    "premium_per_trade_usd": 100,
+    "engine_version": "arb-v1",
+    "void_refund_model": "full_refund_v1"
+  }
+}

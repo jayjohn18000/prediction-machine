@@ -92,7 +92,8 @@
     "pmci:benchmark:coverage": "node scripts/benchmark/coverage-benchmark.mjs",
     "pmci:classify:templates": "node scripts/classify/pmci-classify-templates.mjs",
     "pmci:backfill:vocabulary-templates": "node scripts/classify/pmci-backfill-vocabulary-templates.mjs",
-    "pmci:export:template-classification": "node scripts/classify/export-vocabulary-classification.mjs"
+    "pmci:export:template-classification": "node scripts/classify/export-vocabulary-classification.mjs",
+    "pmci:backtest": "node scripts/backtest/run-backtest.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
