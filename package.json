@@ -103,6 +103,7 @@
     "fastify": "^5.x",
     "openai": "^6.27.0",
     "pg": "^8.18.0",
+    "ws": "^8.20.0",
     "zod": "^3.x"
   },
   "devDependencies": {

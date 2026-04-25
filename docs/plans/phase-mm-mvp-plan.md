@@ -164,15 +164,21 @@ The actual runtime loop. Reads active-markets list from config, subscribes to de
 ## Supabase schema additions
 
 ```sql
--- Kalshi L2 order book snapshots
+-- Kalshi L2 order book snapshots.
+-- NOTE (W1 spec-check 2026-04-24): renamed `bids/asks` → `yes_levels/no_levels`
+-- to match Kalshi's actual WS shape — both sides are BID ladders (YES-bids and
+-- NO-bids), not a bid/ask pair. YES-ask is derived at read time as
+-- 100 - best_no_bid. Added UNIQUE (provider_market_id, observed_at) for
+-- idempotent inserts by the 1Hz downsampler.
 CREATE TABLE pmci.provider_market_depth (
   id                    bigserial PRIMARY KEY,
-  provider_market_id    bigint REFERENCES pmci.provider_markets(id),
+  provider_market_id    bigint NOT NULL REFERENCES pmci.provider_markets(id),
   observed_at           timestamptz NOT NULL,
-  bids                  jsonb NOT NULL,   -- [[price_cents, size], ...] up to top 10
-  asks                  jsonb NOT NULL,
-  mid_cents             numeric,
-  spread_cents          int
+  yes_levels            jsonb NOT NULL,   -- YES-bid ladder [[price_cents, qty], ...] top 10 by price desc
+  no_levels             jsonb NOT NULL,   -- NO-bid ladder [[price_cents, qty], ...] top 10 by price desc
+  mid_cents             numeric,          -- (best_yes_bid + (100 - best_no_bid)) / 2
+  spread_cents          int,              -- (100 - best_no_bid) - best_yes_bid
+  UNIQUE (provider_market_id, observed_at)
 );
 CREATE INDEX ON pmci.provider_market_depth (provider_market_id, observed_at DESC);
 
@@ -257,6 +263,21 @@ New Fly.io app `pmci-mm-runtime`:
 - Health check: `/health/mm` endpoint on a small admin HTTP server returns orchestrator loop status.
 
 Pausing MM is as simple as `fly scale count 0 -a pmci-mm-runtime`. Does not affect observer or API.
+
+## W1 spec-check corrections (2026-04-24)
+
+The following plan assumptions were corrected during W1 kickoff against the
+live Kalshi WebSocket spec (`https://docs.kalshi.com/getting_started/quick_start_websockets`):
+
+1. **Demo WS URL.** Correct path is `wss://demo-api.kalshi.co/trade-api/ws/v2` (not `.../trade-api/v2/ws` as referenced elsewhere).
+2. **Subscribe channels.** Subscribe to `orderbook_delta` only. Kalshi sends an initial message of type `orderbook_snapshot` as the first message on the subscription; subsequent messages are `orderbook_delta`. There is no separate `orderbook_snapshot` channel to subscribe to.
+3. **Schema column naming** (see `## Supabase schema additions` above). `bids/asks` → `yes_levels/no_levels`. Added `UNIQUE (provider_market_id, observed_at)` for idempotency.
+4. **WebSocket auth** — omitted from the original plan but required on connection:
+   - Headers: `KALSHI-ACCESS-KEY` (key id), `KALSHI-ACCESS-SIGNATURE` (RSA-PSS signed, base64), `KALSHI-ACCESS-TIMESTAMP` (unix ms).
+   - Sign string: `{timestamp_ms}GET/trade-api/ws/v2` (path has no query params).
+   - Algorithm: RSA-PSS with SHA-256, MGF1 SHA-256, salt length = digest length.
+   - Implemented in `lib/providers/kalshi-ws-auth.mjs`; reusable by `kalshi-trader.mjs` (W2).
+5. **Node dependency.** `ws@^8` added to `package.json` — Node has no suitable built-in WebSocket client for this workload.
 
 ## Build sequence
 
