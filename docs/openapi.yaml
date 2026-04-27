@@ -488,9 +488,14 @@ components:
           type: string
           format: date-time
           nullable: true
+          description: Derived live from MAX(provider_market_snapshots.observed_at); not a denormalized DB column.
         lag_seconds:
           type: integer
           nullable: true
+        staleness_seconds:
+          type: integer
+          nullable: true
+          description: Same value as lag_seconds (alias for staleness wording).
         latest_by_provider:
           type: array
           items:
@@ -503,6 +508,9 @@ components:
                 format: date-time
                 nullable: true
               lag_seconds:
+                type: integer
+                nullable: true
+              staleness_seconds:
                 type: integer
                 nullable: true
         counts:
@@ -921,7 +929,8 @@ paths:
     get:
       summary: Data freshness
       description: |
-        Returns the age of the latest snapshot per provider and aggregate counts.
+        Returns the age of the latest snapshot per provider (live MAX(observed_at) against
+        provider_market_snapshots — no cached column) and aggregate counts.
         Use this as a liveness check — `status: "ok"` means the observer is running and data
         is within `PMCI_MAX_LAG_SECONDS`.
       operationId: getHealthFreshness
@@ -942,13 +951,16 @@ paths:
                 now: "2026-03-03T16:00:00.000Z"
                 latest_snapshot_at: "2026-03-03T15:59:30.000Z"
                 lag_seconds: 30
+                staleness_seconds: 30
                 latest_by_provider:
                   - provider: kalshi
                     latest_snapshot_at: "2026-03-03T15:59:30.000Z"
                     lag_seconds: 30
+                    staleness_seconds: 30
                   - provider: polymarket
                     latest_snapshot_at: "2026-03-03T15:59:28.000Z"
                     lag_seconds: 32
+                    staleness_seconds: 32
                 counts:
                   provider_markets: 1336
                   snapshots: 306329
