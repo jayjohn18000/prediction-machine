@@ -2,8 +2,11 @@ export async function getObserverHealth(db, options = {}) {
   const maxLagSeconds = Number(options.maxLagSeconds ?? 120);
   const observerWindow = Number(options.observerWindow ?? 20);
 
-  const [runtimeResult, heartbeatResult] = await Promise.all([
-    db.query(`select observer_last_run from pmci.pmci_runtime_status where id = 1`),
+  const [lastRunAgg, heartbeatResult] = await Promise.all([
+    db.query(`
+      SELECT MAX(cycle_at) AS observer_last_run
+      FROM pmci.observer_heartbeats
+    `),
     db.query(`
       select cycle_at, pairs_attempted, pairs_succeeded, pairs_configured,
         kalshi_fetch_errors, polymarket_fetch_errors,
@@ -14,7 +17,7 @@ export async function getObserverHealth(db, options = {}) {
     `, [observerWindow]),
   ]);
 
-  const lastRun = runtimeResult.rows[0]?.observer_last_run ?? null;
+  const lastRun = lastRunAgg.rows[0]?.observer_last_run ?? null;
   const lastRunDate = lastRun ? new Date(lastRun) : null;
   const lagSeconds = lastRunDate
     ? Math.max(0, Math.round((Date.now() - lastRunDate.getTime()) / 1000))

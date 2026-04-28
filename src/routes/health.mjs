@@ -40,7 +40,12 @@ export function registerHealthRoutes(app, deps) {
         const lp = p.latest_snapshot_at ? new Date(p.latest_snapshot_at) : null;
         const lpTs = lp ? lp.getTime() : null;
         const lpLag = lpTs == null ? null : Math.max(0, Math.round((nowTs - lpTs) / 1000));
-        return { provider: p.provider, latest_snapshot_at: p.latest_snapshot_at, lag_seconds: lpLag };
+        return {
+          provider: p.provider,
+          latest_snapshot_at: p.latest_snapshot_at,
+          lag_seconds: lpLag,
+          staleness_seconds: lpLag,
+        };
       });
 
       const snapshots = rts.snapshot_count ?? 0;
@@ -59,6 +64,7 @@ export function registerHealthRoutes(app, deps) {
         now: now.toISOString(),
         latest_snapshot_at: latest ? latest.toISOString() : null,
         lag_seconds: lagSeconds,
+        staleness_seconds: lagSeconds,
         latest_by_provider: latestByProvider,
         counts: {
           provider_markets: rts.provider_markets_count ?? 0,
@@ -111,7 +117,12 @@ export function registerHealthRoutes(app, deps) {
           const lp = p.latest_snapshot_at ? new Date(p.latest_snapshot_at) : null;
           const lpTs = lp ? lp.getTime() : null;
           const lpLag = lpTs == null ? null : Math.max(0, Math.round((nowTs - lpTs) / 1000));
-          return { provider: p.provider, latest_snapshot_at: p.latest_snapshot_at, lag_seconds: lpLag };
+          return {
+            provider: p.provider,
+            latest_snapshot_at: p.latest_snapshot_at,
+            lag_seconds: lpLag,
+            staleness_seconds: lpLag,
+          };
         });
 
         const providerMarkets = Number(rts.provider_markets_count ?? 0);
@@ -134,6 +145,7 @@ export function registerHealthRoutes(app, deps) {
           now: now.toISOString(),
           latest_snapshot_at: latest ? latest.toISOString() : null,
           lag_seconds: lagSeconds,
+          staleness_seconds: lagSeconds,
           latest_by_provider: latestByProvider,
           counts: {
             provider_markets: providerMarkets,

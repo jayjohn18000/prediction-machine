@@ -24,7 +24,7 @@ When neither env var is set the API is fully open (useful for local dev).
 
 | Method | Path                         | Auth     | Required params              | Notes                                  |
 |--------|------------------------------|----------|------------------------------|----------------------------------------|
-| GET    | `/v1/health/freshness`       | Public   | —                            | Liveness check; returns `lag_seconds`  |
+| GET    | `/v1/health/freshness`       | Public   | —                            | Liveness check; live `lag_seconds` / `staleness_seconds`, `latest_snapshot_at` computed from snapshots |
 | GET    | `/v1/health/slo`             | Public   | —                            | 4-check SLO report                     |
 | GET    | `/v1/health/projection-ready`| Public   | —                            | `ready` bool + `missing_steps[]`       |
 | GET    | `/v1/health/observer`        | Public   | —                            | `true_success_rate`, error totals      |
