@@ -52,11 +52,13 @@ async function main() {
     INSERT INTO pmci.mm_market_config (
       market_id, enabled, soft_position_limit, hard_position_limit, min_half_spread_cents,
       base_size_contracts, k_vol, kill_switch_active, notes,
-      max_order_notional_cents, min_requote_cents, stale_quote_timeout_seconds, daily_loss_limit_cents
+      max_order_notional_cents, min_requote_cents, stale_quote_timeout_seconds, daily_loss_limit_cents,
+      inventory_skew_cents
     ) VALUES (
       $1, true, 5, 20, 2,
-      1, 1.0, false, 'W3 DEMO seed script',
-      5000, 2, 600, 500000
+      1, 1.0, false, 'W4 DEMO seed script',
+      5000, 2, 600, 500000,
+      15
     )
     ON CONFLICT (market_id) DO UPDATE SET
       enabled = EXCLUDED.enabled,
@@ -69,7 +71,8 @@ async function main() {
       max_order_notional_cents = EXCLUDED.max_order_notional_cents,
       min_requote_cents = EXCLUDED.min_requote_cents,
       stale_quote_timeout_seconds = EXCLUDED.stale_quote_timeout_seconds,
-      daily_loss_limit_cents = EXCLUDED.daily_loss_limit_cents
+      daily_loss_limit_cents = EXCLUDED.daily_loss_limit_cents,
+      inventory_skew_cents = EXCLUDED.inventory_skew_cents
     `,
     [marketId],
   );

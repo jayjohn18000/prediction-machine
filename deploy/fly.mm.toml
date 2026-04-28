@@ -1,44 +1,37 @@
-# MM runtime — single-instance Fly app for the Market Making MVP (W1+).
+# MM orchestrator runtime — SINGLE instance only (Invariant R14). Two replicas double-quote.
+# Deploy: fly deploy --remote-only --config deploy/fly.mm.toml
 #
-# W1 occupant: depth ingestion only (lib/ingestion/depth.mjs via a small entrypoint).
-# W2+:         kalshi-trader WRITE client joins.
-# W3+:         fair-value engine, quoting engine, risk manager, toxicity tracker,
-#              and orchestrator all land in the same app.
-#
-# Invariant (MM plan §"Invariants"): MM deployment must be a SINGLE Fly instance.
-# Never scale count > 1 without implementing leader election. Two orchestrators
-# double-quote. The stateful L2 books in memory and the quote/fill state tracked
-# in mm_orders/mm_fills/mm_positions require exactly one writer.
-#
-# Deploying (when ready — W1 verification can run locally first):
-#   fly apps create pmci-mm-runtime
-#   fly deploy --remote-only --config deploy/fly.mm.toml
-#
-# Secrets to set BEFORE first deploy (via `fly secrets set -a pmci-mm-runtime ...`):
-#   KALSHI_DEMO_API_KEY_ID
-#   KALSHI_DEMO_PRIVATE_KEY         (inline PEM; escape newlines as \n)
-#   KALSHI_DEMO_WS_URL              (or rely on default in code)
-#   KALSHI_DEMO_UNIVERSE_TICKERS    (comma-separated ticker list)
-#   SUPABASE_URL, SUPABASE_ANON_KEY
-#
-# Docs: docs/plans/phase-mm-mvp-plan.md §"Deployment", docs/deployment-fly.md
+# After first deploy enforce one machine:
+#   fly scale count 1 -a pmci-mm-runtime --region iad
 
 app = "pmci-mm-runtime"
 primary_region = "iad"
 
-# Paths are relative to this file's directory; root Dockerfile lives one level up.
-# W1 uses the shared root Dockerfile; W2/W3 may introduce a dedicated Dockerfile.mm
-# if the MM runtime grows deps the observer doesn't need (unlikely for the core
-# Node modules).
 [build]
-  dockerfile = "../Dockerfile"
+  dockerfile = "../Dockerfile.mm"
+
+[deploy]
+  strategy = "immediate"
 
 [env]
   PMCI_FLY_ROLE = "mm-runtime"
-  MM_RUNTIME_COMPONENT = "depth"   # W1 flag — switches to "full" when the orchestrator lands (W3)
+  MM_RUNTIME_COMPONENT = "orchestrator"
+  PORT = "8790"
 
-# Single-instance guarantee: Fly will not launch a second machine under this config.
-# If you ever scale this, implement leader election first.
+[http_service]
+  internal_port = 8790
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "45s"
+    method = "get"
+    path = "/health/mm"
+
 [[vm]]
   memory = "512mb"
   cpu_kind = "shared"
@@ -47,7 +40,3 @@ primary_region = "iad"
 [[restart]]
   policy = "on-failure"
   retries = 10
-
-# No public HTTP services in W1 — the MM runtime does not accept inbound traffic.
-# Admin HTTP with /health/mm lands in W3 per MM plan §"Deployment". When it does,
-# add a [[services]] block similar to deploy/fly.api.toml.

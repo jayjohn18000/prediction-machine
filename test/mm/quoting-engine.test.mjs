@@ -1,6 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { decideQuote, applyMinRequoteGuard, capSizeForNotional } from "../../lib/mm/quoting-engine.mjs";
+import {
+  decideQuote,
+  applyMinRequoteGuard,
+  capSizeForNotional,
+  inventorySkewCentsV1,
+} from "../../lib/mm/quoting-engine.mjs";
 
 const baseCfg = {
   soft_position_limit: 5,
@@ -13,6 +18,7 @@ const baseCfg = {
   min_requote_cents: 2,
   stale_quote_timeout_seconds: 600,
   daily_loss_limit_cents: 500_000,
+  inventory_skew_cents: 15,
 };
 
 test("decideQuote halts on kill_switch", () => {
@@ -41,6 +47,16 @@ test("decideQuote returns symmetric ladder around fair", () => {
     if (prev === undefined) delete process.env.MM_SKEW_CENTS_AT_HARD;
     else process.env.MM_SKEW_CENTS_AT_HARD = prev;
   }
+});
+
+test("inventorySkewCentsV1 is flat inside soft band (v1 piecewise)", () => {
+  assert.equal(inventorySkewCentsV1(4, 5, 20, 15), 0);
+  assert.equal(inventorySkewCentsV1(-4, 5, 20, 15), 0);
+});
+
+test("inventorySkewCentsV1 reaches full skew at hard", () => {
+  assert.equal(inventorySkewCentsV1(20, 5, 20, 15), -15);
+  assert.equal(inventorySkewCentsV1(-20, 5, 20, 15), 15);
 });
 
 test("capSizeForNotional shrinks oversized child orders", () => {

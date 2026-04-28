@@ -125,6 +125,8 @@ const REQUIRED_COLUMNS = {
     'market_id',
     'enabled',
     'soft_position_limit',
+    'hard_position_limit',
+    'inventory_skew_cents',
     'max_order_notional_cents',
     'min_requote_cents',
     'stale_quote_timeout_seconds',

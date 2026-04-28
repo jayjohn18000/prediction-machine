@@ -1,22 +1,45 @@
 #!/usr/bin/env node
 /**
- * W3 MM orchestrator — fair → quote → DEMO Kalshi.
- * Env: DATABASE_URL, KALSHI_DEMO_* keys, KALSHI_BASE (default DEMO), MM_DURATION_MS (default 60000), MM_TICK_MS (default 5000).
+ * MM orchestrator runtime: HTTP /health/mm + reconcile + main quoting loop (W4).
+ * Env: PORT (default 8790), DATABASE_URL, KALSHI_DEMO_* , MM_DURATION_MS empty = run forever,
+ * MM_TICK_MS (default 5000).
  */
 
 import { loadEnv } from "../../src/platform/env.mjs";
 
 loadEnv();
 
+import Fastify from "fastify";
 import { runMmOrchestratorLoop } from "../../lib/mm/orchestrator.mjs";
 
+const PORT = Number(process.env.PORT ?? 8790);
+
+/** @type {Record<string, unknown>} */
+const health = {
+  ok: true,
+  role: "mm-runtime",
+  startedAt: null,
+  lastReconcileAt: null,
+  reconcilePhase: null,
+  reconcileSkipped: null,
+  lastMainLoopTickAt: null,
+  loopTick: 0,
+  lastSessionLineCount: 0,
+};
+
 async function main() {
-  console.log("[mm] orchestrator start", new Date().toISOString());
-  const lines = await runMmOrchestratorLoop({
-    durationMs: Number(process.env.MM_DURATION_MS ?? 60_000),
-    intervalMs: Number(process.env.MM_TICK_MS ?? 5000),
-  });
-  console.log("[mm] orchestrator stopped line_count=", lines.length);
+  const app = Fastify({ logger: false });
+  app.get("/health/mm", async () => ({
+    ok: health.ok !== false,
+    ...health,
+  }));
+
+  await app.listen({ port: PORT, host: "0.0.0.0" });
+  console.error(`[mm] /health/mm listening on ${PORT}`);
+  /** @type {any} */
+  (health).startedAt = new Date().toISOString();
+
+  await runMmOrchestratorLoop({ health: /** @type {any} */ (health) });
 }
 
 main().catch((e) => {
