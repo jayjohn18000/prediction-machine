@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * MM orchestrator runtime: HTTP /health/mm + Kalshi L2 depth (W1) + reconcile + main quoting loop (W4).
- * Env: PORT (default 8790), DATABASE_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (for depth writes),
+ * Env: PORT (default 8790), DATABASE_URL, SUPABASE_URL,
+ * SUPABASE_SERVICE_ROLE_KEY (preferred for depth REST writes; else depth uses DATABASE_URL + Postgres INSERT),
  * KALSHI_DEMO_* , MM_DURATION_MS empty = run forever, MM_TICK_MS (default 5000).
  *
  * Depth uses DEMO Kalshi WebSocket only (never production WS). Restart the runtime to pick up
@@ -21,7 +22,7 @@ import {
 } from "../../lib/mm/orchestrator.mjs";
 import { createPgClient } from "../../lib/mm/order-store.mjs";
 import { loadPrivateKey } from "../../lib/providers/kalshi-ws-auth.mjs";
-import { startDepthIngestion } from "../../lib/ingestion/depth.mjs";
+import { startDepthIngestion, makePgDepthWriter } from "../../lib/ingestion/depth.mjs";
 
 const PORT = Number(process.env.PORT ?? 8790);
 
@@ -128,13 +129,27 @@ async function main() {
     (health).depthStartedAt = null;
   } else {
     const supabase = createServiceRoleSupabase();
+    /** @type {import('pg').Client | null} */
+    let depthPg = null;
+    /** @type {undefined | ReturnType<typeof makePgDepthWriter>} */
+    let depthWriteRow = undefined;
     if (!supabase) {
-      const msg =
-        "depth: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required to write provider_market_depth";
-      console.error(`[mm] ${msg}`);
-      /** @type {any} */
-      (health).depthStartError = msg;
-    } else {
+      try {
+        depthPg = createPgClient();
+        await depthPg.connect();
+        depthWriteRow = makePgDepthWriter(depthPg, { logger: console });
+        console.error(
+          "[mm] depth: SUPABASE_SERVICE_ROLE_KEY unset — using DATABASE_URL for provider_market_depth inserts",
+        );
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error("[mm] depth: cannot open DATABASE_URL for depth writes:", msg);
+        /** @type {any} */
+        (health).depthStartError = `depth: set SUPABASE_SERVICE_ROLE_KEY or fix DATABASE_URL (${msg})`;
+      }
+    }
+
+    if (supabase || depthWriteRow) {
       const wsUrl = resolveKalshiDemoDepthWsUrl();
       const keyId = process.env.KALSHI_DEMO_API_KEY_ID ?? process.env.KALSHI_API_KEY_ID;
       const pemPath = process.env.KALSHI_DEMO_PRIVATE_KEY_PATH;
@@ -149,17 +164,24 @@ async function main() {
         console.error(
           `[mm] depth: starting ingestion for ${marketTickers.length} ticker(s) ws=${wsUrl}`,
         );
-        const { stop } = await startDepthIngestion({
+        const { stop: stopInner } = await startDepthIngestion({
           marketTickers,
           tickerToProviderMarketId,
           wsUrl,
           apiKeyId: String(keyId),
           privateKey,
-          supabase,
+          supabase: supabase ?? undefined,
+          writeRow: depthWriteRow,
           downsampleIntervalMs: 1000,
           logger: console,
         });
-        depthStop = stop;
+        depthStop = () => {
+          stopInner();
+          if (depthPg) {
+            void depthPg.end().catch(() => {});
+            depthPg = null;
+          }
+        };
         const started = new Date().toISOString();
         /** @type {any} */
         (health).depthSubscribedTickers = marketTickers.length;
@@ -168,6 +190,8 @@ async function main() {
         /** @type {any} */
         (health).depthStartError = null;
       } catch (e) {
+        if (depthPg) void depthPg.end().catch(() => {});
+        depthPg = null;
         const msg = e instanceof Error ? e.message : String(e);
         console.error("[mm] depth: startDepthIngestion failed:", msg);
         /** @type {any} */
