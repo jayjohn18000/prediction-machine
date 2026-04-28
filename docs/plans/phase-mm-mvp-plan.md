@@ -321,3 +321,54 @@ Reusable directly:
    - 1× economics: CPI reading range from the relevant KX series (NOT Fed Funds — sharp-dominated and tied tightly to SOFR futures).
 3. **Kalshi API rate limits:** confirmed free for verified users. Specific numeric limits live at `docs.kalshi.com/getting_started/rate_limits` — verify at start of W2 when writing auth layer. MVP design assumes conservative rates: ≥250ms between REST calls, continuous WS subscription.
 4. **Demo sandbox: YES, confirmed at `https://demo-api.kalshi.co/trade-api/v2` + WS at `wss://demo-api.kalshi.co/trade-api/v2/ws`.** Separate API keys, mock funds, full-featured. Weeks 1–3 (depth ingestion, write client plumbing, first fair-value + quoting live) run entirely in demo. Week 4 switches the runtime to production config at 1-contract size.
+
+## W2.0 plan-text contract amendments (2026-04-28)
+
+Normative definitions for MM W2 (`kalshi-trader`, order/fill persistence, quoting loop). Audit refs: **R7**, **R8**, **R9**, **R11**.
+
+### Contract R7 — Per-market P&L attribution formula
+
+Attribution buckets in `pmci.mm_pnl_snapshots` (`spread_capture_cents`, `adverse_selection_cents`, `inventory_drift_cents`, `fees_cents`, `net_pnl_cents`) are computed **per `market_id`** over each attribution window \(W\) (hourly snapshots in MVP unless noted otherwise):
+
+1. **`spread_capture_cents`:** Sum over fills in \(W\) whose parent `mm_orders` row carries `fair_value_at_place` = `FV`. For each fill, let `P = mm_fills.price_cents`, `sz = mm_fills.size_contracts`. Oriented in YES-probability cents (0–100) consistent with the quoting engine:
+   - **`yes_buy`:** contribute `(FV − P) × sz`.
+   - **`yes_sell`:** contribute `(P − FV) × sz`.
+   - **`no_buy` / `no_sell`:** map to the equivalent YES-quote outcome using the executed NO price and the identity `yes_implied = 100 − no_price` for the same contract, then apply the same long/short reward sign as above (implementation centralizes this in one helper so all four sides stay consistent).
+2. **`adverse_selection_cents`:** Sum over fills in \(W\) of `adverse_cents_5m × mm_fills.size_contracts` with sign aligned to economic loss from adverse movement (equivalently: aggregate the stored `adverse_cents_5m` column when defined as price move against the fill, per Contract R8). If a fill has NULL `post_fill_mid_5m`, exclude it from this bucket until observation completes.
+3. **`inventory_drift_cents`:** Mark-to-market change on opening inventory between window boundaries using Kalshi YES midpoint (same mid definition as depth/fair-value): `(mid_end − mid_start) × net_yes_equivalent_contracts` for the position carried through \(W\) (inventory method: average-cost vs mid-at-boundary documented in reconciliation module; MVP uses midpoint at snapshot times).
+4. **`fees_cents`:** Kalshi clearing fees accrued in \(W\), using fee rules in `lib/execution/costs.mjs` (or successor MM fee table keyed by contracts and price).
+
+**`net_pnl_cents`** in \(W\) = `spread_capture_cents` + `adverse_selection_cents` + `inventory_drift_cents` − `fees_cents` with sign conventions as above.
+
+### Contract R8 — `fair_value_at_fill` = place-time semantics
+
+On insert into `pmci.mm_fills`, **`fair_value_at_fill` MUST equal the originating order's `fair_value_at_place`** (same numeric semantics: YES-probability cents, identical scale). It MUST NOT be recomputed from live midpoint at fill receipt.
+
+Rationale: `adverse_cents_5m` (= `post_fill_mid_5m − fair_value_at_fill`) measures post-trade midpoint drift **versus the fair benchmark that justified the resting quote**, not versus a recomputed fair at match time.
+
+### Contract R9 — `client_order_id` format `mm-<ticker>-<side>-<unix_ms_5s>-<rand4>`
+
+Every `mm_orders.client_order_id` (and Kalshi `client_order_id` on wire) MUST match:
+
+`mm-<ticker>-<side>-<unix_ms_5s>-<rand4>`
+
+where:
+
+- **`<ticker>`** — Kalshi `market_ticker` string as used in REST/WS for that contract (characters safe for hyphen delimiters; literal inclusion, no truncation unless Kalshi rejects length—if length limits hit, deterministic hash suffix allowed as W2 discovery item).
+- **`<side>`** — One of `yes_buy`, `yes_sell`, `no_buy`, `no_sell` (exact strings above).
+- **`<unix_ms_5s>`** — Unix epoch milliseconds rounded **down** to a 5-second grid:  
+  `"<unix_ms_5s>" = String(Math.floor(epoch_ms / 5000) * 5000)`  
+  Aligns retries/replace attempts inside the same quoting epoch for idempotency debugging.
+- **`<rand4>`** — Four lowercase hex characters `[0-9a-f]{4}` distinguishing concurrent orders sharing ticker/side/time bucket.
+
+Clients MUST generate a fresh `<rand4>` per `createOrder` attempt even when repeating the same `{ticker, side}` within the same 5s bucket.
+
+### Contract R11 — Cancel-on-place fire-and-forget sequencing
+
+When replacing an existing quote **or** any path that first retires stale working orders **then** submits a new `createOrder`:
+
+1. The runtime invokes **`cancelOrder` / scoped cancel APIs without awaiting terminal acknowledgement** (“fire-and-forget”) before calling **`createOrder`** for the replacement (non-blocking cancel dispatch).
+2. The new order MUST use a **new** `client_order_id` per Contract R9 (never reuse).
+3. Reconciliation (REST poll or WS fill feed) is authoritative for which orders were live; duplicate depth is resolved by idempotency + kill-switch limits, not by blocking the place path on cancel latency.
+
+**Exception:** Global halt / kill-switch paths MAY await cancel completion when human-safety or exchange-required ordering demands it; the default hot path is fire-and-forget as above.

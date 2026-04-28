@@ -252,6 +252,25 @@
 - `CLAUDE.md` (Invariants; arb pivot closure)
 - `docs/archive/pivot-2026-04/README.md`
 
+## ADR-007: MM W2 plan-text contracts (R7/R8/R9/R11) — 2026-04-28
+
+**Status:** Accepted
+
+**Decision:** Treat **Contract R7** (per-market P&L attribution formula), **Contract R8** (`fair_value_at_fill` = place-time semantics), **Contract R9** (`client_order_id` format `mm-<ticker>-<side>-<unix_ms_5s>-<rand4>`), and **Contract R11** (cancel-on-place fire-and-forget sequencing) as **normative** for W2 implementation. They are appended to `docs/plans/phase-mm-mvp-plan.md` as plan-text amendments; code and schema work must conform unless explicitly superseded by a future ADR.
+
+**Context:** With the observer healthy and MM W2 starting, locking these definitions prevents divergent attribution, idempotent order identity, or blocking behavior across `kalshi-trader`, fill logging, and the orchestrator.
+
+**Alternatives considered:**
+- **Defer contracts to PR review only** — rejected: unstructured drift between modules.
+- **Encode only in code comments** — rejected: obscures PMCI/MM operating truth for operators and agents.
+
+**Consequences:**
+- W2 reviewers check PRs against the four subsection contracts in `phase-mm-mvp-plan.md`.
+- Backtests and dashboards that consume `mm_fills` / `mm_pnl_snapshots` assume Contract R8 for adverse metrics.
+
+**Sources:**
+- `docs/plans/phase-mm-mvp-plan.md` (§ W2.0 plan-text contract amendments)
+
 ## 2026-04-28 — Pre-existing test debt — accepted for Pre-W2 deploy
 
 - **Context:** Before merging `pre-w2/integration` → `main`, `npm test` was compared on `origin/main` vs `pre-w2/integration`. The same two failures appear on **main** (not introduced by Pre-W2).
