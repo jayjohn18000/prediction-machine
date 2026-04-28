@@ -271,6 +271,30 @@
 **Sources:**
 - `docs/plans/phase-mm-mvp-plan.md` (§ W2.0 plan-text contract amendments)
 
+## ADR-008: 7-day MM continuous-quote test clock starts — 2026-04-28
+
+**Status:** Accepted
+
+**Decision:** Enabled five hand-curated, demo-tradeable Kalshi markets in `pmci.mm_market_config`. The seven-day continuous-quote test clock starts at **2026-04-28T17:41:28.638Z** (UTC, transaction timestamp when config rows were committed).
+
+**Context:** Trading is hostname-pinned to Kalshi **DEMO** (`demo-api.kalshi.co`); production `provider_markets` refs are not valid for demo execution. Tickers below were validated against DEMO REST (`yes_bid` / `yes_ask` populated, closes ≥7 days out).
+
+**Markets:**
+
+| ticker | pm.id | category |
+|--------|-------|----------|
+| KXPAYROLLS-26APR-T40000 | 4058636 | economics |
+| KXDOTA2MAP-26APR260400FLCAUR-2-AUR | 4058637 | esports |
+| KXNHLSERIESGAMES-26PHIPITR1-7 | 4058638 | sports (NHL) |
+| KXPGATOUR-PGC26-TFLE | 1718344 | sports (golf) |
+| KXNBATOTAL-26APR28ATLNYK-229 | 4058640 | sports (NBA) |
+
+Tests run exclusively against Kalshi DEMO. Production cutover is a separate ADR after this seven-day window completes.
+
+**Sources:** roadmap §4 W6; orchestrator brief 2026-04-28; `scripts/mm/seed-w6-demo-mm-markets.mjs`.
+
+---
+
 ## ADR-009: Poly indexer W1 schema + reorg state machine + read-only client namespace — 2026-04-28
 
 **Status:** Accepted
@@ -287,7 +311,7 @@
 **Consequences:**
 - New RPC/subgraph **read** code must live under `lib/poly-indexer/clients/` (or earn an explicit allowlist entry in `scripts/lint/no-polymarket-write.mjs` with owner review).
 - `verify:schema` includes the four `poly_*` tables once the migration is applied.
-- **ADR-008** remains reserved for workstream D’s 7-day continuous test clock (do not renumber).
+- **ADR-008** (workstream D 7-day demo MM clock): see § ADR-008 entry above — no longer reserved.
 
 **Sources:**
 - `audits/post-pivot-review/synthesis/post-pivot-roadmap.md` (§3 Pre-Poly-W1, §4 Poly W1)
