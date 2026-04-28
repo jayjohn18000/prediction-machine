@@ -94,7 +94,9 @@
     "pmci:backfill:vocabulary-templates": "node scripts/classify/pmci-backfill-vocabulary-templates.mjs",
     "pmci:export:template-classification": "node scripts/classify/export-vocabulary-classification.mjs",
     "pmci:backtest": "node scripts/backtest/run-backtest.mjs",
-    "mm:dev:demo-smoke": "node scripts/mm/dev-place-cancel.mjs"
+    "mm:dev:demo-smoke": "node scripts/mm/dev-place-cancel.mjs",
+    "mm:seed": "node scripts/mm/seed-mm-market-config.mjs",
+    "mm:orchestrator": "node scripts/mm/run-mm-orchestrator.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
