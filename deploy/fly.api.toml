@@ -23,9 +23,10 @@ primary_region = "iad"
   min_machines_running = 1
 
   [[http_service.checks]]
-    interval = "15s"
-    timeout = "5s"
-    grace_period = "15s"
+    interval = "20s"
+    # DB-bound route; must exceed pool query timeout (see src/platform/db.mjs) and p95 latency
+    timeout = "15s"
+    grace_period = "45s"
     method = "get"
     path = "/v1/health/freshness"
 
