@@ -6,7 +6,7 @@ See `docs/architecture.md` for system structure.
 
 ## Knowledge Vault (Obsidian)
 
-Compiled wiki for this project lives at `~/Obsidian/Prediction Machine/` (Karpathy LLM-wiki pattern). Read pre-compiled context from there before re-deriving from source.
+Compiled wiki for this project lives at `~/Documents/Claude/Projects/Prediction Machine/` (Karpathy LLM-wiki pattern). Read pre-compiled context from there before re-deriving from source.
 
 Entry points:
 - `_home.md` — dashboard, active phase, recent decisions

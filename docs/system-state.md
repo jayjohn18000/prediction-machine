@@ -23,6 +23,27 @@ DB-backed pair discovery replaces mandatory large static JSON when enabled.
 - `start` / `observe:spreads` own observer ingestion loop execution.
 - `pmci:*` scripts are PMCI operational workflows (ingest/probe/smoke/review/audit/check), not API server entrypoints.
 
+## MM MVP W1 — Kalshi L2 depth ingestion (2026-04-24)
+Depth ingestion is a parallel WS stream for MM-specific data; it does NOT alter
+the observer's active-only invariant on REST-polling ingestion.
+
+| Surface | Path |
+|---|---|
+| Module | `lib/ingestion/depth.mjs` |
+| Auth | `lib/providers/kalshi-ws-auth.mjs` (RSA-PSS; sign string `{ts}GET/trade-api/ws/v2`) |
+| Schema | `supabase/migrations/20260424120004_pmci_provider_market_depth.sql` — `pmci.provider_market_depth` with `UNIQUE (provider_market_id, observed_at)` for idempotent writes |
+| One-shot verification script | `scripts/ingestion/mm-depth-oneshot.mjs` (manual W1 check; not cron) |
+| Fly app (proposed) | `pmci-mm-runtime` via `deploy/fly.mm.toml`; single-instance invariant (MM plan §Invariants). W1 occupant: depth only |
+| Runtime env | `KALSHI_DEMO_API_KEY_ID`, `KALSHI_DEMO_PRIVATE_KEY_PATH` (or inline `KALSHI_DEMO_PRIVATE_KEY`), `KALSHI_DEMO_WS_URL` (default `wss://demo-api.kalshi.co/trade-api/ws/v2`), `KALSHI_DEMO_UNIVERSE_TICKERS` |
+| Dep | `ws@^8` — added to package.json for WebSocket client |
+| Downsample cadence | 1Hz, top 10 levels per side per market |
+| Dependency shape | Demo environment only in W1. Production WS writes are W2+ with the trader client |
+
+YES-ask is derived as `100 - best_no_bid` at read time — Kalshi's WS sends YES-bid
+and NO-bid ladders only (both are bid sides). Column names on the depth table are
+`yes_levels` / `no_levels` accordingly; the MM plan's original `bids`/`asks` names
+were corrected in the 2026-04-24 W1 spec check.
+
 ---
 
 ## Current status (2026-04-19)
