@@ -27,7 +27,7 @@ When neither env var is set the API is fully open (useful for local dev).
 | GET    | `/v1/health/freshness`       | Public   | —                            | Liveness check; live `lag_seconds` / `staleness_seconds`, `latest_snapshot_at` computed from snapshots |
 | GET    | `/v1/health/slo`             | Public   | —                            | 4-check SLO report                     |
 | GET    | `/v1/health/projection-ready`| Public   | —                            | `ready` bool + `missing_steps[]`       |
-| GET    | `/v1/health/observer`        | Public   | —                            | `true_success_rate`, error totals      |
+| GET    | `/v1/health/observer`        | Public   | `provider`=`kalshi`|`polymarket` (optional drilldown via `provider_focus`) | `true_success_rate` Σ-window alert (`alert`/`failure_rate`), `configured_pair_success_rate`, error totals |
 | GET    | `/v1/health/usage`           | Public   | —                            | Per-endpoint stats, last 24h           |
 | GET    | `/v1/providers`              | Standard | —                            | `[{code, name}]`                       |
 | GET    | `/v1/coverage`               | Standard | `provider`                   | `coverage_ratio`, unmatched breakdown  |
@@ -177,7 +177,18 @@ curl -s "http://localhost:8787/v1/links?status=any&topic=politics&after=2026-03-
 ```json
 {
   "status": "ok",
-  "true_success_rate": 1,
+  "configured_pair_success_rate": 0.98,
+  "true_success_rate": {
+    "window_minutes": 30,
+    "pairs_attempted": 1820,
+    "pairs_succeeded": 1489,
+    "pairs_failed": 331,
+    "failure_rate": 0.182,
+    "alert": true,
+    "alert_threshold": 0.1,
+    "alert_reason": "polymarket_pair_failure_rate_exceeded",
+    "by_provider": {}
+  },
   "pairs_configured_total": 854,
   "rolling_window_cycles": 20,
   "error_totals": { "kalshi_fetch_errors": 0, "polymarket_fetch_errors": 0, ... }

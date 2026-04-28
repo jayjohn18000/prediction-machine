@@ -207,7 +207,7 @@ export function registerHealthRoutes(app, deps) {
     }
 
     const ingestionSuccessRate =
-      observerHealth?.true_success_rate ?? observerHealth?.rolling_success_rate ?? null;
+      observerHealth?.configured_pair_success_rate ?? observerHealth?.rolling_success_rate ?? null;
 
     const checks = {
       ingestion_success: {
@@ -320,7 +320,12 @@ export function registerHealthRoutes(app, deps) {
 
   app.get("/v1/health/observer", async (req, reply) => {
     try {
-      const observerHealth = await getObserverHealth({ query }, { maxLagSeconds: MAX_LAG_SECONDS });
+      const providerFilter =
+        typeof req.query?.provider === "string" ? req.query.provider : undefined;
+      const observerHealth = await getObserverHealth(
+        { query },
+        { maxLagSeconds: MAX_LAG_SECONDS, providerFilter },
+      );
       return {
         ...observerHealth,
         api_version: PMCI_API_VERSION,
