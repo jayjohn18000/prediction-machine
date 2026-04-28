@@ -38,8 +38,11 @@ async function main() {
 
   await app.listen({ port: PORT, host: "0.0.0.0" });
   console.error(`[mm] /health/mm listening on ${PORT}`);
+  const t0 = new Date().toISOString();
   /** @type {any} */
-  (health).listenedAt = new Date().toISOString();
+  (health).startedAt = t0;
+  /** @type {any} */
+  (health).listenedAt = t0;
 
   runMmOrchestratorLoop({ health: /** @type {any} */ (health) }).catch((e) => {
     console.error("[mm] orchestrator stopped", e);
