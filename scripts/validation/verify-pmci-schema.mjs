@@ -110,7 +110,15 @@ const REQUIRED_COLUMNS = {
     'fair_value_at_place',
     'kalshi_order_id',
   ],
-  mm_fills: ['order_id', 'market_id', 'fair_value_at_fill', 'adverse_cents_5m', 'post_fill_mid_5m', 'observed_at'],
+  mm_fills: [
+    'order_id',
+    'market_id',
+    'fair_value_at_fill',
+    'adverse_cents_5m',
+    'post_fill_mid_5m',
+    'observed_at',
+    'kalshi_fill_id',
+  ],
   mm_positions: ['market_id', 'net_contracts', 'last_updated'],
   mm_pnl_snapshots: ['market_id', 'observed_at', 'spread_capture_cents', 'net_pnl_cents'],
   mm_market_config: [
