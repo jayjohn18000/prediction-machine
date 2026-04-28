@@ -19,27 +19,34 @@ const health = {
   ok: true,
   role: "mm-runtime",
   startedAt: null,
+  listenedAt: null,
   lastReconcileAt: null,
   reconcilePhase: null,
   reconcileSkipped: null,
   lastMainLoopTickAt: null,
   loopTick: 0,
   lastSessionLineCount: 0,
+  lastOrchestratorError: null,
 };
 
 async function main() {
   const app = Fastify({ logger: false });
   app.get("/health/mm", async () => ({
-    ok: health.ok !== false,
+    ok: /** @type {any} */ (health).lastOrchestratorError ? false : health.ok !== false,
     ...health,
   }));
 
   await app.listen({ port: PORT, host: "0.0.0.0" });
   console.error(`[mm] /health/mm listening on ${PORT}`);
   /** @type {any} */
-  (health).startedAt = new Date().toISOString();
+  (health).listenedAt = new Date().toISOString();
 
-  await runMmOrchestratorLoop({ health: /** @type {any} */ (health) });
+  runMmOrchestratorLoop({ health: /** @type {any} */ (health) }).catch((e) => {
+    console.error("[mm] orchestrator stopped", e);
+    health.ok = false;
+    /** @type {any} */
+    (health).lastOrchestratorError = e instanceof Error ? e.message : String(e);
+  });
 }
 
 main().catch((e) => {
