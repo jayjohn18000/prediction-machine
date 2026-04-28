@@ -116,3 +116,140 @@
   - Phase F execution-readiness probes still missing in active PMCI API (`/v1/signals/ranked`, `/v1/router/best-venue`, `src/services/tradability-service.mjs`, `src/services/router-service.mjs`, `config/execution-readiness.json`).
 - Outcome: roadmap/system-state were refreshed to separate historical closeout from current live state; E2 remains planning-unblocked but not promoted to active implementation claims while E1 strict-audit is red.
 
+
+---
+
+<!-- ADRs below document the pivot stretch (2026-04-19 — 2026-04-24); see roadmap §2 row 7 / audit Group G2. Vault cross-references: Obsidian `_home.md`/`90-decisions/` mirror planned in §5 cleanup. -->
+
+## ADR-001: Phase G closeout without Lever-D NHL/MLB alias-map expansion — 2026-04-19
+
+**Status:** Accepted
+
+**Decision:** Close Phase G (sports linker bilateral matching) without the Lever-D NHL/MLB alias-map expansion — the linker’s bottleneck was upstream data hygiene and batch composition (duplicate canonical_events, polluted participants, Kalshi-dominated batches where `linked=0` paired with large `attached=1165`-class attachment counts), not a missing pairwise alias layer.
+
+**Context:** Symptoms pointed at the matcher surface, but the hit-rate ceiling traced to duplicated canonical namespaces and labeling noise that the alias map could not amortize away. Investing in Lever D would deepen entanglement with the same degraded inputs rather than reallocating fixes to ingestion and normalization.
+
+**Alternatives considered:**
+- **Proceed with Lever D NHL/MLB expansion** — rejected: expected marginal lift versus effort; duplicates/participants dominate miss budget.
+- **Extend Phase G timelines indefinitely** — rejected: diminishing returns absent upstream repairs; violates focus on reversible bets.
+- **Suspend all linking** — rejected: PMCI linkage remains valuable elsewhere; scope reduction is narrower than abandonment.
+
+**Consequences:**
+- Phase G terminates without alias-map rollout; Lever D is not on the backlog for revival on this codebase path (`CLAUDE.md` arb-era constraints).
+- Stakeholders treat linker metrics as gated by ingestion quality checks before any future matching investment.
+- H2h / linker historical artifacts remain in `docs/archive/pivot-2026-04/` for reference.
+
+**Sources:**
+- `docs/plans/phase-g-bilateral-linking-postmortem.md`
+- `docs/plans/phase-g-bilateral-linking-strategy.md`
+- `docs/archive/pivot-2026-04/pivot/artifacts/linker-bugs-phase-g.md`
+
+## ADR-002: Arb thesis closed RED terminal — 2026-04-24
+
+**Status:** Accepted
+
+**Decision:** Cut losses on the Kalshi+Polymarket arbitrage thesis: the realized-edge backtest is closed **RED**. Do **not** authorize Lever D, classifier finer-bucket subdivision, or repeat A3/A5 rubric cycles to “rescue” the same thesis on this provider pair.
+
+**Context:** The cross-venue arb surface proved structurally shallow — spread of opportunities is thin and unstable — so parameter tuning yields diminishing returns after the dataset has falsified profitability. Pivot review agreed that salvage work would mostly increase operational surface area without credible edge restoration.
+
+**Alternatives considered:**
+- **Tune fee/slippage models and rerun A5** — rejected: thesis failure is structural shallow pool, not a single-parameter miss.
+- **Expand NHL/MLB alias coverage (Lever D)** — rejected; explicitly superseded per ADR-001 linkage constraints and banned under pivot closeout (`CLAUDE.md`).
+- **Continue live arb scaffolding in mainline** — rejected: entangles MM roadmap and violates clean pivot boundary.
+
+**Consequences:**
+- `docs/archive/pivot-2026-04/` is the authoritative historical record for arb-era plans, prompts, and artifacts — not a revive queue.
+- New trading theses branch from current MM/pivot docs, not dormant arb pipelines.
+- Red-team evidence (A3/A5 summaries) informs future provider pairs rather than rerun gates on Kalshi+Polymarket arbitrage alone.
+
+**Sources:**
+- `docs/archive/pivot-2026-04/README.md`
+- `docs/archive/pivot-2026-04/plans/phase-pivot-arb-and-templates-plan.md`
+- `docs/archive/pivot-2026-04/pivot/artifacts/a5-backtest-interpretation-2026-04-24.md`
+
+## ADR-003: MM MVP accepted as successor thesis — 2026-04-24
+
+**Status:** Accepted
+
+**Decision:** Adopt Kalshi-only market making as the MVP successor thesis — fair-value model, inventory-aware quoting, MM-specific backtesting, and adverse-selection tracking — deliberately reusing a bounded slice (~30–40%) of arb-era infrastructure (observer, Kalshi client, portions of costs/resolution).
+
+**Context:** U.S.-resident/legal constraints forbid Polymarket *execution*, but Kalshi quotes are admissible. MM concentrates capital and engineering on one execution venue while still allowing Polymarket-derived *information* (wallet flow) elsewhere as auxiliary signal.
+
+**Alternatives considered:**
+- **Retain arb as parallel primary** — rejected: RED terminal (ADR-002) removes funding mandate.
+- **Polymarket-first MM** — rejected: violates execution constraint class.
+- **Greenfield provider with no infra reuse** — rejected: needless schedule risk; disciplined reuse lowers time-to-quote.
+
+**Consequences:**
+- Roadmap sequencing shifts to MM milestones (W1 depth, subsequent MM engine work per `phase-mm-mvp-plan.md`).
+- Operational reviews judge progress against Kalshi/MM metrics, not cross-venue arb P&L placeholders.
+- Polymarket remains non-execution; any Poly integration is informational only until explicit ADR supersession.
+
+**Sources:**
+- `docs/plans/phase-mm-mvp-plan.md`
+- `docs/archive/pivot-2026-04/pivot/north-star.md`
+
+## ADR-004: Polymarket wallet indexer (info-source only) — 2026-04-24
+
+**Status:** Accepted
+
+**Decision:** Stand up a Polygon RPC + subgraph-backed Polymarket **wallet** indexer read path — advisory toxicity / wallet-flow signal for MM. No Polymarket account, custody, or trading hooks; outputs are informational features, not mandatory MM exit gates.
+
+**Context:** Poly’s public order-flow is the richest alternative-information surface compatible with execution staying on Kalshi. Read-only ingestion matches compliance posture without duplicating arb-era trade routing.
+
+**Alternatives considered:**
+- **Defer all Polymarket integration** — rejected: discards orthogonal signal unrelated to arb execution bans.
+- **Polymarket API trading mirror** — rejected: violates non-execution invariant.
+- **Make wallet signal load-bearing for MM KPIs day one** — rejected: adds fragility until proven stable; phased advisory use only.
+
+**Consequences:**
+- Indexer SLA and schema changes are graded “advisory unless promoted by later ADR.”
+- Operators document wallet lag/freshness distinctly from Kalshi quoting paths.
+- No wallet code path obtains trading credentials beyond public RPC endpoints.
+
+**Sources:**
+- `docs/plans/phase-poly-wallet-indexer-plan.md`
+
+## ADR-005: MM W1 schema/code spec-check corrections — 2026-04-24
+
+**Status:** Accepted
+
+**Decision:** Before committing build capacity, corrected W1 depth modelling to Kalshi truth: relational columns **`yes_levels`** / **`no_levels`** (replacing generic `{bids,asks}`) because both ladders are bids; **`UNIQUE (provider_market_id, observed_at)`** guarantees idempotent re-emission after reconnect/restart without duplicate rows.
+
+**Context:** Earlier prose assumed symmetrical bid/ask ladders; Kalshi WebSocket payloads expose YES-bid and NO-bid ladders, with YES ask implied as **`100 − best_no_bid`**. Persisting mismatched semantics would have produced empty ladders and meaningless mids at read time.
+
+**Alternatives considered:**
+- **Keep generic bid/ask naming** — rejected: misleads downstream fair-value maths.
+- **Open interval upserts without uniqueness** — rejected: duplicates under reconnect violate analytics and storage budgets.
+- **Derive ladders client-side without schema fix** — rejected: persists incorrect invariant in DB contradicting telemetry.
+
+**Consequences:**
+- Downstream MM consumers import schema semantics literally from migrations + `depth.mjs`; YES-ask derivation stays centralized at read/filter layers.
+- Reconnect-heavy runs cannot duplicate `(provider_market_id, observed_at)` rows unintentionally.
+
+**Sources:**
+- `supabase/migrations/20260424120004_pmci_provider_market_depth.sql`
+- `lib/ingestion/depth.mjs`
+
+## ADR-006: Do not revive arb-pivot invariant — 2026-04-24
+
+**Status:** Accepted
+
+**Decision:** Encode in-repo (notably `CLAUDE.md`) that Kalshi+Polymarket **arb-pivot code, prompts, grading rubrics, and execution experiments** MUST NOT drift back onto the primary development branch/workstream. `docs/archive/pivot-2026-04/` remains **reference-only**; a materially new provider pairing starts a documented **new pivot**, not a stealth revival fork.
+
+**Context:** Consolidated pivot review surfaced that mixed revival invites schema drift (`arb`/`mm` coexistence ambiguity), brittle operator mental models (“which thesis is authoritative?”), and repeated cleanup cost exceeding salvage value once ADR-002 closed arb RED.
+
+**Alternatives considered:**
+- **Cherry-pick arb scripts privately** — rejected: opaque reuse bypasses invariant control.
+- **Soft guidelines only (Slack/policy)** — rejected: regressions recur without enforced repo guardrails (`CLAUDE.md` + audits).
+- **Delete arb archive** — rejected: loses forensic value; disciplined archive suffices.
+
+**Consequences:**
+- PR reviewers reject changes that resurrect arb-era routes, matchers, or rubrics on Kalshi+Poly without explicit new ADRs.
+- Automated agents default to archived paths for archaeology, not copy-paste into `lib/` mains.
+- Any future arb-like effort names a distinct phase document and KPI set before merging code.
+
+**Sources:**
+- `CLAUDE.md` (Invariants; arb pivot closure)
+- `docs/archive/pivot-2026-04/README.md`
+
