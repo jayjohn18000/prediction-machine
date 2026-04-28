@@ -35,6 +35,13 @@ const PMCI_TABLES = [
   'request_log',
   // MM MVP W1 — Kalshi L2 depth ingestion (lib/ingestion/depth.mjs).
   'provider_market_depth',
+  // MM MVP W2 — write-side ledger + risk config (migration 20260428100001_pmci_mm_w2_schema.sql).
+  'mm_orders',
+  'mm_fills',
+  'mm_positions',
+  'mm_pnl_snapshots',
+  'mm_market_config',
+  'mm_kill_switch_events',
 ];
 
 const REQUIRED_COLUMNS = {
@@ -94,6 +101,28 @@ const REQUIRED_COLUMNS = {
     'mid_cents',
     'spread_cents',
   ],
+  mm_orders: [
+    'market_id',
+    'client_order_id',
+    'side',
+    'status',
+    'placed_at',
+    'fair_value_at_place',
+    'kalshi_order_id',
+  ],
+  mm_fills: ['order_id', 'market_id', 'fair_value_at_fill', 'adverse_cents_5m', 'post_fill_mid_5m', 'observed_at'],
+  mm_positions: ['market_id', 'net_contracts', 'last_updated'],
+  mm_pnl_snapshots: ['market_id', 'observed_at', 'spread_capture_cents', 'net_pnl_cents'],
+  mm_market_config: [
+    'market_id',
+    'enabled',
+    'soft_position_limit',
+    'max_order_notional_cents',
+    'min_requote_cents',
+    'stale_quote_timeout_seconds',
+    'daily_loss_limit_cents',
+  ],
+  mm_kill_switch_events: ['observed_at', 'reason', 'market_id'],
 };
 
 const REQUIRED_VIEW = 'v_market_links_current';
