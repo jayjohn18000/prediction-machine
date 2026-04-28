@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "test": "node --test test/**/*.test.mjs",
+    "lint:poly-write-guard": "node scripts/lint/no-polymarket-write.mjs",
+    "test": "npm run lint:poly-write-guard && node --test test/**/*.test.mjs",
+    "test:poly-indexer": "node --test test/poly-indexer/*.test.mjs",
     "test:mm:pnl": "node --test test/mm/pnl-attribution.test.mjs",
     "test:matching": "node --test test/matching/*.test.mjs",
     "test:ingestion": "node --test test/ingestion/*.test.mjs",

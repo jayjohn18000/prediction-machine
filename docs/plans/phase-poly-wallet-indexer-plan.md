@@ -238,3 +238,18 @@ Environment variables needed:
    - Confirmed event names: `OrderFilled`, `OrdersMatched`, `TokenRegistered` on CTF Exchange contract at `0x4bfb41d5b3570defd03c39a9a4d8de6bd8b8982e` (Polygon). NegRisk_CTFExchange handles multi-outcome markets — same event shapes, different contract address (verify on-chain at W1).
 3. **Min wallet volume threshold for inclusion in stats: $100 USDC lifetime volume.** Anything below is likely noise (single-trade hobby wallets). Tightens the `poly_wallet_stats` dataset while preserving the long tail for later analysis. Can relax later if needed.
 4. **Off-chain balance effects (MEV, bridging) — out of scope for v1.** Realized P&L on Polymarket trades is the only signal that matters for sharp/degen classification; a wallet that's profitable on Poly is relevant regardless of what they do elsewhere on-chain.
+
+## Poly W1 implementation notes (2026-04-28)
+
+This section records the concrete choices shipped in W1 (schema + libraries + tests). The **running indexer process** is **W2** (planned `pmci-poly-indexer` Fly app); W1 does **not** deploy a new Fly service.
+
+| Item | Choice |
+|------|--------|
+| Polygon RPC | `POLYGON_RPC_URL` env, default **`https://polygon-rpc.com`** in `lib/poly-indexer/clients/polygon-rpc.mjs`; WebSocket subscriptions use `POLYGON_WS_URL` (default `wss://polygon-bor.publicnode.com`). Production should swap to paid Alchemy / Chainstack per prior plan. |
+| Polymarket subgraph | **`POLYMARKET_SUBGRAPH_URL` required** — no baked default; queries are **GET-only** GraphQL via `lib/poly-indexer/clients/polymarket-subgraph.mjs`. Pin the official Polymarket / Goldsky deployment for your network. |
+| Confirmation depth | **64 blocks** (~2 minutes on Polygon) — `DEFAULT_CONFIRMATION_DEPTH` in `lib/poly-indexer/reorg.mjs`; `poly_indexer_cursor.final_*` lags `head_*` by this depth. Revisit once empirical reorg + lag data exist. |
+| Trade table partitioning | **`PARTITION BY RANGE (block_number)`** with initial catch-all child `poly_wallet_trades_p_init` (`MINVALUE`–`MAXVALUE`). Split into monthly (or coarser) partitions in a later migration when volume warrants. |
+| Flow rollup partitioning | **`PARTITION BY RANGE (bucket_start)`** on `poly_market_flow_5m`; initial child spans full time range. Weekly-style span is preferred over hour-of-day partitioning to keep partition count small for time-window queries. |
+| Head vs final watermark | **Rationale:** the live tail must track the **speculative chain head** (`head_block_*`) while aggregates and MM-advisory rules that must not flip on shallow reorgs consume **`final_block_*`**, updated only after confirmations. |
+
+Related: `ADR-009` in `docs/decision-log.md`; CI guard `npm run lint:poly-write-guard`.

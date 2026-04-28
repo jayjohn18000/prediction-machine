@@ -271,6 +271,29 @@
 **Sources:**
 - `docs/plans/phase-mm-mvp-plan.md` (§ W2.0 plan-text contract amendments)
 
+## ADR-009: Poly indexer W1 schema + reorg state machine + read-only client namespace — 2026-04-28
+
+**Status:** Accepted
+
+**Decision:** Ship **Pre-Poly-W1 P1** (read-only `lib/poly-indexer/clients/` + CI `lint:poly-write-guard` banning non-whitelisted HTTP stacks against `clob.polymarket.com` / Polymarket trading API paths), **Pre-Poly-W1 P2** (pure `lib/poly-indexer/reorg.mjs` fork-choice + final-row panic), and **Poly W1** database objects: `pmci.poly_wallet_trades` (RANGE `block_number` + initial catch-all partition), `pmci.poly_market_flow_5m` (5m buckets + RANGE `bucket_start` partitions), `pmci.poly_indexer_cursor` (head vs final watermarks), `pmci.poly_resolved_markets`, all with **anon/authenticated REVOKE** and **service_role/postgres GRANT** consistent with Pre-W2 §3. **Confirmation depth** defaults to **64 blocks** for marking `final=true` (audit §3 P2); indexer **process** lands in W2 (`pmci-poly-indexer` Fly app), not W1.
+
+**Context:** Post-pivot roadmap calls for Polymarket on-chain data as an **information-only** source (US-resident posture: no trading paths, no Polymarket accounts). W1 confines work to **library + schema + tests** so workstream B (MM depth) stays file-disjoint.
+
+**Alternatives considered:**
+- **Single watermark cursor** — rejected: cannot both tail near-head and treat post-confirmation rows as immutable without split `head_*` / `final_*`.
+- **Defer P1 CI guard** — rejected: posture must be enforced in CI, not prose only.
+- **Unpartitioned trade table** — rejected: audit §4 W2 schema-fitness requires RANGE partitioning from day one.
+
+**Consequences:**
+- New RPC/subgraph **read** code must live under `lib/poly-indexer/clients/` (or earn an explicit allowlist entry in `scripts/lint/no-polymarket-write.mjs` with owner review).
+- `verify:schema` includes the four `poly_*` tables once the migration is applied.
+- **ADR-008** remains reserved for workstream D’s 7-day continuous test clock (do not renumber).
+
+**Sources:**
+- `audits/post-pivot-review/synthesis/post-pivot-roadmap.md` (§3 Pre-Poly-W1, §4 Poly W1)
+- `supabase/migrations/20260430130000_pmci_poly_w1.sql`
+- `lib/poly-indexer/clients/`, `lib/poly-indexer/reorg.mjs`, `scripts/lint/no-polymarket-write.mjs`
+
 ## 2026-04-28 — Pre-existing test debt — accepted for Pre-W2 deploy
 
 - **Context:** Before merging `pre-w2/integration` → `main`, `npm test` was compared on `origin/main` vs `pre-w2/integration`. The same two failures appear on **main** (not introduced by Pre-W2).

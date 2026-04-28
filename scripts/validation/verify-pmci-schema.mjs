@@ -42,6 +42,11 @@ const PMCI_TABLES = [
   'mm_pnl_snapshots',
   'mm_market_config',
   'mm_kill_switch_events',
+  // Poly indexer W1 (migration 20260430130000_pmci_poly_w1.sql).
+  'poly_wallet_trades',
+  'poly_market_flow_5m',
+  'poly_indexer_cursor',
+  'poly_resolved_markets',
 ];
 
 const REQUIRED_COLUMNS = {
@@ -134,6 +139,46 @@ const REQUIRED_COLUMNS = {
     'toxicity_threshold',
   ],
   mm_kill_switch_events: ['observed_at', 'reason', 'market_id'],
+  poly_wallet_trades: [
+    'block_number',
+    'block_hash',
+    'tx_hash',
+    'log_index',
+    'wallet_address',
+    'market_id',
+    'outcome_index',
+    'price_usdc',
+    'size_shares',
+    'side',
+    'final',
+    'orphaned_at',
+    'observed_at',
+  ],
+  poly_market_flow_5m: [
+    'bucket_start',
+    'market_id',
+    'outcome_index',
+    'buy_count',
+    'sell_count',
+    'buy_usdc',
+    'sell_usdc',
+    'sharp_buy_count',
+    'observed_at',
+  ],
+  poly_indexer_cursor: [
+    'head_block_number',
+    'head_block_hash',
+    'final_block_number',
+    'final_block_hash',
+    'last_updated_at',
+  ],
+  poly_resolved_markets: [
+    'market_id',
+    'outcome_index_winner',
+    'resolution_block_number',
+    'resolution_tx_hash',
+    'observed_at',
+  ],
 };
 
 const REQUIRED_VIEW = 'v_market_links_current';
