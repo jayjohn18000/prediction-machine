@@ -131,6 +131,7 @@ const REQUIRED_COLUMNS = {
     'min_requote_cents',
     'stale_quote_timeout_seconds',
     'daily_loss_limit_cents',
+    'toxicity_threshold',
   ],
   mm_kill_switch_events: ['observed_at', 'reason', 'market_id'],
 };

@@ -21,6 +21,7 @@ const ADMIN_JOBS = {
   "benchmark-coverage": ["node", ["scripts/benchmark/coverage-benchmark.mjs"]],
   "health-poll":      ["node", ["scripts/ops/pmci-health-poll.mjs"]],
   "auto-link":        ["node", ["scripts/ops/pmci-auto-link-pass.mjs"]],
+  "mm-post-fill-backfill": ["node", ["scripts/mm/run-post-fill-backfill.mjs"]],
 };
 
 export function registerAdminJobRoutes(app, deps) {
