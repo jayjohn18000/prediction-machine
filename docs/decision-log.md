@@ -291,7 +291,7 @@
 
 Tests run exclusively against Kalshi DEMO. Production cutover is a separate ADR after this seven-day window completes.
 
-**Sources:** roadmap §4 W6; orchestrator brief 2026-04-28; `scripts/mm/seed-w6-demo-mm-markets.mjs`.
+**Sources:** roadmap W6 (section 4); orchestrator brief 2026-04-28; `scripts/mm/seed-w6-demo-mm-markets.mjs`.
 
 ---
 
