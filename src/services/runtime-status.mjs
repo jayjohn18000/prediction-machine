@@ -7,13 +7,16 @@
  * for market_families and v_market_links_current.
  */
 
-const LIVE_FRESHNESS_SELECT = `
+/** Exported for tests — bound snapshots so MAX(observed_at) cannot scan entire history (~4M+ rows). */
+export const LIVE_FRESHNESS_SELECT = `
   WITH snap_by_provider AS (
     SELECT p.code,
            MAX(s.observed_at) AS max_observed_at
     FROM pmci.providers p
     LEFT JOIN pmci.provider_markets pm ON pm.provider_id = p.id
-    LEFT JOIN pmci.provider_market_snapshots s ON s.provider_market_id = pm.id
+    LEFT JOIN pmci.provider_market_snapshots s
+      ON s.provider_market_id = pm.id
+     AND s.observed_at > now() - interval '15 minutes'
     GROUP BY p.code
   ),
   hb AS (
