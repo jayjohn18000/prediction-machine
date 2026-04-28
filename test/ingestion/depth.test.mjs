@@ -20,6 +20,10 @@ import {
   handleMessage,
   makeEmptyBook,
   makeSupabaseWriter,
+  reconnectBackoffMs,
+  resetDepthStateForReconnect,
+  secondsSinceLastUpdate,
+  startDownsampler,
 } from "../../lib/ingestion/depth.mjs";
 
 const silent = { info: () => {}, warn: () => {}, error: () => {} };
@@ -295,4 +299,79 @@ test("makeSupabaseWriter surfaces DB errors via logger but does not throw", asyn
   });
   await assert.doesNotReject(async () => write({ provider_market_id: 1, observed_at: "x", yes_levels: [], no_levels: [] }));
   assert.equal(errors.length, 1);
+});
+
+// ---------------------------------------------------------------------------
+// D1/D2/D3 — reconnect backoff, staleness, snapshot gating (Group D)
+// ---------------------------------------------------------------------------
+
+test("reconnectBackoffMs is exponential 1s…16s capped at 30s", () => {
+  assert.equal(reconnectBackoffMs(0), 1000);
+  assert.equal(reconnectBackoffMs(1), 2000);
+  assert.equal(reconnectBackoffMs(2), 4000);
+  assert.equal(reconnectBackoffMs(3), 8000);
+  assert.equal(reconnectBackoffMs(4), 16_000);
+  assert.equal(reconnectBackoffMs(5), 30_000);
+  assert.equal(reconnectBackoffMs(6), 30_000);
+});
+
+test("resetDepthStateForReconnect clears in-memory book and snapshot flags", () => {
+  const books = new Map([["T1", makeEmptyBook()]]);
+  applySnapshot(books.get("T1"), { yes: [[50, 100]], no: [[48, 50]] });
+  const snapshotReceived = new Map([["T1", true]]);
+  resetDepthStateForReconnect(books, ["T1"], snapshotReceived);
+  assert.equal(books.get("T1").yes.size, 0);
+  assert.equal(books.get("T1").no.size, 0);
+  assert.equal(books.get("T1").lastUpdateMs, null);
+  assert.equal(snapshotReceived.get("T1"), false);
+});
+
+test("secondsSinceLastUpdate returns Infinity before first frame", () => {
+  const books = new Map([["T1", makeEmptyBook()]]);
+  assert.equal(Number.POSITIVE_INFINITY, secondsSinceLastUpdate("T1", books));
+  assert.equal(Number.POSITIVE_INFINITY, secondsSinceLastUpdate("T2", books));
+});
+
+test("startDownsampler skips rows when snapshotReceived is false for that ticker", async () => {
+  const books = new Map([["T1", makeEmptyBook()]]);
+  applySnapshot(books.get("T1"), { yes: [[50, 100]], no: [[48, 50]] });
+  const snapshotReceived = new Map([["T1", false]]);
+  const blocked = [];
+  const stop1 = startDownsampler({
+    books,
+    tickerToProviderMarketId: new Map([["T1", 1]]),
+    onRow: (r) => blocked.push(r),
+    intervalMs: 20,
+    logger: silent,
+    snapshotReceived,
+  });
+  await new Promise((r) => setTimeout(r, 70));
+  stop1();
+  assert.equal(blocked.length, 0);
+
+  snapshotReceived.set("T1", true);
+  const allowed = [];
+  const stop2 = startDownsampler({
+    books,
+    tickerToProviderMarketId: new Map([["T1", 1]]),
+    onRow: (r) => allowed.push(r),
+    intervalMs: 20,
+    logger: silent,
+    snapshotReceived,
+  });
+  await new Promise((r) => setTimeout(r, 70));
+  stop2();
+  assert.ok(allowed.length >= 1);
+});
+
+test("handleMessage sets snapshotReceived when orderbook_snapshot and map provided", () => {
+  const books = new Map([["T1", makeEmptyBook()]]);
+  const snapshotReceived = new Map([["T1", false]]);
+  handleMessage(
+    { type: "orderbook_snapshot", msg: { market_ticker: "T1", yes: [[50, 100]], no: [[48, 50]] } },
+    books,
+    silent,
+    { snapshotReceived },
+  );
+  assert.equal(snapshotReceived.get("T1"), true);
 });
