@@ -116,7 +116,6 @@
   - Phase F execution-readiness probes still missing in active PMCI API (`/v1/signals/ranked`, `/v1/router/best-venue`, `src/services/tradability-service.mjs`, `src/services/router-service.mjs`, `config/execution-readiness.json`).
 - Outcome: roadmap/system-state were refreshed to separate historical closeout from current live state; E2 remains planning-unblocked but not promoted to active implementation claims while E1 strict-audit is red.
 
-
 ---
 
 <!-- ADRs below document the pivot stretch (2026-04-19 — 2026-04-24); see roadmap §2 row 7 / audit Group G2. Vault cross-references: Obsidian `_home.md`/`90-decisions/` mirror planned in §5 cleanup. -->
@@ -252,4 +251,12 @@
 **Sources:**
 - `CLAUDE.md` (Invariants; arb pivot closure)
 - `docs/archive/pivot-2026-04/README.md`
+
+## 2026-04-28 — Pre-existing test debt — accepted for Pre-W2 deploy
+
+- **Context:** Before merging `pre-w2/integration` → `main`, `npm test` was compared on `origin/main` vs `pre-w2/integration`. The same two failures appear on **main** (not introduced by Pre-W2).
+- **Accepted debt (do not block Pre-W2 Fly deploy):**
+  1. **`test/backtest/leg-payout.test.mjs` — "A3 csv parses to table rows (quoted newlines) and default path exists"** — `ENOENT` opening `docs/pivot/artifacts/a3-resolution-equivalence-audit.csv` (artifact absent from repo; pivot reference path).
+  2. **`test/routes/review.test.mjs` — "POST /v1/review/decision accept: succeeds on first call (happy path)"** — assertion `null !== 10` (expected `proposed_id` from DB/fixture; behavior vs test data mismatch).
+- **Rationale:** Ship Pre-W2 API/observer fixes (health endpoints vs live schema) while tracking test repair separately.
 
