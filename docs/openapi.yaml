@@ -556,6 +556,41 @@ components:
           items:
             type: string
 
+    TrueSuccessRateAlertBlock:
+      type: object
+      description: |
+        Σ pairs_attempted / Σ pairs_succeeded over the last `window_minutes` rows in pmci.observer_heartbeats.
+        `alert` when aggregate failure_rate > `alert_threshold` (Pre-W6 synthetic pair-failure indicator).
+      properties:
+        window_minutes:
+          type: integer
+          example: 30
+        pairs_attempted:
+          type: integer
+        pairs_succeeded:
+          type: integer
+        pairs_failed:
+          type: integer
+        failure_rate:
+          type: number
+          nullable: true
+        alert:
+          type: boolean
+        alert_threshold:
+          type: number
+        alert_reason:
+          type: string
+          nullable: true
+        heartbeat_cycles_in_window:
+          type: integer
+        provider_focus:
+          type: object
+          nullable: true
+          description: Present when `provider=kalshi|polymarket` query on /v1/health/observer — one leg of by_provider.
+        by_provider:
+          type: object
+          additionalProperties: true
+
     ObserverHealthResponse:
       type: object
       properties:
@@ -577,14 +612,15 @@ components:
           maximum: 1
           nullable: true
           description: Success rate over the rolling window including all cycles.
-        true_success_rate:
+        configured_pair_success_rate:
           type: number
           minimum: 0
           maximum: 1
           nullable: true
           description: |
-            Success rate counting only cycles where pairs_configured > 0.
-            More accurate than rolling_success_rate when the observer recently restarted.
+            Σ pairs_succeeded / Σ pairs_configured over the recent rolling window (when configured > 0).
+        true_success_rate:
+          $ref: "#/components/schemas/TrueSuccessRateAlertBlock"
         pairs_configured_total:
           type: integer
           description: Sum of pairs_configured across all cycles in the rolling window.
@@ -997,10 +1033,19 @@ paths:
     get:
       summary: Observer heartbeat health
       description: |
-        Rolling-window observer health backed by `pmci.observer_heartbeats`. Reports
-        `true_success_rate` (only cycles where `pairs_configured > 0`) and per-error-type totals.
+        Rolling heartbeat rows + aggregated pair KPIs over the last **30 minutes** from the same truth table (`pmci.observer_heartbeats`).
+        `configured_pair_success_rate` is Σ pairs_succeeded / Σ pairs_configured in the rolling N-cycle window (last-row buffer).
+        `true_success_rate` is the Σ/Σ synthetic pair-failure alert block (`alert` when aggregate failure fraction > 10% over that 30‑minute window).
       operationId: getHealthObserver
       tags: [Health]
+      parameters:
+        - name: provider
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [kalshi, polymarket]
+          description: When set, `true_success_rate.provider_focus` echoes the keyed `by_provider` entry for triage drilldown.
       responses:
         "200":
           description: Observer health
@@ -1017,7 +1062,27 @@ paths:
                 lag_seconds: 123
                 api_version: "2026-03-02"
                 rolling_success_rate: 1
-                true_success_rate: 1
+                configured_pair_success_rate: 0.98
+                true_success_rate:
+                  window_minutes: 30
+                  pairs_attempted: 1820
+                  pairs_succeeded: 1489
+                  pairs_failed: 331
+                  failure_rate: 0.182
+                  alert: true
+                  alert_threshold: 0.1
+                  alert_reason: polymarket_pair_failure_rate_exceeded
+                  heartbeat_cycles_in_window: 20
+                  provider_focus: null
+                  by_provider:
+                    kalshi:
+                      pairs_attempted: 1820
+                      pairs_failed: 0.2
+                      failure_rate: 0.001
+                    polymarket:
+                      pairs_attempted: 1820
+                      pairs_failed: 331
+                      failure_rate: 0.182
                 pairs_configured_total: 854
                 rolling_window_cycles: 20
                 error_totals:
