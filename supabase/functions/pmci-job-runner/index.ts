@@ -20,6 +20,7 @@ const JOB_MAP: Record<string, string> = {
   "health:poll":       "/v1/admin/jobs/health-poll",
   "auto-link":         "/v1/admin/jobs/auto-link",
   "mm-post-fill-backfill": "/v1/admin/jobs/mm-post-fill-backfill",
+  "mm-pnl-snapshot": "/v1/admin/jobs/mm-pnl-snapshot",
 };
 
 serve(async (req: Request) => {

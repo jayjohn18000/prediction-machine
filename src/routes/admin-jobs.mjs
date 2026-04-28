@@ -22,6 +22,7 @@ const ADMIN_JOBS = {
   "health-poll":      ["node", ["scripts/ops/pmci-health-poll.mjs"]],
   "auto-link":        ["node", ["scripts/ops/pmci-auto-link-pass.mjs"]],
   "mm-post-fill-backfill": ["node", ["scripts/mm/run-post-fill-backfill.mjs"]],
+  "mm-pnl-snapshot": ["node", ["scripts/mm/run-pnl-snapshot.mjs"]],
 };
 
 export function registerAdminJobRoutes(app, deps) {

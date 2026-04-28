@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test test/**/*.test.mjs",
+    "test:mm:pnl": "node --test test/mm/pnl-attribution.test.mjs",
     "test:matching": "node --test test/matching/*.test.mjs",
     "test:ingestion": "node --test test/ingestion/*.test.mjs",
     "start": "node observer.mjs",

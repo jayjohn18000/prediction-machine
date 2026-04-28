@@ -17,6 +17,7 @@ import { registerSignalsRoutes } from "./routes/signals.mjs";
 import { registerReviewRoutes } from "./routes/review.mjs";
 import { registerLinksRoutes } from "./routes/links.mjs";
 import { registerAdminJobRoutes } from "./routes/admin-jobs.mjs";
+import { registerMmDashboardRoutes } from "./routes/mm-dashboard.mjs";
 import { resolveProviderIdByCode } from "./repositories/providers-repo.mjs";
 import { percentile, typeFactor, computeConsensus, computeDivergence } from "./utils/metrics.mjs";
 import { parseSince } from "./utils/time.mjs";
@@ -255,6 +256,7 @@ export async function buildApp() {
   registerReviewRoutes(app, deps);
   registerLinksRoutes(app, deps);
   registerAdminJobRoutes(app, deps);
+  registerMmDashboardRoutes(app, deps);
 
   return app;
 }
