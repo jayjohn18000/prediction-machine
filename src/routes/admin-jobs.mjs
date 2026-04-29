@@ -1,9 +1,13 @@
 /**
  * POST /v1/admin/jobs/:jobName — triggered by Supabase Edge Function dispatcher.
- * Spawns the requested job as a detached child process; stdout/stderr inherit the API process (Fly logs).
+ * Most jobs spawn a detached child; MM operational jobs (`mm-pnl-snapshot`, `mm-post-fill-backfill`)
+ * run in-process so failures surface as non-2xx (cron/pg_cron observability).
  * Auth: global x-pmci-api-key hook (server.mjs) + admin key gate.
  */
 import { spawn } from "child_process";
+import { createPgClient } from "../../lib/mm/order-store.mjs";
+import { insertPnlSnapshotsAllEnabledMarkets } from "../../lib/mm/pnl-attribution.mjs";
+import { backfillPostFillMids } from "../../lib/mm/post-fill-backfill.mjs";
 
 const ADMIN_JOBS = {
   "ingest-sports":    ["node", ["lib/ingestion/sports-universe.mjs"]],
@@ -21,8 +25,6 @@ const ADMIN_JOBS = {
   "benchmark-coverage": ["node", ["scripts/benchmark/coverage-benchmark.mjs"]],
   "health-poll":      ["node", ["scripts/ops/pmci-health-poll.mjs"]],
   "auto-link":        ["node", ["scripts/ops/pmci-auto-link-pass.mjs"]],
-  "mm-post-fill-backfill": ["node", ["scripts/mm/run-post-fill-backfill.mjs"]],
-  "mm-pnl-snapshot": ["node", ["scripts/mm/run-pnl-snapshot.mjs"]],
 };
 
 export function registerAdminJobRoutes(app, deps) {
@@ -41,19 +43,65 @@ export function registerAdminJobRoutes(app, deps) {
     { preHandler: [adminKeyGate], rateLimit: RATE_LIMIT_CONFIG },
     async (req, reply) => {
       const { jobName } = req.params;
+
+      if (jobName === "mm-pnl-snapshot") {
+        const client = createPgClient();
+        await client.connect();
+        try {
+          const out = await insertPnlSnapshotsAllEnabledMarkets(client);
+          const failures = out.results.filter((x) => !x.ok);
+          if (failures.length > 0) {
+            return reply.code(500).send({
+              ok: false,
+              job: jobName,
+              error: "one_or_more_snapshots_failed",
+              inserted: out.inserted,
+              failures,
+              results: out.results,
+            });
+          }
+          return reply.code(200).send({ ok: true, job: jobName, inserted: out.inserted, results: out.results });
+        } catch (err) {
+          return reply.code(500).send({
+            ok: false,
+            job: jobName,
+            error: /** @type {Error} */ (err).message,
+          });
+        } finally {
+          await client.end().catch(() => {});
+        }
+      }
+
+      if (jobName === "mm-post-fill-backfill") {
+        const client = createPgClient();
+        await client.connect();
+        try {
+          const stats = await backfillPostFillMids({ client, now: new Date() });
+          return reply.code(200).send({ ok: true, job: jobName, ...stats });
+        } catch (err) {
+          return reply.code(500).send({
+            ok: false,
+            job: jobName,
+            error: /** @type {Error} */ (err).message,
+          });
+        } finally {
+          await client.end().catch(() => {});
+        }
+      }
+
       const job = ADMIN_JOBS[jobName];
       if (!job) {
         return reply.code(404).send({
           error: "unknown job",
           jobName,
-          available: Object.keys(ADMIN_JOBS),
+          available: [...Object.keys(ADMIN_JOBS), "mm-pnl-snapshot", "mm-post-fill-backfill"],
         });
       }
 
       const [cmd, args] = job;
       const child = spawn(cmd, args, {
         detached: true,
-        // Inherit stdout/stderr so job logs (e.g. pmci-health-poll) reach Fly/PM2; piped + unread drops them.
+        // Inherit stdout/stderr so job logs reach Fly logs; piped + unread drops them.
         stdio: ["ignore", "inherit", "inherit"],
         cwd: process.cwd(),
         env: { ...process.env },
@@ -70,7 +118,7 @@ export function registerAdminJobRoutes(app, deps) {
     "/v1/admin/jobs",
     { preHandler: [adminKeyGate], rateLimit: RATE_LIMIT_CONFIG },
     async () => ({
-      available: Object.keys(ADMIN_JOBS),
+      available: [...Object.keys(ADMIN_JOBS), "mm-pnl-snapshot", "mm-post-fill-backfill"].sort(),
     })
   );
 }
