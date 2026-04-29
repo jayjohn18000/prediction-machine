@@ -24,6 +24,7 @@ import {
   resetDepthStateForReconnect,
   secondsSinceLastUpdate,
   startDownsampler,
+  wrapDepthRowWriter,
 } from "../../lib/ingestion/depth.mjs";
 
 const silent = { info: () => {}, warn: () => {}, error: () => {} };
@@ -283,6 +284,38 @@ test("makeSupabaseWriter passes idempotent upsert options", async () => {
   assert.equal(calls[0].opts.ignoreDuplicates, true);
   // Both calls forwarded identical rows; DB UNIQUE constraint enforces idempotency.
   assert.deepEqual(calls[0].row, calls[1].row);
+});
+
+test("wrapDepthRowWriter skips insert when yes_levels empty and logs warn", async () => {
+  const writes = [];
+  const warns = [];
+  const infos = [];
+  const inner = async (row) => writes.push(row);
+  const wrap = wrapDepthRowWriter(inner, {
+    info: (...a) => infos.push(a),
+    warn: (...a) => warns.push(a),
+    error: () => {},
+  });
+  await wrap({
+    provider_market_id: 1,
+    observed_at: new Date(0).toISOString(),
+    yes_levels: [],
+    no_levels: [[48, 1]],
+    mid_cents: null,
+    spread_cents: null,
+  });
+  assert.equal(writes.length, 0);
+  assert.ok(warns.some((w) => String(w[0]).includes("skip_empty_yes")));
+  await wrap({
+    provider_market_id: 2,
+    observed_at: new Date(1).toISOString(),
+    yes_levels: [[50, 1]],
+    no_levels: [[48, 1]],
+    mid_cents: 51,
+    spread_cents: 2,
+  });
+  assert.equal(writes.length, 1);
+  assert.equal(writes[0].provider_market_id, 2);
 });
 
 test("makeSupabaseWriter surfaces DB errors via logger but does not throw", async () => {
