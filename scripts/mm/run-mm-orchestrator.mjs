@@ -71,17 +71,39 @@ const health = {
   loopTick: 0,
   lastSessionLineCount: 0,
   lastOrchestratorError: null,
+  /** @deprecated Use depthSubscribedConfigured; kept for backward compatibility. */
   depthSubscribedTickers: 0,
+  depthSubscribedConfigured: null,
+  depthSubscribedConnected: null,
+  depthLastUpdateSecondsAgo: null,
+  depthTickersStale: null,
   depthStartedAt: null,
   depthStartError: null,
 };
 
+/** @type {null | (() => object)} */
+let depthGetHealthSnapshot = null;
+
 async function main() {
   const app = Fastify({ logger: false });
-  app.get("/health/mm", async () => ({
-    ok: /** @type {any} */ (health).lastOrchestratorError ? false : health.ok !== false,
-    ...health,
-  }));
+  app.get("/health/mm", async () => {
+    const h = /** @type {any} */ (health);
+    const depthSnap =
+      typeof depthGetHealthSnapshot === "function" ? depthGetHealthSnapshot() : null;
+    const configured =
+      depthSnap?.depthSubscribedConfigured ?? h.depthSubscribedTickers ?? 0;
+    return {
+      ok: h.lastOrchestratorError ? false : health.ok !== false,
+      ...health,
+      ...(depthSnap ?? {}),
+      depthSubscribedTickers: configured,
+      depthSubscribedConfigured: depthSnap?.depthSubscribedConfigured ?? configured,
+      depthSubscribedConnected: depthSnap?.depthSubscribedConnected ?? 0,
+      depthLastUpdateSecondsAgo:
+        depthSnap?.depthLastUpdateSecondsAgo ?? h.depthLastUpdateSecondsAgo,
+      depthTickersStale: depthSnap?.depthTickersStale ?? h.depthTickersStale,
+    };
+  });
 
   await app.listen({ port: PORT, host: "0.0.0.0" });
   console.error(`[mm] /health/mm listening on ${PORT}`);
@@ -126,6 +148,14 @@ async function main() {
     /** @type {any} */
     (health).depthSubscribedTickers = 0;
     /** @type {any} */
+    (health).depthSubscribedConfigured = 0;
+    /** @type {any} */
+    (health).depthSubscribedConnected = 0;
+    /** @type {any} */
+    (health).depthLastUpdateSecondsAgo = null;
+    /** @type {any} */
+    (health).depthTickersStale = null;
+    /** @type {any} */
     (health).depthStartedAt = null;
   } else {
     const supabase = createServiceRoleSupabase();
@@ -164,7 +194,7 @@ async function main() {
         console.error(
           `[mm] depth: starting ingestion for ${marketTickers.length} ticker(s) ws=${wsUrl}`,
         );
-        const { stop: stopInner } = await startDepthIngestion({
+        const { stop: stopInner, getHealthSnapshot } = await startDepthIngestion({
           marketTickers,
           tickerToProviderMarketId,
           wsUrl,
@@ -175,7 +205,9 @@ async function main() {
           downsampleIntervalMs: 1000,
           logger: console,
         });
+        depthGetHealthSnapshot = getHealthSnapshot;
         depthStop = () => {
+          depthGetHealthSnapshot = null;
           stopInner();
           if (depthPg) {
             void depthPg.end().catch(() => {});
@@ -185,6 +217,8 @@ async function main() {
         const started = new Date().toISOString();
         /** @type {any} */
         (health).depthSubscribedTickers = marketTickers.length;
+        /** @type {any} */
+        (health).depthSubscribedConfigured = marketTickers.length;
         /** @type {any} */
         (health).depthStartedAt = started;
         /** @type {any} */
@@ -198,6 +232,8 @@ async function main() {
         (health).depthStartError = msg;
         /** @type {any} */
         (health).depthSubscribedTickers = 0;
+        /** @type {any} */
+        (health).depthSubscribedConfigured = 0;
         /** @type {any} */
         (health).depthStartedAt = null;
       }
