@@ -2,42 +2,42 @@
 import "dotenv/config";
 
 /**
- * Replay all pmci.mm_fills in chronological order through upsertPositionFromMmFill
- * so mm_positions catches up after deploy / historical gaps.
+ * Per-market full recompute of pmci.mm_positions from pmci.mm_fills.
+ *
+ * Safe to run any time — including while the orchestrator is live and ingesting fills:
+ * `recomputeMmPositionForMarket` takes a per-market `pg_advisory_xact_lock` so concurrent
+ * live writes serialize against the backfill on a per-market basis. No DELETE; idempotent.
  */
 import { createPgClient } from "../../lib/mm/order-store.mjs";
-import { upsertPositionFromMmFill } from "../../lib/mm/position-store.mjs";
+import { recomputeMmPositionForMarket } from "../../lib/mm/position-store.mjs";
 
 async function main() {
   const client = createPgClient();
   await client.connect();
-  let replayed = 0;
-  let markets = /** @type {Set<number>} */ (new Set());
+  /** @type {Array<{ market_id: number, fills_seen: number, net_contracts: number }>} */
+  const summary = [];
   try {
-    await client.query(`DELETE FROM pmci.mm_positions`);
-    const fills = await client.query(
+    const res = await client.query(
       `
-      SELECT id, market_id, observed_at, price_cents, size_contracts, side
+      SELECT DISTINCT market_id
       FROM pmci.mm_fills
-      ORDER BY observed_at ASC, id ASC
+      ORDER BY market_id ASC
       `,
     );
-    const rows = fills.rows ?? [];
-    for (const r of rows) {
-      await upsertPositionFromMmFill(client, r.market_id, {
-        side: r.side,
-        size_contracts: Number(r.size_contracts),
-        price_cents: Number(r.price_cents),
-        observed_at: r.observed_at,
+    const markets = (res.rows ?? []).map((r) => Number(r.market_id));
+    for (const m of markets) {
+      const out = await recomputeMmPositionForMarket(client, m);
+      summary.push({
+        market_id: out.market_id,
+        fills_seen: out.fills_seen,
+        net_contracts: out.net_contracts,
       });
-      replayed += 1;
-      markets.add(Number(r.market_id));
     }
     console.log(
       JSON.stringify({
         ok: true,
-        fills_replayed: replayed,
-        distinct_markets: [...markets.values()].sort((a, b) => a - b),
+        markets_recomputed: summary.length,
+        summary,
       }),
     );
   } finally {

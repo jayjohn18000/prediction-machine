@@ -62,8 +62,11 @@ serve(async (req: Request) => {
     });
     const result = await res.json();
     console.log(`[pmci-job-runner] job=${job} status=${res.status}`, result);
+    // Forward the inner API status to pg_cron so non-2xx (e.g. mm-pnl-snapshot
+    // returning 500 when a market's snapshot fails) surfaces as a failed cron run
+    // instead of being silently masked by an outer 200.
     return new Response(JSON.stringify({ job, status: res.status, result }), {
-      status: 200,
+      status: res.status >= 200 && res.status < 300 ? 200 : res.status,
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {

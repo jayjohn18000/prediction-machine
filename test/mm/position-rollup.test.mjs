@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import {
   yesNetDeltaContracts,
   rollupPositionAccounting,
+  replayFillsToPosition,
 } from "../../lib/mm/position-store.mjs";
 
 test("yesNetDelta matches MM side semantics", () => {
@@ -44,4 +45,29 @@ test("rollup: flip long to short", () => {
   assert.equal(after.net_contracts, -7);
   assert.equal(after.avg_cost_cents, 40);
   assert.ok(after.realized_pnl_cents < 0);
+});
+
+test("replayFillsToPosition: idempotent over chronological fills", () => {
+  // Same fills sequence — should yield same answer regardless of how many times we replay.
+  const fills = [
+    { side: "yes_buy",  size_contracts: 8, price_cents: 40 },
+    { side: "yes_buy",  size_contracts: 2, price_cents: 60 },
+    { side: "yes_sell", size_contracts: 3, price_cents: 50 },
+    { side: "yes_sell", size_contracts: 7, price_cents: 50 },
+  ];
+  const a = replayFillsToPosition(fills);
+  const b = replayFillsToPosition(fills);
+  const c = replayFillsToPosition(fills);
+  assert.deepEqual(a, b);
+  assert.deepEqual(b, c);
+  assert.equal(a.net_contracts, 0);
+  assert.equal(a.avg_cost_cents, null);
+  assert.equal(a.realized_pnl_cents, 60);
+});
+
+test("replayFillsToPosition: empty fill list yields flat", () => {
+  const empty = replayFillsToPosition([]);
+  assert.equal(empty.net_contracts, 0);
+  assert.equal(empty.avg_cost_cents, null);
+  assert.equal(empty.realized_pnl_cents, 0);
 });
