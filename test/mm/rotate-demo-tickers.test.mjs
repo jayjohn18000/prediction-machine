@@ -71,6 +71,21 @@ test("selectMarketsForRotation skips multi-event KXMVE tickers", () => {
   assert.equal(out[0].ticker, "KXNORMAL-A");
 });
 
+test("selectMarketsForRotation excludes -B<digit> strike markets (Kalshi DEMO post-only rejects)", () => {
+  const out = selectMarketsForRotation(
+    [
+      m({ ticker: "KXHIGHTLV-26MAY01-B89.5" }),
+      m({ ticker: "KXHIGHMIA-26MAY01-B90.5" }),
+      m({ ticker: "KXHIGHTPHX-26MAY01-B91.5" }),
+      m({ ticker: "KXHIGHTNOLA-26MAY01-T77" }),
+      m({ ticker: "KXHIGHPHIL-26MAY01-T63" }),
+    ],
+    { nowMs: NOW_MS, target: 8, minCloseHours: 24 },
+  );
+  const tickers = out.map((s) => s.ticker);
+  assert.deepEqual(tickers.sort(), ["KXHIGHPHIL-26MAY01-T63", "KXHIGHTNOLA-26MAY01-T77"]);
+});
+
 test("selectMarketsForRotation prefers longer close time when volume tied", () => {
   const out = selectMarketsForRotation(
     [

@@ -69,6 +69,11 @@ export function selectMarketsForRotation(markets, opts = {}) {
     const ticker = String(m?.ticker ?? "");
     if (!ticker) continue;
     if (ticker.startsWith("KXMVE")) continue; // multi-event combos — exotic, skip
+    // Empirically (2026-04-30) Kalshi DEMO returns HTTP 400 invalid_parameters on every
+    // post-only order against `KXHIGH*-B*` (below-threshold) markets, regardless of price.
+    // The same code path works on the matching `-T*` (above) markets. Until the demo accepts
+    // these, exclude B-strike markets from rotation so we get clean two-sided fills.
+    if (/-B\d/.test(ticker)) continue;
     const yesBid = Number.parseFloat(m?.yes_bid_dollars ?? "0");
     const yesAsk = Number.parseFloat(m?.yes_ask_dollars ?? "0");
     if (!Number.isFinite(yesBid) || !Number.isFinite(yesAsk)) continue;
