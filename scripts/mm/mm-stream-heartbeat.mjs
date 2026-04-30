@@ -5,11 +5,13 @@
  * Threshold semantics: per-hour rates rather than 24h totals, so the alarm
  * doesn't false-fire for the first day after a daily ticker rotation.
  *
- * For each enabled mm_market_config row, "quoting" requires (in last 60 minutes):
- *   - mm_orders activity   (≥1 new order placed)
- *   - provider_market_depth (≥120 rows with non-empty yes_levels — 1Hz emitter ⇒ 3600/hr expected,
- *                            120 = 3.3% of expected, generous tolerance)
- *   - mm_pnl_snapshots     (≥6 rows — 5-min cron ⇒ 12/hr expected, 6 = 50% tolerance)
+ * For each enabled mm_market_config row, "quoting" requires:
+ *   - has currently-open orders on Kalshi (≥1 with status='open') — counts existing resting
+ *     orders, not just new placements, because the MM correctly leaves a quote in place when
+ *     the book hasn't moved (no min_requote_cents trigger).
+ *   - provider_market_depth (≥120 rows with non-empty yes_levels in window — 1Hz emitter ⇒
+ *     3600/hr expected, 120 = 3.3% of expected, generous tolerance)
+ *   - mm_pnl_snapshots     (≥6 rows in window — 5-min cron ⇒ 12/hr expected, 6 = 50% tolerance)
  *
  * Exit code 0 = ≥MM_HEARTBEAT_MIN_QUOTING markets meeting the threshold; 1 otherwise.
  *
@@ -47,8 +49,7 @@ export async function runHeartbeat(opts = {}) {
              AND o.placed_at > now() - ($1::int * INTERVAL '1 minute')) AS new_orders_window,
         (SELECT COUNT(*) FROM pmci.mm_orders o
            WHERE o.market_id = mc.market_id
-             AND o.placed_at > now() - ($1::int * INTERVAL '1 minute')
-             AND o.status = 'open') AS new_open_window,
+             AND o.status = 'open') AS currently_open_orders,
         (SELECT COUNT(*) FROM pmci.provider_market_depth d
            WHERE d.provider_market_id = mc.market_id
              AND d.observed_at > now() - ($1::int * INTERVAL '1 minute')
@@ -68,6 +69,7 @@ export async function runHeartbeat(opts = {}) {
     const rows = r.rows ?? [];
     const perMarket = rows.map((row) => {
       const newOrders = Number(row.new_orders_window);
+      const currentlyOpen = Number(row.currently_open_orders);
       const depth = Number(row.depth_with_yes_window);
       const pnl = Number(row.pnl_snapshots_window);
       return {
@@ -75,11 +77,12 @@ export async function runHeartbeat(opts = {}) {
         market_id: Number(row.market_id),
         kill_switch_active: row.kill_switch_active === true,
         new_orders_window: newOrders,
-        new_open_window: Number(row.new_open_window),
+        currently_open_orders: currentlyOpen,
         depth_with_yes_window: depth,
         pnl_snapshots_window: pnl,
         latest_order: row.latest_order,
-        meets_quoting_threshold: newOrders >= 1 && depth >= MIN_DEPTH && pnl >= MIN_PNL,
+        meets_quoting_threshold:
+          currentlyOpen >= 1 && depth >= MIN_DEPTH && pnl >= MIN_PNL,
       };
     });
 
