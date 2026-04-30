@@ -55,12 +55,15 @@ serve(async (req: Request) => {
   const targetUrl = `${PMCI_SERVER_URL}${JOB_MAP[job]}`;
 
   try {
+    // Fastify rejects POST with Content-Type: application/json and an empty body
+    // (FST_ERR_CTP_EMPTY_JSON_BODY). Send "{}" so every admin job route accepts the call.
     const res = await fetch(targetUrl, {
       method: "POST",
       headers: {
         "x-pmci-api-key": PMCI_API_KEY,
         "Content-Type": "application/json",
       },
+      body: "{}",
     });
     const result = await res.json();
     console.log(`[pmci-job-runner] job=${job} status=${res.status}`, result);
