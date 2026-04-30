@@ -21,6 +21,8 @@ const JOB_MAP: Record<string, string> = {
   "auto-link":         "/v1/admin/jobs/auto-link",
   "mm-post-fill-backfill": "/v1/admin/jobs/mm-post-fill-backfill",
   "mm-pnl-snapshot": "/v1/admin/jobs/mm-pnl-snapshot",
+  "mm-rotate-tickers": "/v1/admin/jobs/mm-rotate-tickers",
+  "mm-stream-heartbeat": "/v1/admin/jobs/mm-stream-heartbeat",
 };
 
 serve(async (req: Request) => {

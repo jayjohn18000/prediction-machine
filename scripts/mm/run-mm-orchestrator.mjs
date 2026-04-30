@@ -143,6 +143,21 @@ async function main() {
     };
   });
 
+  // Used by the daily ticker rotator to force a clean restart so the depth WS
+  // re-subscribes to the freshly-enabled mm_market_config rows. Fly auto-restarts
+  // the machine on process.exit.
+  app.post("/admin/restart", async (req, reply) => {
+    const adminKey = process.env.PMCI_ADMIN_KEY?.trim();
+    if (adminKey && req.headers["x-pmci-admin-key"] !== adminKey) {
+      return reply.code(403).send({ error: "forbidden", message: "admin key required" });
+    }
+    setTimeout(() => {
+      console.error("[mm] /admin/restart invoked — exiting for Fly to respawn");
+      process.exit(0);
+    }, 500);
+    return reply.code(202).send({ ok: true, restartingInMs: 500 });
+  });
+
   await app.listen({ port: PORT, host: "0.0.0.0" });
   console.error(`[mm] /health/mm listening on ${PORT}`);
   const t0 = new Date().toISOString();

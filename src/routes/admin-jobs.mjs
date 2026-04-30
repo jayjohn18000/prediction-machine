@@ -8,6 +8,8 @@ import { spawn } from "child_process";
 import { createPgClient } from "../../lib/mm/order-store.mjs";
 import { insertPnlSnapshotsAllEnabledMarkets } from "../../lib/mm/pnl-attribution.mjs";
 import { backfillPostFillMids } from "../../lib/mm/post-fill-backfill.mjs";
+import { runRotation } from "../../scripts/mm/rotate-demo-tickers.mjs";
+import { runHeartbeat } from "../../scripts/mm/mm-stream-heartbeat.mjs";
 
 const ADMIN_JOBS = {
   "ingest-sports":    ["node", ["lib/ingestion/sports-universe.mjs"]],
@@ -89,12 +91,52 @@ export function registerAdminJobRoutes(app, deps) {
         }
       }
 
+      if (jobName === "mm-rotate-tickers") {
+        const client = createPgClient();
+        await client.connect();
+        try {
+          const summary = await runRotation({ client });
+          return reply.code(summary.ok ? 200 : 500).send({ job: jobName, ...summary });
+        } catch (err) {
+          return reply.code(500).send({
+            ok: false,
+            job: jobName,
+            error: /** @type {Error} */ (err).message,
+          });
+        } finally {
+          await client.end().catch(() => {});
+        }
+      }
+
+      if (jobName === "mm-stream-heartbeat") {
+        const client = createPgClient();
+        await client.connect();
+        try {
+          const summary = await runHeartbeat({ client });
+          return reply.code(summary.ok ? 200 : 503).send({ job: jobName, ...summary });
+        } catch (err) {
+          return reply.code(500).send({
+            ok: false,
+            job: jobName,
+            error: /** @type {Error} */ (err).message,
+          });
+        } finally {
+          await client.end().catch(() => {});
+        }
+      }
+
       const job = ADMIN_JOBS[jobName];
       if (!job) {
         return reply.code(404).send({
           error: "unknown job",
           jobName,
-          available: [...Object.keys(ADMIN_JOBS), "mm-pnl-snapshot", "mm-post-fill-backfill"],
+          available: [
+            ...Object.keys(ADMIN_JOBS),
+            "mm-pnl-snapshot",
+            "mm-post-fill-backfill",
+            "mm-rotate-tickers",
+            "mm-stream-heartbeat",
+          ],
         });
       }
 
@@ -118,7 +160,13 @@ export function registerAdminJobRoutes(app, deps) {
     "/v1/admin/jobs",
     { preHandler: [adminKeyGate], rateLimit: RATE_LIMIT_CONFIG },
     async () => ({
-      available: [...Object.keys(ADMIN_JOBS), "mm-pnl-snapshot", "mm-post-fill-backfill"].sort(),
+      available: [
+        ...Object.keys(ADMIN_JOBS),
+        "mm-pnl-snapshot",
+        "mm-post-fill-backfill",
+        "mm-rotate-tickers",
+        "mm-stream-heartbeat",
+      ].sort(),
     })
   );
 }
