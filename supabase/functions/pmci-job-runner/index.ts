@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const PMCI_API_KEY = Deno.env.get("PMCI_API_KEY") ?? "";
+const PMCI_ADMIN_KEY = Deno.env.get("PMCI_ADMIN_KEY") ?? "";
 const PMCI_SERVER_URL = Deno.env.get("PMCI_SERVER_URL") ?? "";
 
 const JOB_MAP: Record<string, string> = {
@@ -57,12 +58,16 @@ serve(async (req: Request) => {
   try {
     // Fastify rejects POST with Content-Type: application/json and an empty body
     // (FST_ERR_CTP_EMPTY_JSON_BODY). Send "{}" so every admin job route accepts the call.
+    /** @type {Record<string,string>} */
+    const fwdHeaders: Record<string, string> = {
+      "x-pmci-api-key": PMCI_API_KEY,
+      "Content-Type": "application/json",
+    };
+    if (PMCI_ADMIN_KEY) fwdHeaders["x-pmci-admin-key"] = PMCI_ADMIN_KEY;
+
     const res = await fetch(targetUrl, {
       method: "POST",
-      headers: {
-        "x-pmci-api-key": PMCI_API_KEY,
-        "Content-Type": "application/json",
-      },
+      headers: fwdHeaders,
       body: "{}",
     });
     const result = await res.json();
