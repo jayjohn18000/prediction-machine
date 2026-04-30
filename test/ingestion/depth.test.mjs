@@ -20,6 +20,7 @@ import {
   handleMessage,
   makeEmptyBook,
   makeSupabaseWriter,
+  normalizeLevelTuple,
   reconnectBackoffMs,
   resetDepthStateForReconnect,
   secondsSinceLastUpdate,
@@ -32,6 +33,54 @@ const silent = { info: () => {}, warn: () => {}, error: () => {} };
 // ---------------------------------------------------------------------------
 // applySnapshot
 // ---------------------------------------------------------------------------
+
+test("normalizeLevelTuple parses Kalshi *_dollars_fp string format to [cents,qty]", () => {
+  assert.deepEqual(normalizeLevelTuple(["0.0100", "5693.00"]), [1, 5693]);
+  assert.deepEqual(normalizeLevelTuple(["0.2600", "11.00"]), [26, 11]);
+  assert.deepEqual(normalizeLevelTuple(["0.9500", "20000.00"]), [95, 20000]);
+});
+
+test("normalizeLevelTuple keeps legacy [cents,qty] integer form working", () => {
+  assert.deepEqual(normalizeLevelTuple([55, 100]), [55, 100]);
+  assert.deepEqual(normalizeLevelTuple([1, 7]), [1, 7]);
+});
+
+test("normalizeLevelTuple rejects malformed input", () => {
+  assert.equal(normalizeLevelTuple(null), null);
+  assert.equal(normalizeLevelTuple([]), null);
+  assert.equal(normalizeLevelTuple(["abc", "def"]), null);
+  assert.equal(normalizeLevelTuple([200, 1]), null); // out of range
+});
+
+test("applySnapshot reads new Kalshi yes_dollars_fp / no_dollars_fp shape", () => {
+  const book = makeEmptyBook();
+  // Captured-from-prod snapshot fragment for KXPGATOUR-PGC26-TFLE.
+  applySnapshot(book, {
+    market_ticker: "KXPGATOUR-PGC26-TFLE",
+    yes_dollars_fp: [["0.0100", "4805601.00"], ["0.0200", "2405222.00"], ["0.0300", "999999.90"]],
+    no_dollars_fp: [["0.0100", "5693.00"], ["0.9600", "74611.64"]],
+  });
+  assert.equal(book.yes.size, 3);
+  assert.equal(book.yes.get(1), 4805601);
+  assert.equal(book.yes.get(2), 2405222);
+  assert.equal(book.yes.get(3), 999999.9);
+  assert.equal(book.no.size, 2);
+  assert.equal(book.no.get(1), 5693);
+  assert.equal(book.no.get(96), 74611.64);
+});
+
+test("applyDelta reads new Kalshi yes_dollars_fp / no_dollars_fp shape", () => {
+  const book = makeEmptyBook();
+  book.yes.set(1, 100);
+  book.no.set(96, 50);
+  applyDelta(book, {
+    yes_dollars_fp: [["0.0100", "0"], ["0.0200", "10.00"]], // remove 1c, add 2c
+    no_dollars_fp: [["0.9600", "75.00"]], // update 96c
+  });
+  assert.equal(book.yes.has(1), false);
+  assert.equal(book.yes.get(2), 10);
+  assert.equal(book.no.get(96), 75);
+});
 
 test("applySnapshot replaces book state from both sides", () => {
   const book = makeEmptyBook();
