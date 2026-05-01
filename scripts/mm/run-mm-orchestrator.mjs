@@ -23,6 +23,7 @@ import {
 import { createPgClient } from "../../lib/mm/order-store.mjs";
 import { loadPrivateKey } from "../../lib/providers/kalshi-ws-auth.mjs";
 import { startDepthIngestion, makePgDepthWriter } from "../../lib/ingestion/depth.mjs";
+import { buildMmHealthMmResponse } from "../../lib/mm/runtime-health-payload.mjs";
 
 const PORT = Number(process.env.PORT ?? 8790);
 
@@ -130,19 +131,7 @@ async function main() {
     const h = /** @type {any} */ (health);
     const depthSnap =
       typeof depthGetHealthSnapshot === "function" ? depthGetHealthSnapshot() : null;
-    const configured =
-      depthSnap?.depthSubscribedConfigured ?? h.depthSubscribedTickers ?? 0;
-    return {
-      ok: h.lastOrchestratorError ? false : health.ok !== false,
-      ...health,
-      ...(depthSnap ?? {}),
-      depthSubscribedTickers: configured,
-      depthSubscribedConfigured: depthSnap?.depthSubscribedConfigured ?? configured,
-      depthSubscribedConnected: depthSnap?.depthSubscribedConnected ?? 0,
-      depthLastUpdateSecondsAgo:
-        depthSnap?.depthLastUpdateSecondsAgo ?? h.depthLastUpdateSecondsAgo,
-      depthTickersStale: depthSnap?.depthTickersStale ?? h.depthTickersStale,
-    };
+    return buildMmHealthMmResponse({ health: h, depthSnap });
   });
 
   // Used by the daily ticker rotator to force a clean restart so the depth WS
