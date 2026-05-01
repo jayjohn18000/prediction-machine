@@ -24,10 +24,8 @@ const PMCI_TABLES = [
   'provider_market_map',
   'market_families',
   'market_links',
-  'unmatched_markets',
-  'linker_runs',
-  'link_gold_labels',
-  'linker_run_metrics',
+  // arb-era tables dropped 2026-05-01 (B.3a, migration 20260501190800):
+  //   unmatched_markets, linker_runs, link_gold_labels, linker_run_metrics
   'proposed_links',
   'review_decisions',
   // Observer + API request log tables (low criticality but part of pmci schema).
