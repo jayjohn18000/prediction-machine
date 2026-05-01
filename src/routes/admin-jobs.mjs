@@ -21,12 +21,9 @@ const ADMIN_JOBS = {
   "audit-live":       ["bash", ["scripts/run_pmci_live_audit.sh"]],
   "review-crypto":    ["node", ["scripts/review/pmci-review-category-pipeline.mjs"]],
   "review-economics": ["node", ["scripts/review/pmci-review-category-pipeline.mjs", "--economics"]],
-  "auto-accept":      ["node", ["scripts/review/pmci-auto-accept.mjs"]],
-  "auto-accept-audit": ["node", ["scripts/review/pmci-auto-accept-audit.mjs"]],
   "status-digest":    ["node", ["scripts/digest/pmci-daily-digest.mjs"]],
   "benchmark-coverage": ["node", ["scripts/benchmark/coverage-benchmark.mjs"]],
   "health-poll":      ["node", ["scripts/ops/pmci-health-poll.mjs"]],
-  "auto-link":        ["node", ["scripts/ops/pmci-auto-link-pass.mjs"]],
 };
 
 export function registerAdminJobRoutes(app, deps) {
