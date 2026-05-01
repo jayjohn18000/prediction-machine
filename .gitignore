@@ -24,3 +24,4 @@ state/repo-audit/daily/*.json
 # Supabase platform audit: daily JSON (MCP snapshots) — keep optional delta md tracked if desired
 state/supabase-audit/daily/*.json
 .claude/
+.cursor-prompts/
