@@ -1187,8 +1187,11 @@ paths:
 
   /v1/coverage:
     get:
+      deprecated: true
       summary: Market coverage
       description: |
+        **Sunset:** 2026-08-01.
+
         Returns match rate between provider markets and canonical market families.
         `coverage_ratio` is `matched_markets / total_markets`. `unmatched_breakdown`
         shows why unlinked markets have no family.
@@ -1232,8 +1235,12 @@ paths:
 
   /v1/coverage/summary:
     get:
+      deprecated: true
       summary: Coverage summary
-      description: Linked vs unlinked market counts over an optional time window.
+      description: |
+        **Sunset:** 2026-08-01.
+
+        Linked vs unlinked market counts over an optional time window.
       operationId: getCoverageSummary
       tags: [Coverage]
       security:
@@ -1518,8 +1525,11 @@ paths:
 
   /v1/signals/divergence:
     get:
+      deprecated: true
       summary: Per-link divergence for a family
       description: |
+        **Sunset:** 2026-08-01.
+
         Returns the current price divergence for each link in a family. Requires fresh data —
         returns `503` if the observer lag exceeds `PMCI_MAX_LAG_SECONDS`.
       operationId: getDivergence
@@ -1555,8 +1565,11 @@ paths:
 
   /v1/signals/top-divergences:
     get:
+      deprecated: true
       summary: Top divergences (global or filtered)
       description: |
+        **Sunset:** 2026-08-01.
+
         Returns the families with the highest cross-provider price divergence among active links,
         sorted by `max_divergence` descending. With no `event_id`, ranks across all linked families.
         Optional `category` filters via `canonical_events.category`. Does not use the API freshness gate;
@@ -1603,10 +1616,60 @@ paths:
         "429":
           $ref: "#/components/responses/RateLimited"
 
+  /v1/signals/event/{eventRef}:
+    get:
+      deprecated: true
+      summary: Divergence-style payload for legacy event slug/path ref
+      description: |
+        **Sunset:** 2026-08-01.
+
+        Arb-era route: resolves the URL-encoded Polymarket-style `eventRef` and delegates to the same ranking as top-divergences.
+      operationId: getSignalsEventByRef
+      tags: [Signals]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      parameters:
+        - name: eventRef
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Event-scoped divergence result
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
   /v1/snapshots:
     get:
+      deprecated: true
       summary: Price history for a market family
       description: |
+        **Sunset:** 2026-08-01.
+
         Returns bucketed average `price_yes` per provider for all active links in a family.
         Use to draw sparklines on the candidate detail view. No freshness gate — returns
         historical data even if the observer is temporarily stale.
@@ -1702,8 +1765,11 @@ paths:
 
   /v1/review/queue:
     get:
+      deprecated: true
       summary: Proposed link review queue
       description: |
+        **Sunset:** 2026-08-01.
+
         Returns pending link proposals above a confidence threshold. Use with
         `POST /v1/review/decision` to accept, reject, or skip each proposal.
       operationId: getReviewQueue
@@ -1753,8 +1819,11 @@ paths:
 
   /v1/review/decision:
     post:
+      deprecated: true
       summary: Submit a review decision
       description: |
+        **Sunset:** 2026-08-01.
+
         Accept, reject, or skip a proposed link. Accepting with `relationship_type: "equivalent"`
         creates or attaches to a market family and inserts an active `market_links` row.
       operationId: postReviewDecision
@@ -1783,6 +1852,57 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReviewDecisionResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/review/batch:
+    post:
+      deprecated: true
+      summary: Batch review decisions on proposals
+      description: |
+        **Sunset:** 2026-08-01.
+
+        Applies one decision (`accept` / `reject` / `skip`) to up to 100 proposals in a single POST.
+      operationId: postReviewBatch
+      tags: [Review]
+      security:
+        - ApiKeyHeader: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              required: [proposed_ids, decision]
+              properties:
+                proposed_ids:
+                  type: array
+                  items:
+                    type: integer
+                  minItems: 1
+                  maxItems: 100
+                decision:
+                  type: string
+                  enum: [accept, reject, skip]
+                relationship_type:
+                  type: string
+                  enum: [equivalent, proxy]
+                note:
+                  type: string
+      responses:
+        "200":
+          description: Batch decision summary
+          headers:
+            X-PMCI-Version:
+              $ref: "#/components/headers/XPmciVersion"
+          content:
+            application/json:
+              schema:
+                type: object
         "401":
           $ref: "#/components/responses/Unauthorized"
         "429":

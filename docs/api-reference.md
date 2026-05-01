@@ -30,18 +30,21 @@ When neither env var is set the API is fully open (useful for local dev).
 | GET    | `/v1/health/observer`        | Public   | `provider`=`kalshi`|`polymarket` (optional drilldown via `provider_focus`) | `true_success_rate` Σ-window alert (`alert`/`failure_rate`), `configured_pair_success_rate`, error totals |
 | GET    | `/v1/health/usage`           | Public   | —                            | Per-endpoint stats, last 24h           |
 | GET    | `/v1/providers`              | Standard | —                            | `[{code, name}]`                       |
-| GET    | `/v1/coverage`               | Standard | `provider`                   | `coverage_ratio`, unmatched breakdown  |
-| GET    | `/v1/coverage/summary`       | Standard | `provider`                   | linked vs unlinked counts              |
+| GET    | `/v1/coverage`               | Standard | `provider`                   | Deprecated **Sunset 2026-08-01.** `coverage_ratio`, unmatched breakdown  |
+| GET    | `/v1/coverage/summary`       | Standard | `provider`                   | Deprecated **Sunset 2026-08-01.** linked vs unlinked counts              |
 | GET    | `/v1/markets/unlinked`       | Standard | `provider`                   | Markets with no family link            |
 | GET    | `/v1/markets/new`            | Standard | `provider`, `since`          | Markets first seen after `since`       |
 | GET    | `/v1/canonical-events`       | Standard | —                            | List canonical events; filter by `category` |
 | GET    | `/v1/market-families`        | Standard | `event_id` (UUID)            | Families under a canonical event       |
 | GET    | `/v1/market-links`           | Standard | `family_id` (int)            | Links in a family with price/divergence|
 | GET    | `/v1/links`                  | Standard | —                            | Historical/current links with filters  |
-| GET    | `/v1/signals/divergence`     | Standard | `family_id` (int)            | **503 if stale.** Per-link divergence  |
-| GET    | `/v1/signals/top-divergences`| Standard | `event_id` (UUID)            | **503 if stale.** Top divergences      |
-| GET    | `/v1/review/queue`           | Standard | —                            | Pending proposals above confidence     |
-| POST   | `/v1/review/decision`        | Standard | body (see below)             | Accept / reject / skip a proposal      |
+| GET    | `/v1/signals/divergence`     | Standard | `family_id` (int)            | Deprecated **Sunset 2026-08-01.** **503 if stale.** Per-link divergence  |
+| GET    | `/v1/signals/top-divergences`| Standard | optional `event_id` (UUID), `category`, `limit` | Deprecated **Sunset 2026-08-01.** Top divergences; includes soft `data_lag_seconds` metadata (does **not** use the global freshness gate) |
+| GET    | `/v1/signals/event/:eventRef`| Standard | path `eventRef` + optional `category`, `limit` | Deprecated **Sunset 2026-08-01.** Same ranking as top-divergences for a legacy polymarket event ref |
+| GET    | `/v1/snapshots`              | Standard | `family_id`, `since`, `interval` | Deprecated **Sunset 2026-08-01.** Bucketed YES price history across providers |
+| GET    | `/v1/review/queue`           | Standard | —                            | Deprecated **Sunset 2026-08-01.** Pending proposals above confidence     |
+| POST   | `/v1/review/decision`        | Standard | body (see below)             | Deprecated **Sunset 2026-08-01.** Accept / reject / skip a proposal      |
+| POST   | `/v1/review/batch`          | Standard | body (`proposed_ids`, `decision`, …) | Deprecated **Sunset 2026-08-01.** Batch apply one decision across many IDs |
 | POST   | `/v1/resolve/link`           | Admin    | body (see below)             | Directly insert an active link         |
 
 ---
