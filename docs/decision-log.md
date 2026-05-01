@@ -326,3 +326,41 @@ Tests run exclusively against Kalshi DEMO. Production cutover is a separate ADR 
   2. **`test/routes/review.test.mjs` — "POST /v1/review/decision accept: succeeds on first call (happy path)"** — assertion `null !== 10` (expected `proposed_id` from DB/fixture; behavior vs test data mismatch).
 - **Rationale:** Ship Pre-W2 API/observer fixes (health endpoints vs live schema) while tracking test repair separately.
 
+---
+
+## ADR-010: 7-day MM test design drift — daily ticker rotator + 8-market window — 2026-05-01
+
+**Status:** Accepted (drift documented retroactively)
+
+**Decision:** ADR-008 specified the 7-day continuous-quote test as "five hand-curated demo-tradeable Kalshi markets enabled in `pmci.mm_market_config`." Between 2026-04-28 (clock start) and 2026-04-30, the test design evolved on `main`: 8 markets are enabled at any time, a **daily ticker rotator** (`scripts/mm/rotate-demo-tickers.mjs` + cron migration `20260430140000_pmci_mm_rotator_cron.sql`) refreshes the universe each day, and a 24h **stream-heartbeat verifier** (`scripts/mm/mm-stream-heartbeat.mjs`) replaces the implicit "did we quote continuously" check.
+
+**Context:** The original ADR-008 universe was tied to specific demo tickers with limited liquidity windows. Several of those markets were at end-of-life within the 7-day window (e.g., NHL series, NBA totals on 26APR28 settlement). Without a refresh mechanism, the test would have degenerated to an empty universe by ~day 4. The rotator solves the universe-decay problem at the cost of changing the exit-criterion semantics from "static 5 continuous" to "rotating ≤8 continuous."
+
+**Alternatives considered:**
+- **Hold to ADR-008's static 5** — rejected: the original 5 don't survive 7 days of trading, so the test would be vacuous after ~3 days.
+- **Pause the clock, re-seed, restart** — rejected: violates "continuous" semantics worse than rotation does.
+- **Wait until live tickers can run a full 7-day cycle (longer-dated markets)** — rejected: pushes promotion to production by weeks for no signal gain.
+
+**Consequences:**
+- Exit criterion "5 markets quoted continuously for 7 days" becomes "≤8 markets, rotated daily, with stream-heartbeat verification continuously for 7 days."
+- Spread-capture and adverse-selection metrics aggregate across the rotated set rather than the original 5.
+- Per-market continuity assertion is replaced by per-cycle continuity (every cron tick must show active quoting on the current universe).
+- Post-W6 audit (next-audit trigger #2 in `audits/post-pivot-review/synthesis/post-pivot-roadmap.md`) must reconcile against this revised criterion.
+
+**Sources:**
+- `scripts/mm/rotate-demo-tickers.mjs` (commit `8152414`, 2026-04-30)
+- `scripts/mm/mm-stream-heartbeat.mjs` (commit `8152414`, 2026-04-30)
+- `supabase/migrations/20260430140000_pmci_mm_rotator_cron.sql`
+- ADR-008 (now superseded for universe management; clock-start timestamp still authoritative)
+
+**Open question for post-W6 audit:** the elevated `mm_kill_switch_events` count (44,372 as of 2026-05-01 day 3) needs root-cause analysis before any production-cutover ADR. Likely either triage churn from W4 reconcile phase or a kill-switch-fire bug; either way, must be resolved before live capital.
+
+---
+
+## 2026-05-01 — Master parallel-execution prompt rewritten to reflect day-3-of-7 reality
+
+- **Context:** A master prompt at `docs/cursor-prompts/2026-05-01-post-mm-mvp-parallel-execution.md` was authored 2026-05-01 assuming Phase 0 (operational follow-through) and Track A (Polymarket Pre-W1 + W1) had not started. Both were already on `main` from 2026-04-28 (ADR-008 for the operational steps; ADR-009 for the Polymarket indexer). The prompt was stale.
+- **Decision:** Rewrite the master prompt so Phase 0 is a verification pass against live state (clock running, 8 markets quoting, runtime healthy) rather than an execution sequence; collapse Track A into a status-acknowledgement plus a forward-looking "Track A successor = indexer W2" placeholder; preserve Tracks B, C, D as live work. Capture this revision rather than silently editing.
+- **Rationale:** Operator caught the staleness while reading the master prompt mid-validation. Future agents reading the file should see current reality, not the assumptions baked in 24 hours earlier.
+- **Documentation cascade:** `CLAUDE.md` (CURRENT PHASE line + invariants), `docs/system-state.md` (Current status block + Drift from ADR-008 callout), `docs/decision-log.md` (this entry + ADR-010), and the master prompt itself were all updated in the same pass.
+

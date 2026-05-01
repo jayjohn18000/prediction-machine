@@ -46,22 +46,38 @@ were corrected in the 2026-04-24 W1 spec check.
 
 ---
 
-## Current status (2026-04-19)
+## Current status (2026-05-01)
 
-- **Branch / phase:** `main`; **E2** (crypto) and **E3** (economics) in progress — ladder-style crypto proposer, economics event-group proposer, full review pipeline wired for admin/cron (`scripts/review/pmci-review-category-pipeline.mjs`).
-- **E1.7 Phase G bilateral-linking hygiene:** ✅ CLOSED 2026-04-19. Reslot migration applied in prod; 1,412 / 4,191 sports+politics pm rows moved to enriched slots; sports bilateral-ready 88 → 104 (+16); overfilled share 40.5% → 33.0%. Auto-link pass (10k batch) returned `{attached: 4381, skipped: 5619, linked: 0}` — `linked: 0` is steady-state since all 104 bilateral-ready slots were already paired in prior `link_version=117` family rows. See [`docs/plans/phase-g-phase2-results.md`](plans/phase-g-phase2-results.md).
-- **Production:** `pmci-api` and `pmci-observer` on Fly.io (see `deploy/fly.api.toml`, `deploy/fly.observer.toml`). Cron and scheduled jobs use Supabase `pmci-job-runner` Edge Function + `pg_cron`, not local PM2.
-- **Ops:** `npm run pmci:status` — API health plus, when `DATABASE_URL` is set, smoke counts, pending proposals by category, active links by category, and latest observer heartbeat. `npm run pmci:smoke` remains the lightweight DB smoke check.
-- **Automation:** pg_cron jobs include ingest (sports/politics), stale cleanup, schema verify, audit, crypto/economics review pipelines (full propose → auto-accept → audit), daily status digest, weekly coverage benchmark (apply latest migrations for digest/benchmark schedules).
+- **Branch / phase:** `main` (HEAD `993e5c7`, in sync with `origin/main`). **MM MVP 7-day validation in progress, day 3 of 7.** Clock started 2026-04-28T17:41:28.638Z (ADR-008); window expires ~2026-05-05T17:41Z. **Polymarket on-chain wallet indexer Pre-W1 + W1 shipped** 2026-04-28 (ADR-009; commit `2ab3160`).
+- **Production runtime (3 Fly apps):**
+  - `pmci-api.fly.dev` — Fastify API + `/v1/mm/*` admin routes for runtime dashboard
+  - `pmci-observer.fly.dev` — observer loop (Kalshi + Polymarket REST + Kalshi WS depth)
+  - `pmci-mm-runtime.fly.dev` — MM orchestrator, **single-instance invariant**, `/health/mm` endpoint, W4 reconcile phase
+- **MM live state (2026-05-01 ~14:36Z):** 8 enabled demo markets (drift from ADR-008's static 5 — see "Drift from ADR-008" below); ~45,582 mm_orders; 118 mm_fills; **44,372 mm_kill_switch_events** (suspiciously high, investigate before production cutover); latest mm_pnl_snapshot from <1 min ago; 8/8 depth subscriptions connected; depth ticker staleness 160–273s (likely normal for demo low-activity markets).
+- **API freshness (2026-05-01 ~14:36Z):** Kalshi + Polymarket lag 30s; provider_markets=161,083; snapshots=6,095,067; families=205; current_links=356.
+- **Polymarket indexer state:** schema + reorg state machine + read-only client namespace + CI lint guard all merged. `pmci.poly_wallet_trades` count = 0 (W2 ingestion process not yet started). `pmci-poly-indexer` Fly app not deployed.
+- **Cron:** pg_cron now includes the MM stack (depth pruning daily, post-fill backfill every minute, P&L snapshot every 5 min, daily ticker rotator, 24h stream heartbeat) plus the legacy ingest/audit/review crons. Job runner via Supabase `pmci-job-runner` Edge Function.
+- **Ops:** `npm run pmci:status` for API health + smoke counts. `curl -sS https://pmci-mm-runtime.fly.dev/health/mm` for MM runtime status. `curl -sS -H "X-PMCI-API-KEY: $PMCI_API_KEY" https://pmci-api.fly.dev/v1/mm/{markets,orders,positions,pnl,fills,kill-switch-events}` for runtime dashboard.
 
-### Carry-forward (see `docs/adr/` for design gates)
-- Polymarket strike ladders vs Kalshi: tolerance and product rules (ADR: ladder strike tolerance).
-- Ladder / multi-strike divergence scoring vs binary YES mid (`signals/top-divergences`) — Phase F design (ADR: ladder divergence scoring).
-- Canonical event lifecycle after settlement (archive vs delete) — ADR: canonical event lifecycle.
+### Drift from ADR-008 (captured retroactively in ADR-010, 2026-05-01)
+ADR-008 specified "5 hand-curated demo markets continuously quoted for 7 days." The actual test design as of 2026-04-30 includes 8 markets enabled at any time PLUS a daily ticker rotator (`scripts/mm/rotate-demo-tickers.mjs` + cron migration `20260430140000_pmci_mm_rotator_cron.sql`) PLUS a 24h stream-heartbeat verifier (`scripts/mm/mm-stream-heartbeat.mjs`). The exit-criterion semantics changed from "5 markets continuous" to a rotating set. ADR-010 documents this drift; an open question (Track D Q10) asks whether ADR-010 should stand or whether ADR-008 should be revised in place to remove the two-ADR tension.
 
-### Known risks (abbreviated)
+### Open work (per 2026-05-01 master prompt; tracks B/C/D still pending)
+- **Track B — sunset cleanup tier 1:** `lib/backtest/` not yet archived; `pmci.unmatched_markets`/`link_gold_labels`/`linker_runs`/`linker_run_metrics` not dropped; `pmci.proposed_links` not truncated; JOB_MAP orphans (`auto-accept`, `auto-accept:audit`, `auto-link`) still live in `supabase/functions/pmci-job-runner/index.ts` + `src/routes/admin-jobs.mjs`; arb-era endpoints not tagged `deprecated: true` in `docs/openapi.yaml`; migration secrets (anon JWT + PMCI_API_KEY) not rotated; lovable-ui `pages/Index.tsx` removed but other dead components need verification; `docs/db-schema-reference.md` drift unfixed.
+- **Track C — MM v2 prep:** `docs/plans/mm-v2/` does not exist; statistical fair-value spec, universe-selection rubric, MM-flavored backtest engine spec, and futures-account memo all unwritten.
+- **Track D — open decisions:** no `docs/plans/*open-decisions*` doc yet.
+- **Indexer W2:** `pmci-poly-indexer` Fly app design + deployment + live-tail Polygon RPC ingestion all unstarted.
+
+### Known risks (2026-05-01)
+- **44k mm_kill_switch_events** all reason=`daily_loss`, fired 2026-04-29T17:09Z → 2026-04-30T13:43Z (then stopped). PnL at trip = −2,341.66 cents vs `daily_loss_limit_cents=2000`. **The 7-day run already breached the daily-loss exit criterion on day 2.** Operator decision (2026-05-01): accept as a controlled-failure observation; use the data; do not declare PASS at hour 168 on this dimension.
+- **Unannounced `pmci-mm-runtime` restart 2026-04-30T19:03:22Z.** Possibly a Fly machine cycle. Since that restart, `lastReconcileAt` has been frozen at `2026-04-30T19:03:23Z` (~20.9h as of 2026-05-01 15:55Z) — the W4 reconcile loop has not advanced since boot, even though `loopTick` is still incrementing. Order placement collapsed from ~1,080/h to sporadic single-digit hours after the restart. Handed to **Track E (MM runtime triage)** for diagnosis; do not declare runtime "trustworthy" until Track E returns a verdict.
+- **Daily ticker rotator** changes the test design from ADR-008; ADR-010 captures this. Open question (Track D Q10) is whether to keep both ADRs or revise ADR-008 in place.
+- Depth ticker staleness on every ticker (160–273s); acceptable for demo but won't be acceptable on production where active book updates should arrive sub-second. (Note: 2026-05-01 ~15:33Z showed `depthSubscribedConnected=0/8` for ~22 minutes; recovered to 8/8 by 15:55Z. Transient WS reconnect window — Track E should investigate why the runtime didn't surface this in `/health/mm` as anything other than "ok=true" while it lasted.)
 - Freshness thresholds differ between CLI and API by design; align operator expectations via `PMCI_MAX_LAG_SECONDS` / API config.
-- Competitive coverage and benchmark outputs live under `output/benchmark/`; weekly cron archives there when the benchmark job runs on a host with `DATABASE_URL` and optional `ODDPOOL_API_KEY`.
+
+### Carry-forward
+- Canonical event lifecycle after settlement (archive vs delete) — ADR pending.
+- Production cutover from Kalshi DEMO to live Kalshi after 7-day validation closes — gated on validation outcome, kill_switch investigation, and a separate ADR.
 
 ---
 
