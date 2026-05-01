@@ -35,7 +35,7 @@ Live P&L attribution already imports `kalshiFeeUsdCeilCents` from `lib/execution
 **If you want to think differently, the relevant tension is:**
 Keeping `costs.mjs` as the named indirection preserves one import for future multi-venue fee tables, but it blurs MM’s actual dependency and leaves the pivot-era module in the narrative longer than necessary.
 
-**Your answer: [ ]**
+**Your answer: [x] YES** — trust the audit; update `phase-mm-mvp-plan.md` Carryover + Contract R7 prose to reference `fees.kalshi.mjs` directly.
 
 ## Q2. Should `polymarket-snapshot-recovery.mjs` be restated as an MM-only niche helper with no indexer backfill claim?
 
@@ -51,7 +51,7 @@ The implementation remains at `lib/backfill/polymarket-snapshot-recovery.mjs` wi
 **If you want to think differently, the relevant tension is:**
 Naming it “MM helper” might understate legitimate one-off forensic backfill uses — but those uses are still observer/PMCI snapshot repair, not indexer W2.
 
-**Your answer: [ ]**
+**Your answer: [x] YES** — trust the audit; retract the indexer claim from `phase-mm-mvp-plan.md` lines 298–299.
 
 ## Q3. Should `v_polymarket_latest_prices` be owned observer-side or indexer-side?
 
@@ -67,7 +67,7 @@ Naming it “MM helper” might understate legitimate one-off forensic backfill 
 **If you want to think differently, the relevant tension is:**
 Agent 03’s indexer-leaning framing (roadmap section 6) is moot unless you intentionally move Poly mid storage into indexer-owned tables later — that would be a new ADR, not this view’s current ownership.
 
-**Your answer: [ ]**
+**Your answer: [x] YES — RESOLVED** — observer-side already shipped (migration `20260427120001_pmci_v_polymarket_latest_prices.sql`). Closed.
 
 ## Q4. Should the `/health/mm` admin probe live on `pmci-api` as `/v1/health/mm` or on a separate Fastify attached to `pmci-mm-runtime`?
 
@@ -83,7 +83,7 @@ Agent 03’s indexer-leaning framing (roadmap section 6) is moot unless you inte
 **If you want to think differently, the relevant tension is:**
 Centralizing all health URLs on `pmci-api` is operationally fewer hostnames — but obscures reconcile/depth truth that exists only inside the MM process.
 
-**Your answer: [ ]**
+**Your answer: [x] YES — RESOLVED** — separate Fastify on `pmci-mm-runtime` already shipped (`scripts/mm/run-mm-orchestrator.mjs`, `deploy/fly.mm.toml`). Closed.
 
 ## Q5. Should CLAUDE.md adopt an explicit invariant that MM operational signaling never uses fire-and-forget cron / `child.unref()`-style dispatch?
 
@@ -99,7 +99,7 @@ Centralizing all health URLs on `pmci-api` is operationally fewer hostnames — 
 **If you want to think differently, the relevant tension is:**
 Formalizing “never” risks blocking benign background maintenance unless you carve out explicitly allowed cron categories (metric writers vs control plane).
 
-**Your answer: [ ]**
+**Your answer: [x] YES** — adopt the invariant; scope is the narrower one the sub-agent synthesized: privileged MM administrative signaling (kill-switch acks, position-snapshot triggers) must be synchronous/durable; observability cron jobs that prove row landing remain allowed.
 
 ## Q6. Should `pmci.providers.last_snapshot_at` be dropped (live-compute) or retained by wiring every writer to `touchProvidersLastSnapshotAt`?
 
@@ -115,7 +115,7 @@ Formalizing “never” risks blocking benign background maintenance unless you 
 **If you want to think differently, the relevant tension is:**
 If global max snapshot queries regress in latency, operators might revive a narrower materialized summary — separate from resurrecting column-level drift on providers.
 
-**Your answer: [ ]**
+**Your answer: [x] YES — RESOLVED** — denormalization dropped (migration `20260427120003_pmci_drop_health_denormalizations.sql`). Closed.
 
 ## Q7. Is `lovable-ui` in-scope for MM MVP operator surfaces, or out-of-scope?
 
@@ -131,7 +131,7 @@ If global max snapshot queries regress in latency, operators might revive a narr
 **If you want to think differently, the relevant tension is:**
 Keeping a live dashboard lowers operational blindness during the seven-day demo, even if prettiness is deferred — but inaccurate wiring trades one risk for another.
 
-**Your answer: [ ]**
+**Your answer: [x] OUT-OF-SCOPE** — `lovable-ui` is not in MM MVP scope. The Track B.5 deletion of `MarketMakingDashboard.tsx` stands; Q7-placeholder dashboard remains until Phase 1 per the post-MM creative-practice roadmap.
 
 ## Q8. Are Phase G ops scripts (`scripts/review/*`, `scripts/ops/pmci-auto-link-pass.mjs`, `scripts/classify/*`) still run on any cadence?
 
@@ -147,7 +147,7 @@ The repo **still exposes** these entrypoints aggressively: `package.json` maps m
 **If you want to think differently, the relevant tension is:**
 Marking scripts “cold” prematurely could strand legitimate sports/politics maintenance while indexer/MM stay live on PMCI primitives.
 
-**Your answer: [ ]**
+**Your answer: [x] NO CADENCE — assume not running.** Operator unaware of any cadence; treat Phase G ops scripts as cold. This unblocks `lib/matching/` and bilateral-schema archival in the "Only-after-thesis-validated" tier-3 cleanup bucket (post-7-day-clock).
 
 ## Recommended ordering for operator review
 
