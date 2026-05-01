@@ -48,7 +48,7 @@ were corrected in the 2026-04-24 W1 spec check.
 
 ## Current status (2026-05-01)
 
-- **Branch / phase:** `main` (HEAD `993e5c7`, in sync with `origin/main`). **MM MVP 7-day validation in progress, day 3 of 7.** Clock started 2026-04-28T17:41:28.638Z (ADR-008); window expires ~2026-05-05T17:41Z. **Polymarket on-chain wallet indexer Pre-W1 + W1 shipped** 2026-04-28 (ADR-009; commit `2ab3160`).
+- **Branch / phase:** `main` (merged Track F / ops branches 2026-05-01; push to `origin/main` up to deploy). **MM MVP 7-day validation in progress, day 3 of 7.** Clock started 2026-04-28T17:41:28.638Z (ADR-008); window expires ~2026-05-05T17:41Z. **Polymarket on-chain wallet indexer Pre-W1 + W1 shipped** 2026-04-28 (ADR-009; commit `2ab3160`).
 - **Production runtime (3 Fly apps):**
   - `pmci-api.fly.dev` — Fastify API + `/v1/mm/*` admin routes for runtime dashboard
   - `pmci-observer.fly.dev` — observer loop (Kalshi + Polymarket REST + Kalshi WS depth)
@@ -62,15 +62,16 @@ were corrected in the 2026-04-24 W1 spec check.
 ### Drift from ADR-008 (captured retroactively in ADR-010, 2026-05-01)
 ADR-008 specified "5 hand-curated demo markets continuously quoted for 7 days." The actual test design as of 2026-04-30 includes 8 markets enabled at any time PLUS a daily ticker rotator (`scripts/mm/rotate-demo-tickers.mjs` + cron migration `20260430140000_pmci_mm_rotator_cron.sql`) PLUS a 24h stream-heartbeat verifier (`scripts/mm/mm-stream-heartbeat.mjs`). The exit-criterion semantics changed from "5 markets continuous" to a rotating set. ADR-010 documents this drift; an open question (Track D Q10) asks whether ADR-010 should stand or whether ADR-008 should be revised in place to remove the two-ADR tension.
 
-### Open work (per 2026-05-01 master prompt; tracks B/C/D still pending)
-- **Track B — sunset cleanup tier 1:** `lib/backtest/` not yet archived; `pmci.unmatched_markets`/`link_gold_labels`/`linker_runs`/`linker_run_metrics` not dropped; `pmci.proposed_links` not truncated; JOB_MAP orphans (`auto-accept`, `auto-accept:audit`, `auto-link`) still live in `supabase/functions/pmci-job-runner/index.ts` + `src/routes/admin-jobs.mjs`; arb-era endpoints not tagged `deprecated: true` in `docs/openapi.yaml`; migration secrets (anon JWT + PMCI_API_KEY) not rotated; lovable-ui `pages/Index.tsx` removed but other dead components need verification; `docs/db-schema-reference.md` drift unfixed.
-- **Track C — MM v2 prep:** `docs/plans/mm-v2/` does not exist; statistical fair-value spec, universe-selection rubric, MM-flavored backtest engine spec, and futures-account memo all unwritten.
-- **Track D — open decisions:** no `docs/plans/*open-decisions*` doc yet.
+### Open work (post Track G 2026-05-01)
+- **Track B — remaining:** `pmci.unmatched_markets` / `link_gold_labels` / `linker_runs` / `linker_run_metrics` **not** dropped — `linker_runs` had 140 rows at pre-drop check (B.3 blocked). **Migration-secrets rotation** deferred by operator until the 7-day clock closes (`track-b-rotate-migration-secrets`). `pmci.proposed_links` truncate migration is in-repo (`20260501123000_pmci_truncate_proposed_links.sql`) but was **not** applied on this track (only B.3 + post-api pg_cron unschedule were in scope for DB apply).
+- **Track C — MM v2 prep:** landed under `docs/plans/mm-v2/` (merge from `track-c-mm-v2-prep`).
+- **Track D — open decisions:** `docs/plans/2026-05-01-open-decisions-for-jay.md` (8 questions; blanks intentional).
 - **Indexer W2:** `pmci-poly-indexer` Fly app design + deployment + live-tail Polygon RPC ingestion all unstarted.
 
 ### Known risks (2026-05-01)
+- **Runtime redeployed 2026-05-01 ~18:34Z with Track F fixes** — `lastStartupReconcileAt` field added (alias of legacy `lastReconcileAt`); `/health/mm` exposes new `ready` and `severity` fields; PnL rollup now sums latest snapshot per market; `mm_orders.status` lifecycle patched (backfill applied: 121 parent rows synced from `mm_fills`). Daily-loss exit criterion remains breached on day 2 (controlled-failure observation).
 - **44k mm_kill_switch_events** all reason=`daily_loss`, fired 2026-04-29T17:09Z → 2026-04-30T13:43Z (then stopped). PnL at trip = −2,341.66 cents vs `daily_loss_limit_cents=2000`. **The 7-day run already breached the daily-loss exit criterion on day 2.** Operator decision (2026-05-01): accept as a controlled-failure observation; use the data; do not declare PASS at hour 168 on this dimension.
-- **Unannounced `pmci-mm-runtime` restart 2026-04-30T19:03:22Z.** Possibly a Fly machine cycle. Since that restart, `lastReconcileAt` has been frozen at `2026-04-30T19:03:23Z` (~20.9h as of 2026-05-01 15:55Z) — the W4 reconcile loop has not advanced since boot, even though `loopTick` is still incrementing. Order placement collapsed from ~1,080/h to sporadic single-digit hours after the restart. Handed to **Track E (MM runtime triage)** for diagnosis; do not declare runtime "trustworthy" until Track E returns a verdict.
+- **Unannounced `pmci-mm-runtime` restart 2026-04-30T19:03:22Z** (historical). Post–Track F deploy, watch `/health/mm` for `ready`, `severity`, and main-loop tick/reconcile fields — **2026-05-01 ~18:35Z check:** `ok=true` but `ready=false`, `severity=crit`, `loopTick=0`, `lastStartupReconcileAt=null` while depth remained 8/8 connected (orchestrator warm-up or startup fault; Track E should re-triage after the new health surface).
 - **Daily ticker rotator** changes the test design from ADR-008; ADR-010 captures this. Open question (Track D Q10) is whether to keep both ADRs or revise ADR-008 in place.
 - Depth ticker staleness on every ticker (160–273s); acceptable for demo but won't be acceptable on production where active book updates should arrive sub-second. (Note: 2026-05-01 ~15:33Z showed `depthSubscribedConnected=0/8` for ~22 minutes; recovered to 8/8 by 15:55Z. Transient WS reconnect window — Track E should investigate why the runtime didn't surface this in `/health/mm` as anything other than "ok=true" while it lasted.)
 - Freshness thresholds differ between CLI and API by design; align operator expectations via `PMCI_MAX_LAG_SECONDS` / API config.
