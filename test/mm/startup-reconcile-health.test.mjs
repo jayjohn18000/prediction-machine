@@ -10,9 +10,17 @@ test("stampStartupReconcileHealth sets lastStartupReconcileAt and aliases lastRe
   const after = Date.now();
   assert.equal(health.reconcilePhase, "W4");
   assert.equal(health.reconcileSkipped, false);
+  assert.equal(health.lastReconcileTimedOut, false);
   assert.ok(typeof health.lastStartupReconcileAt === "string");
   assert.ok(typeof health.lastReconcileAt === "string");
   assert.equal(health.lastStartupReconcileAt, health.lastReconcileAt);
   const t = new Date(String(health.lastStartupReconcileAt)).getTime();
   assert.ok(t >= before && t <= after + 2000);
+});
+
+test("stampStartupReconcileHealth sets lastReconcileTimedOut when timedOut", () => {
+  /** @type {Record<string, unknown>} */
+  const health = {};
+  stampStartupReconcileHealth(health, { phase: "W4", skipped: true, timedOut: true });
+  assert.equal(health.lastReconcileTimedOut, true);
 });

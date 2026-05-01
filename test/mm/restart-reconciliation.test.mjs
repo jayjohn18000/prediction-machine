@@ -142,3 +142,47 @@ test("reconcile loaded order: getOrder executed runs ingest + sync (not blind ca
   assert.ok(log.some((x) => x.startsWith("getOrder:kal-1")));
   assert.ok(log.some((x) => x === "UPDATE_status:filled"));
 });
+
+test("reconcile getOrder hang times out -> cancelled within 6s", async () => {
+  /** @type {string[]} */
+  const updates = [];
+  const trader = /** @type {any} */ ({
+    async getOrders() {
+      return { orders: [] };
+    },
+    async getOrder() {
+      return new Promise(() => {});
+    },
+    async cancelOrder() {
+      return {};
+    },
+  });
+
+  const client = {
+    /**
+     * @param {string} sql
+     * @param {unknown[]} [params]
+     */
+    async query(sql, params = []) {
+      if (/status IN \('pending', 'open', 'partial'\)/.test(sql)) {
+        return { rows: [{ id: 99, kalshi_order_id: "hang-kid" }] };
+      }
+      if (/UPDATE pmci.mm_orders SET\s+status/.test(sql)) {
+        updates.push(String(params[1]));
+        return { rows: [], rowCount: 1 };
+      }
+      return { rows: [] };
+    },
+  };
+
+  const t0 = Date.now();
+  const r = await reconcileOnRestart({
+    client: /** @type {any} */ (client),
+    trader,
+    markets: [{ kalshi_ticker: "KX-HANG", market_id: 77 }],
+  });
+  const elapsed = Date.now() - t0;
+  assert.ok(elapsed < 6500, `elapsed ${elapsed}ms`);
+  assert.ok(r.logs.some((l) => l.includes("db_stale_order_timeout")), r.logs.join("\n"));
+  assert.ok(updates.includes("cancelled"));
+});
