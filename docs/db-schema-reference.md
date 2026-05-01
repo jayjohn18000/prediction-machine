@@ -1,156 +1,242 @@
 # PMCI DB Schema Reference
 
+_Last verified: 2026-05-01 (Track B sub-agent)_
+
 _Read this at session start before writing any DB queries or making API calls._
-_Last updated: 2026-04-19 (A1 market_outcomes)_
+
+_All physical tables live in schema `pmci` unless noted. Types below mirror `information_schema` on production (Postgres): `bigint`=int8, `smallint`=int2, `numeric`, `uuid`, `timestamptz`, `interval`, enums `market_type`, `relationship_type`._
 
 ---
 
 ## Key tables and column names
 
-### `provider_markets`
+### `pmci.providers`
+
 | Column | Type | Notes |
 |--------|------|-------|
-| `id` | uuid | PK |
-| `provider` | text | `'kalshi'` or `'polymarket'` |
-| `provider_market_id` | text | Kalshi: ticker string; Polymarket: condition ID (hex) |
+| `id` | smallint | PK |
+| `code` | text | e.g. `kalshi`, `polymarket` |
+| `name` | text | Display name |
+| `created_at` | timestamptz | |
+
+---
+
+### `pmci.provider_markets`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | bigint | PK — join target for snapshots, links, outcomes |
+| `provider_id` | smallint | FK → `pmci.providers` |
+| `provider_market_ref` | text | Kalshi ticker or Polymarket condition/ref string |
+| `event_ref` | text | Venue event grouping key when present |
 | `title` | text | Market title |
-| `status` | text | Kalshi: `'active'` (not `'open'`); Polymarket: varies |
+| `category` | text | politics, sports, etc. |
+| `url` | text | Venue URL |
+| `market_type` | `market_type` | ENUM |
+| `resolution_source` | text | |
+| `open_time` | timestamptz | |
 | `close_time` | timestamptz | Used for stale-active detection |
-| `sport` | text | `'unknown'` if not yet inferred |
+| `status` | text | Kalshi: often `active` (not `open`) |
+| `metadata` | jsonb | Venue-specific payloads; Kalshi series often `metadata->>'series_ticker'` |
+| `first_seen_at` | timestamptz | |
+| `last_seen_at` | timestamptz | |
+| `title_embedding` | vector | Optional pgvector embedding |
+| `election_phase`, `subject_type` | text | Politics metadata |
+| `sport` | text | `'unknown'` until inferred |
 | `event_type` | text | |
 | `game_date` | date | |
-| `home_team` | text | |
-| `away_team` | text | |
-| `metadata` | jsonb | Extra provider-specific fields |
-| `metadata->>'series_ticker'` | text | Kalshi series ticker (NOT a top-level column) |
-| `created_at` | timestamptz | |
-| `updated_at` | timestamptz | |
+| `home_team`, `away_team` | text | |
+| `volume_24h` | numeric | |
+| `market_template` | text | |
+| `template_params` | jsonb | |
 
-> **Gotcha:** `series_ticker` is stored in `metadata`, not as a column. Use `pm.metadata->>'series_ticker'` in SQL.
+> **Gotcha:** `series_ticker` for Kalshi is usually `metadata->>'series_ticker'`, not a top-level column.
 
-### `market_outcomes` (pivot A1 — settled markets only)
+---
+
+### `pmci.provider_market_snapshots`
 
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | bigint | PK |
-| `provider_market_id` | bigint | FK → `pmci.provider_markets(id)` — **unique** (one current row per venue market) |
-| `provider_id` | smallint | FK → `pmci.providers` |
-| `winning_outcome` | text | Provider-native winner (Kalshi `result`; Polymarket winning token `outcome` label) |
-| `winning_outcome_raw` | jsonb | Structured slice of the settlement response |
-| `resolved_at` | timestamptz | Venue-reported resolution time when available |
-| `resolution_source_observed` | text | e.g. Kalshi/Polymarket GET URL used |
-| `raw_settlement` | jsonb | Full JSON body returned by the provider for audit |
-| `ingested_at` | timestamptz | First insert |
-| `updated_at` | timestamptz | Last upsert |
+| `provider_market_id` | bigint | FK → `provider_markets.id` |
+| `observed_at` | timestamptz | |
+| `price_yes`, `price_no` | numeric | Mid-derived or venue mid |
+| `best_bid_yes`, `best_ask_yes` | numeric | Order book YES side |
+| `liquidity`, `volume_24h` | numeric | |
+| `raw` | jsonb | Original payload snippet |
 
-**Join path:** `pmci.v_market_links_current` → `provider_market_id` → `market_outcomes` (same `provider_markets.id` as `market_links.provider_market_id`).
+---
 
-### `market_outcome_history` (append-only audit)
+### `pmci.market_outcomes` (settled markets)
 
-Same semantic columns as the current row (minus `ingested_at` / `updated_at`), plus `recorded_at` (when this observation was written). **INSERT only** — updates/deletes are blocked by trigger. Every ingest refresh appends a row when a settlement is observed, then upserts `market_outcomes`.
-
-### `proposed_links`
 | Column | Type | Notes |
 |--------|------|-------|
-| `id` | integer | PK — **pg returns this as a JS string; always `Number(p.id)` before use** |
-| `category` | text | `'sports'`, `'politics'`, etc. |
-| `provider_market_id_a` | text | |
-| `provider_market_id_b` | text | |
-| `proposed_relationship_type` | text | e.g. `'equivalent'` |
-| `confidence` | numeric | 0.0–1.0 |
-| `reasons` | jsonb | Array of reason strings |
-| `decision` | text | `NULL` = pending, `'accepted'`, `'rejected'` |
-| `created_at` | timestamptz | |
+| `id` | bigint | PK |
+| `provider_market_id` | bigint | FK → `provider_markets` — effectively one current row per market |
+| `provider_id` | smallint | |
+| `winning_outcome` | text | |
+| `winning_outcome_raw` | jsonb | |
+| `resolved_at` | timestamptz | |
+| `resolution_source_observed` | text | |
+| `raw_settlement` | jsonb | Audit blob |
+| `ingested_at` | timestamptz | |
+| `updated_at` | timestamptz | |
 
-> **Gotcha:** Rows with `decision='rejected'` are NOT re-proposed by the proposer — they are skipped even if the underlying data has changed. To re-propose a previously rejected pair, reset `decision` to `NULL` first.
+**Join:** `pmci.v_market_links_current` → `provider_market_id` → `market_outcomes.provider_market_id`.
 
-### `market_links`
+### `pmci.market_outcome_history`
+
+Append-only audit companion to `market_outcomes` — same semantics plus `recorded_at` (historical ingest trail).
+
+---
+
+### `pmci.canonical_events`
+
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | uuid | PK |
-| `family_id` | uuid | FK → `families.id` |
-| `provider` | text | `'kalshi'` or `'polymarket'` |
-| `provider_market_id` | text | |
-| `relationship_type` | text | `'equivalent'` |
-| `status` | text | `'active'` |
+| `slug`, `title` | text | |
+| `category`, `description` | text | |
+| `start_time`, `end_time`, `resolves_at`, `resolved_at`, `event_time` | timestamptz | |
+| `event_date` | date | |
+| `metadata`, `participants` | jsonb | |
+| `external_ref`, `external_source`, `resolution_source`, `source_annotation`, `lifecycle`, `subcategory` | text | |
+| `created_at`, `updated_at` | timestamptz | |
+
+---
+
+### `pmci.market_families`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | bigint | PK |
+| `canonical_event_id`, `canonical_market_id` | uuid | Event / optional canonical market linkage |
+| `label`, `notes` | text | |
+| `created_at`, `updated_at` | timestamptz | |
+
+---
+
+### `pmci.market_links`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | bigint | PK |
+| `family_id` | bigint | FK → `market_families.id` |
+| `provider_id` | smallint | FK → `providers` (**not** a `provider` text column) |
+| `provider_market_id` | bigint | FK → `provider_markets.id` |
+| `relationship_type` | `relationship_type` | ENUM |
+| `status` | text | e.g. `active`; `removed_at`/`removed_reason` when dropped |
 | `link_version` | integer | |
-| `confidence` | numeric | |
-| `created_at` | timestamptz | |
+| `confidence`, `staleness_score`, `break_rate`, `correlation_strength` | numeric | |
+| `correlation_window` | interval | |
+| `lag_seconds` | integer | |
+| `last_validated_at` | timestamptz | |
+| `reasons` | jsonb | |
+| `created_at`, `updated_at`, `removed_at` | timestamptz | |
+| `removed_reason` | text | |
 
-> **Gotcha:** `market_links` has no `score` column. Don't select it.
-> **Gotcha:** When joining `market_links ml` and `provider_markets pm`, both have a `status` column — qualify as `ml.status` or `pm.status` to avoid "ambiguous column" errors.
+> **Gotcha:** There is **no** `score` column. Qualify `status` (`ml.status` vs `pm.status`) when joining `market_links` to `provider_markets`.
 
-### `families`
+---
+
+### `pmci.proposed_links`
+
 | Column | Type | Notes |
 |--------|------|-------|
-| `id` | uuid | PK |
-| `canonical_title` | text | |
+| `id` | bigint | PK |
 | `category` | text | |
-| `sport` | text | |
-| `created_at` | timestamptz | |
+| `provider_market_id_a`, `provider_market_id_b` | bigint | FK-ish to `provider_markets.id` |
+| `proposed_relationship_type`, `accepted_relationship_type`, `decision` | text | |
+| `confidence`, `features`, `reasons` | numeric / jsonb | |
+| `created_at`, `reviewed_at` | timestamptz | |
+| `reviewer_note` | text | |
+| `accepted_family_id` | bigint | |
+| `accepted_link_version` | integer | |
+
+> **Gotcha:** Rejected pairs stay skipped by proposers until `decision` is cleared back to pending semantics (operator choice).
+
+---
+
+### `pmci.review_decisions`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | bigint | PK |
+| `proposed_link_id` | bigint | FK → `proposed_links.id` |
+| `decision`, `relationship_type`, `reviewer_note` | text | |
+| `reviewed_at` | timestamptz | |
+
+---
+
+### `pmci.mm_orders` / `pmci.mm_fills` (MM runtime)
+
+**`mm_orders`:** `id`, `market_id`, `kalshi_order_id`, `client_order_id`, `side`, `price_cents`, `size_contracts`, `status`, `placed_at`, `filled_at`, `fill_*`, `fair_value_at_place`, `payload`.
+
+**`mm_fills`:** `id`, `order_id`, `market_id`, `observed_at`, `price_cents`, `size_contracts`, `side`, `fair_value_at_fill`, `post_fill_mid_*`, `adverse_cents_5m`, `kalshi_fill_id`.
 
 ---
 
 ## Upsert behavior
 
 The `provider_markets` upsert uses:
+
 ```sql
 sport = COALESCE(EXCLUDED.sport, provider_markets.sport)
 ```
 
-This means: if a re-ingestion run provides a non-null `sport`, it **will overwrite** a previously-stored `'unknown'` value. You can safely re-run ingestion or the backfill script to fix `unknown` sport rows — it will not clobber rows that already have a correct sport.
+So non-null ingestion values replace prior `'unknown'` sport — safe to re-run backfills without clobbering good data.
 
 ---
 
 ## API auth headers
 
 | Endpoint pattern | Required header | Value |
-|-----------------|-----------------|-------|
+|------------------|-----------------|-------|
 | `/v1/review/*` | `x-pmci-api-key` | `process.env.PMCI_API_KEY` |
 | `/v1/resolve/link` | `x-pmci-admin-key` | `process.env.PMCI_ADMIN_KEY` |
 
-> **Gotcha:** The global auth hook in `src/server.mjs` reads `x-pmci-api-key`. Do NOT use `x-pmci-admin-key` for review endpoints — it will return 401 Unauthorized.
+> **Gotcha:** `src/server.mjs` enforces `x-pmci-api-key` for standard routes — do **not** send only admin key to review endpoints.
 
 ---
 
-## Proposed_links → market_links acceptance flow
+## Proposed_links → acceptance flow
 
-1. Proposer runs (`npm run pmci:propose:sports`) — writes rows to `proposed_links` with `decision=NULL`
-2. Review: query `proposed_links WHERE decision IS NULL AND category='sports'`
-3. Accept via API:
-   ```
-   POST http://localhost:3001/v1/review/decision
-   Headers: x-pmci-api-key: <PMCI_API_KEY>
-   Body: { "proposed_id": <Number(p.id)>, "decision": "accepted" }
-   ```
-   **Note:** `proposed_id` must be a number (integer), not a string.
-4. On acceptance, the API creates one `families` row (or reuses existing) and two `market_links` rows (one per provider).
+1. Proposer (`npm run pmci:propose:*`) inserts `pmci.proposed_links` rows with pending `decision`.
+2. Review via `GET /v1/review/queue` (Sunset labelled in OpenAPI Track B — still valid mechanically).
+3. Accept example:
+
+```
+POST http://localhost:8787/v1/review/decision
+Headers: x-pmci-api-key: <PMCI_API_KEY>
+Body: { "proposed_id": <number>, "decision": "accept", "relationship_type": "equivalent" }
+```
+
+(`proposed_id` must parse as integer in JSON.)
+
+4. Acceptance creates/links `market_families` plus `market_links` rows inside the resolver transaction path.
 
 ---
 
 ## Stale-active markets
 
-A market is "stale-active" when `status='active'` but `close_time < NOW()`. These pollute the candidate pool for the proposer. Clear them with:
-```bash
-node scripts/stale-cleanup.mjs
-```
-The script is guard-first: it checks that none of the stale markets have active `market_links` before updating.
+`status='active'` with `close_time < now()` pollutes proposers — clear via `node scripts/stale-cleanup.mjs` (guard-first: skips markets with active links).
 
 ---
 
-## Provider ID quirks
+## Provider market ref quirks
 
-| Provider | `provider_market_id` format | Example |
-|----------|----------------------------|---------|
-| Kalshi | Series ticker + market suffix | `KXMLBODDS-25MAY12-NYM` |
-| Polymarket | Hex condition ID | `0x3a4b...` |
+| Provider | Stored field | Typical shape |
+|----------|--------------|---------------|
+| Kalshi | `provider_market_ref` | Series ticker + market suffix, e.g. `KXMLBODDS-25MAY12-NYM` |
+| Polymarket | `provider_market_ref` / `event_ref` | Hex-ish condition identifiers plus human titles |
 
-Polymarket tag IDs (used in sport inference) are **numeric strings** like `"5"` or `"155"` — never match them against text pattern maps. Always use title-based fallback for Polymarket sport inference.
+Polymarket tag IDs behave as unstable numeric-string metadata — rely on titles + taxonomy helpers for sport inference, not brittle ID maps.
 
 ---
 
-## Sport inference
+## Sport inference pointers
 
-- **Kalshi:** inference is series-level. Pass `(seriesTitle, seriesTicker)` to `inferSportFromKalshiTicker` — title is primary, ticker is fallback only.
-- **Polymarket:** tag ID numeric strings are unreliable across environments; use `inferSportFromPolymarketTitle(title, tags)` with title fallback.
-- DB backfill: `node scripts/backfill-sport-inference.mjs` — re-runs inference on all `unknown` sport Kalshi markets and updates DB directly.
+- **Kalshi:** use `(seriesTitle, seriesTicker)` in `inferSportFromKalshiTicker` — title first.
+- **Polymarket:** prefer `inferSportFromPolymarketTitle(title, tags)`; tag buckets vary by environment.
+- Backfill CLI: `node scripts/backfill-sport-inference.mjs`.
