@@ -90,3 +90,55 @@ test("reconcile returns wmPatch with bid/ask from resting yes orders", async () 
   assert.equal(w.bidPx, 48);
   assert.equal(w.askPx, 52);
 });
+
+test("reconcile loaded order: getOrder executed runs ingest + sync (not blind cancel)", async () => {
+  /** @type {string[]} */
+  const log = [];
+  const trader = /** @type {any} */ ({
+    async getOrders() {
+      return { orders: [] };
+    },
+    async getOrder(kid) {
+      log.push(`getOrder:${kid}`);
+      return { order: { order_id: kid, status: "executed" } };
+    },
+    async getFills() {
+      return { fills: [] };
+    },
+    async cancelOrder() {
+      return {};
+    },
+  });
+
+  const client = {
+    /**
+     * @param {string} sql
+     * @param {unknown[]} [params]
+     */
+    async query(sql, params = []) {
+      if (/status IN \('pending', 'open', 'partial'\)/.test(sql)) {
+        return { rows: [{ id: 42, kalshi_order_id: "kal-1" }] };
+      }
+      if (/SELECT size_contracts::numeric AS sz/.test(sql)) {
+        return { rows: [{ sz: 2 }] };
+      }
+      if (/FROM pmci.mm_fills/.test(sql) && /total_sz/.test(sql)) {
+        return { rows: [{ total_sz: 2, last_at: new Date("2026-05-01T10:00:00Z"), vwap_px: 48 }] };
+      }
+      if (/UPDATE pmci.mm_orders SET\s+status/.test(sql)) {
+        log.push(`UPDATE_status:${params[1]}`);
+        return { rows: [] };
+      }
+      return { rows: [], sql, params };
+    },
+  };
+
+  const r = await reconcileOnRestart({
+    client: /** @type {any} */ (client),
+    trader,
+    markets: [{ kalshi_ticker: "KX-Z", market_id: 9 }],
+  });
+  assert.ok(r.logs.some((l) => l.includes("ingest+sync")), r.logs.join("\n"));
+  assert.ok(log.some((x) => x.startsWith("getOrder:kal-1")));
+  assert.ok(log.some((x) => x === "UPDATE_status:filled"));
+});

@@ -26,6 +26,7 @@ primary_region = "iad"
   min_machines_running = 1
 
   [[http_service.checks]]
+    # Returns 200 from /health/mm; body now includes `ready` + `severity` for ops (Fly checks path only).
     interval = "15s"
     timeout = "5s"
     grace_period = "45s"
