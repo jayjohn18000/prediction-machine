@@ -70,6 +70,8 @@ const health = {
   lastStartupReconcileAt: null,
   reconcilePhase: null,
   reconcileSkipped: null,
+  /** True when startup reconcile hit the 30s outer guard (see orchestrator Promise.race). */
+  lastReconcileTimedOut: false,
   lastMainLoopTickAt: null,
   loopTick: 0,
   lastSessionLineCount: 0,
