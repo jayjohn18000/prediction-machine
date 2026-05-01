@@ -65,6 +65,8 @@ const health = {
   startedAt: null,
   listenedAt: null,
   lastReconcileAt: null,
+  /** Set once at startup after reconcileOnRestart; same instant as lastReconcileAt (deprecated alias). */
+  lastStartupReconcileAt: null,
   reconcilePhase: null,
   reconcileSkipped: null,
   lastMainLoopTickAt: null,
