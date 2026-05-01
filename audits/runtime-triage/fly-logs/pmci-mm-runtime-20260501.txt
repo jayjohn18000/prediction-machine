@@ -1,0 +1,100 @@
+[2m2026-05-01T17:17:49Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]}
+[2m2026-05-01T17:17:49Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468379', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:49Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468380', yes_levels: 1, no_levels: 3 }
+[2m2026-05-01T17:17:50Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457415', yes_levels: 1, no_levels: 4 }
+[2m2026-05-01T17:17:50Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457418', yes_levels: 1, no_levels: 1 }
+[2m2026-05-01T17:17:50Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468375', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:50Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468376', yes_levels: 2, no_levels: 0 }
+[2m2026-05-01T17:17:50Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468377', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:50Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468378', yes_levels: 0, no_levels: 5 }
+[2m2026-05-01T17:17:50Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468379', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:50Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.skip_empty_yes {
+[2m2026-05-01T17:17:50Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  provider_market_id: '4468378',
+[2m2026-05-01T17:17:50Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  observed_at: '2026-05-01T17:17:50.311Z'
+[2m2026-05-01T17:17:50Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]}
+[2m2026-05-01T17:17:50Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468380', yes_levels: 1, no_levels: 3 }
+[2m2026-05-01T17:17:51Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457415', yes_levels: 1, no_levels: 4 }
+[2m2026-05-01T17:17:51Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457418', yes_levels: 1, no_levels: 1 }
+[2m2026-05-01T17:17:51Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468375', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:51Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468376', yes_levels: 2, no_levels: 0 }
+[2m2026-05-01T17:17:51Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468377', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:51Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468378', yes_levels: 0, no_levels: 5 }
+[2m2026-05-01T17:17:51Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.skip_empty_yes {
+[2m2026-05-01T17:17:51Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  provider_market_id: '4468378',
+[2m2026-05-01T17:17:51Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  observed_at: '2026-05-01T17:17:51.312Z'
+[2m2026-05-01T17:17:51Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]}
+[2m2026-05-01T17:17:51Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468379', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:51Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468380', yes_levels: 1, no_levels: 3 }
+[2m2026-05-01T17:17:52Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457415', yes_levels: 1, no_levels: 4 }
+[2m2026-05-01T17:17:52Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457418', yes_levels: 1, no_levels: 1 }
+[2m2026-05-01T17:17:52Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468375', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:52Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468376', yes_levels: 2, no_levels: 0 }
+[2m2026-05-01T17:17:52Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468377', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:52Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468378', yes_levels: 0, no_levels: 5 }
+[2m2026-05-01T17:17:52Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.skip_empty_yes {
+[2m2026-05-01T17:17:52Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  provider_market_id: '4468378',
+[2m2026-05-01T17:17:52Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  observed_at: '2026-05-01T17:17:52.313Z'
+[2m2026-05-01T17:17:52Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]}
+[2m2026-05-01T17:17:52Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468379', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:52Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468380', yes_levels: 1, no_levels: 3 }
+[2m2026-05-01T17:17:53Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457415', yes_levels: 1, no_levels: 4 }
+[2m2026-05-01T17:17:53Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457418', yes_levels: 1, no_levels: 1 }
+[2m2026-05-01T17:17:53Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468375', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:53Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468376', yes_levels: 2, no_levels: 0 }
+[2m2026-05-01T17:17:53Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468377', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:53Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468378', yes_levels: 0, no_levels: 5 }
+[2m2026-05-01T17:17:53Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.skip_empty_yes {
+[2m2026-05-01T17:17:53Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  provider_market_id: '4468378',
+[2m2026-05-01T17:17:53Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  observed_at: '2026-05-01T17:17:53.312Z'
+[2m2026-05-01T17:17:53Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]}
+[2m2026-05-01T17:17:53Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468379', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:53Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468380', yes_levels: 1, no_levels: 3 }
+[2m2026-05-01T17:17:53Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m][mm] KXHIGHTSATX-26MAY01-T67 risk_block gate=fair_value_range
+[2m2026-05-01T17:17:54Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457415', yes_levels: 1, no_levels: 4 }
+[2m2026-05-01T17:17:54Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457418', yes_levels: 1, no_levels: 1 }
+[2m2026-05-01T17:17:54Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468375', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:54Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468376', yes_levels: 2, no_levels: 0 }
+[2m2026-05-01T17:17:54Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468377', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:54Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468378', yes_levels: 0, no_levels: 5 }
+[2m2026-05-01T17:17:54Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.skip_empty_yes {
+[2m2026-05-01T17:17:54Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  provider_market_id: '4468378',
+[2m2026-05-01T17:17:54Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  observed_at: '2026-05-01T17:17:54.313Z'
+[2m2026-05-01T17:17:54Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]}
+[2m2026-05-01T17:17:54Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468379', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:54Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468380', yes_levels: 1, no_levels: 3 }
+[2m2026-05-01T17:17:55Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457415', yes_levels: 1, no_levels: 4 }
+[2m2026-05-01T17:17:55Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457418', yes_levels: 1, no_levels: 1 }
+[2m2026-05-01T17:17:55Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468375', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:55Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468376', yes_levels: 2, no_levels: 0 }
+[2m2026-05-01T17:17:55Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468377', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:55Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468378', yes_levels: 0, no_levels: 5 }
+[2m2026-05-01T17:17:55Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.skip_empty_yes {
+[2m2026-05-01T17:17:55Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  provider_market_id: '4468378',
+[2m2026-05-01T17:17:55Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  observed_at: '2026-05-01T17:17:55.314Z'
+[2m2026-05-01T17:17:55Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]}
+[2m2026-05-01T17:17:55Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468379', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:55Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468380', yes_levels: 1, no_levels: 3 }
+[2m2026-05-01T17:17:56Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457415', yes_levels: 1, no_levels: 4 }
+[2m2026-05-01T17:17:56Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457418', yes_levels: 1, no_levels: 1 }
+[2m2026-05-01T17:17:56Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468375', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:56Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468376', yes_levels: 2, no_levels: 0 }
+[2m2026-05-01T17:17:56Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468377', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:56Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468378', yes_levels: 0, no_levels: 5 }
+[2m2026-05-01T17:17:56Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.skip_empty_yes {
+[2m2026-05-01T17:17:56Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  provider_market_id: '4468378',
+[2m2026-05-01T17:17:56Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  observed_at: '2026-05-01T17:17:56.314Z'
+[2m2026-05-01T17:17:56Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]}
+[2m2026-05-01T17:17:56Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468379', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:56Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468380', yes_levels: 1, no_levels: 3 }
+[2m2026-05-01T17:17:57Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457415', yes_levels: 1, no_levels: 4 }
+[2m2026-05-01T17:17:57Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4457418', yes_levels: 1, no_levels: 1 }
+[2m2026-05-01T17:17:57Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468375', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:57Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468376', yes_levels: 2, no_levels: 0 }
+[2m2026-05-01T17:17:57Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468377', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:57Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468378', yes_levels: 0, no_levels: 5 }
+[2m2026-05-01T17:17:57Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.skip_empty_yes {
+[2m2026-05-01T17:17:57Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  provider_market_id: '4468378',
+[2m2026-05-01T17:17:57Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]  observed_at: '2026-05-01T17:17:57.314Z'
+[2m2026-05-01T17:17:57Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]}
+[2m2026-05-01T17:17:57Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468379', yes_levels: 1, no_levels: 2 }
+[2m2026-05-01T17:17:57Z[0m app[6830371c057948] [32miad[0m [[34minfo[0m]depth.persist.level_counts { provider_market_id: '4468380', yes_levels: 1, no_levels: 3 }
