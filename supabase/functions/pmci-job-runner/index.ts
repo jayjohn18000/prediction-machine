@@ -21,6 +21,7 @@ const JOB_MAP: Record<string, string> = {
   "mm-pnl-snapshot": "/v1/admin/jobs/mm-pnl-snapshot",
   "mm-rotate-tickers": "/v1/admin/jobs/mm-rotate-tickers",
   "mm-stream-heartbeat": "/v1/admin/jobs/mm-stream-heartbeat",
+  "mm-ingest-outcomes": "/v1/admin/jobs/mm-ingest-outcomes",
 };
 
 serve(async (req: Request) => {

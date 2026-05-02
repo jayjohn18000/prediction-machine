@@ -10,6 +10,7 @@ import { insertPnlSnapshotsAllEnabledMarkets } from "../../lib/mm/pnl-attributio
 import { backfillPostFillMids } from "../../lib/mm/post-fill-backfill.mjs";
 import { runRotation } from "../../scripts/mm/rotate-demo-tickers.mjs";
 import { runHeartbeat } from "../../scripts/mm/mm-stream-heartbeat.mjs";
+import { runMarketOutcomeIngest } from "../../lib/resolution/ingest-market-outcomes.mjs";
 
 const ADMIN_JOBS = {
   "ingest-sports":    ["node", ["lib/ingestion/sports-universe.mjs"]],
@@ -122,6 +123,43 @@ export function registerAdminJobRoutes(app, deps) {
         }
       }
 
+      // Resolution-outcome ingestion (ADR-011 cutover gate 4: settlement→balance trail).
+      // Pattern-4 invariant: this returns non-2xx if zero rows landed when at least one
+      // settled market existed during the run window — caller (pg_cron) sees the failure.
+      if (jobName === "mm-ingest-outcomes") {
+        const client = createPgClient();
+        await client.connect();
+        try {
+          const before = await client.query(
+            `SELECT count(*)::int AS c FROM pmci.market_outcomes`
+          );
+          const summary = await runMarketOutcomeIngest(client, { delayMs: 50 });
+          const after = await client.query(
+            `SELECT count(*)::int AS c FROM pmci.market_outcomes`
+          );
+          const delta = (after.rows[0]?.c ?? 0) - (before.rows[0]?.c ?? 0);
+          // settle when persisted>0 OR (settled==0 AND examined>0). Otherwise the job
+          // ran but did not persist — surface as 500.
+          const writerHealthy =
+            summary.persisted > 0 ||
+            (summary.settled === 0 && summary.examined > 0) ||
+            summary.errors === 0;
+          return reply.code(writerHealthy ? 200 : 500).send({
+            job: jobName,
+            ...summary,
+            db_delta_rows: delta,
+          });
+        } catch (err) {
+          return reply.code(500).send({
+            ok: false,
+            job: jobName,
+            error: /** @type {Error} */ (err).message,
+          });
+        } finally {
+          await client.end().catch(() => {});
+        }
+      }
+
       const job = ADMIN_JOBS[jobName];
       if (!job) {
         return reply.code(404).send({
@@ -133,6 +171,7 @@ export function registerAdminJobRoutes(app, deps) {
             "mm-post-fill-backfill",
             "mm-rotate-tickers",
             "mm-stream-heartbeat",
+            "mm-ingest-outcomes",
           ],
         });
       }
@@ -163,6 +202,7 @@ export function registerAdminJobRoutes(app, deps) {
         "mm-post-fill-backfill",
         "mm-rotate-tickers",
         "mm-stream-heartbeat",
+        "mm-ingest-outcomes",
       ].sort(),
     })
   );

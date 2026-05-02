@@ -1,42 +1,95 @@
 #!/usr/bin/env node
 /**
- * MM 7-day-test daily ticker rotator.
+ * MM ticker rotator. Two modes:
  *
- * Designed for Kalshi DEMO, where active books are short-dated and a static ticker
- * list cannot survive a 7-day window. Each day this script:
- *   1. Pulls open markets from demo-api.kalshi.co
- *   2. Picks the top N (default 8) by volume + close-time score
+ *   MM_RUN_MODE=demo (default) — Kalshi DEMO; legacy 7-day-test behavior.
+ *   MM_RUN_MODE=prod          — PROD Kalshi; live capital. ADR-011 spec.
+ *
+ * Each daily run:
+ *   1. Pulls open markets from the appropriate Kalshi REST endpoint
+ *   2. Picks the top N (DEMO=8, PROD=2) by volume + close-time score
  *   3. Inserts any new tickers into pmci.provider_markets
- *   4. Upserts pmci.mm_market_config rows with standard MM risk params (enabled=true, kill_switch=false)
+ *   4. Upserts pmci.mm_market_config rows with mode-appropriate risk params
+ *      (enabled=true, kill_switch=false)
  *   5. Disables prior mm_market_config rows that aren't in today's selection
- *   6. (best-effort) Hits /admin/restart on pmci-mm-runtime so the depth WS re-subscribes
+ *   6. Hits /admin/restart on pmci-mm-runtime so the depth WS re-subscribes
  *
  * Idempotent: rerunning yields the same DB state as long as the Kalshi market set is unchanged.
  *
  * Env:
+ *   MM_RUN_MODE                    — 'demo' (default) | 'prod'
  *   DATABASE_URL                   — required
- *   KALSHI_DEMO_REST_BASE          — defaults to https://demo-api.kalshi.co/trade-api/v2
- *   MM_ROTATOR_TARGET_COUNT        — default 8
- *   MM_ROTATOR_MIN_CLOSE_HOURS     — default 48 (skip markets closing sooner than this)
+ *   KALSHI_DEMO_REST_BASE          — defaults to https://demo-api.kalshi.co/trade-api/v2 (demo mode)
+ *   KALSHI_PROD_REST_BASE          — defaults to https://api.elections.kalshi.com/trade-api/v2 (prod mode)
+ *   MM_ROTATOR_TARGET_COUNT        — default 8 (demo) / 2 (prod)
+ *   MM_ROTATOR_MIN_CLOSE_HOURS     — default 48 (demo) / 720 (prod ≥30 days per ADR-011)
  *   MM_ROTATOR_RESTART_URL         — runtime restart endpoint (default https://pmci-mm-runtime.fly.dev/admin/restart)
  *   PMCI_ADMIN_KEY                 — admin key for the restart call (skipped if unset)
+ *   MM_ROTATOR_DRY_RUN             — '1' | true: enumerate selected/rejected/disabled, perform NO writes
+ *
+ * CLI flags (override env): --dry-run, --mode=prod|demo
  */
 
 import "dotenv/config";
 import { createPgClient } from "../../lib/mm/order-store.mjs";
+
+/** @typedef {'demo' | 'prod'} RunMode */
+
+function parseCliArgs(argv) {
+  const args = { dryRun: false, mode: /** @type {RunMode | null} */ (null) };
+  for (const a of argv) {
+    if (a === "--dry-run") args.dryRun = true;
+    else if (a === "--mode=prod") args.mode = "prod";
+    else if (a === "--mode=demo") args.mode = "demo";
+  }
+  return args;
+}
+
+const CLI_ARGS = parseCliArgs(process.argv.slice(2));
+
+/** @returns {RunMode} */
+function resolveRunMode() {
+  if (CLI_ARGS.mode) return CLI_ARGS.mode;
+  const envMode = process.env.MM_RUN_MODE?.trim().toLowerCase();
+  return envMode === "prod" ? "prod" : "demo";
+}
+
+/** @returns {boolean} */
+function resolveDryRun() {
+  if (CLI_ARGS.dryRun) return true;
+  const v = process.env.MM_ROTATOR_DRY_RUN?.trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes";
+}
+
+const RUN_MODE = resolveRunMode();
+const DRY_RUN = resolveDryRun();
 
 const DEMO_REST_BASE =
   process.env.KALSHI_DEMO_REST_BASE?.trim() ||
   process.env.KALSHI_BASE?.trim() ||
   "https://demo-api.kalshi.co/trade-api/v2";
 
-const TARGET_COUNT = Number.parseInt(process.env.MM_ROTATOR_TARGET_COUNT ?? "8", 10);
-const MIN_CLOSE_HOURS = Number.parseFloat(process.env.MM_ROTATOR_MIN_CLOSE_HOURS ?? "48");
+const PROD_REST_BASE =
+  process.env.KALSHI_PROD_REST_BASE?.trim() ||
+  "https://api.elections.kalshi.com/trade-api/v2";
+
+const REST_BASE = RUN_MODE === "prod" ? PROD_REST_BASE : DEMO_REST_BASE;
+
+const TARGET_COUNT = Number.parseInt(
+  process.env.MM_ROTATOR_TARGET_COUNT ?? (RUN_MODE === "prod" ? "2" : "8"),
+  10,
+);
+const MIN_CLOSE_HOURS = Number.parseFloat(
+  process.env.MM_ROTATOR_MIN_CLOSE_HOURS ?? (RUN_MODE === "prod" ? "720" : "48"),
+);
 const RESTART_URL =
   process.env.MM_ROTATOR_RESTART_URL?.trim() || "https://pmci-mm-runtime.fly.dev/admin/restart";
 
-/** Default risk params for newly-rotated MM markets (matches existing mm_market_config rows). */
-const DEFAULT_MM_PARAMS = Object.freeze({
+/**
+ * Default risk params per ADR-008 / pre-ADR-011 (DEMO).
+ * The day-2 storm tripped at exactly daily_loss_limit_cents=2000.
+ */
+const DEFAULT_MM_PARAMS_DEMO = Object.freeze({
   soft_position_limit: 5,
   hard_position_limit: 20,
   min_half_spread_cents: 1,
@@ -49,6 +102,32 @@ const DEFAULT_MM_PARAMS = Object.freeze({
   inventory_skew_cents: 0,
   toxicity_threshold: 500,
 });
+
+/**
+ * Default risk params for live capital per ADR-011.
+ * 4× tighter daily-loss cap; $50 notional ceiling translates to a
+ * fill-price-dependent contract count derived at upsert time.
+ *
+ * `hard_position_limit` here is a FLOOR — the actual upsert clamps it
+ * by max(5, min(100, floor(5000 / expected_price_cents))) for a
+ * $50 notional cap.
+ */
+const DEFAULT_MM_PARAMS_PROD = Object.freeze({
+  soft_position_limit: 5,
+  hard_position_limit: 20, // re-derived at upsert; this is the floor
+  min_half_spread_cents: 2,
+  base_size_contracts: 1,
+  k_vol: 1.0,
+  max_order_notional_cents: 500,
+  min_requote_cents: 1,
+  stale_quote_timeout_seconds: 300,
+  daily_loss_limit_cents: 500,
+  inventory_skew_cents: 0,
+  toxicity_threshold: 200,
+});
+
+export const DEFAULT_MM_PARAMS =
+  RUN_MODE === "prod" ? DEFAULT_MM_PARAMS_PROD : DEFAULT_MM_PARAMS_DEMO;
 
 const PROD_KALSHI_MARKET_URL = "https://api.elections.kalshi.com/trade-api/v2/markets";
 
@@ -73,15 +152,22 @@ function yesMidFromSides(bid, ask) {
 }
 
 /**
- * Pre-enable checks for DEMO MM rotation (runs after coarse REST filters).
+ * Pre-enable checks for MM rotation (runs after coarse REST filters).
+ *
+ * In PROD mode, the cross-check error paths (network/HTTP/JSON) flip from
+ * "best-effort skip" (`{ ok: true }`) to "required pass"
+ * (`{ ok: false, reason: "prod_cross_check_unavailable" }`). Audit lane 17
+ * 2026-05-02 flagged the fail-OPEN behavior as cutover-blocking.
+ *
  * `skipProdCrossCheck` skips the prod API call — use in unit tests to avoid outbound HTTP.
  *
- * @param {object} market raw Kalshi market from DEMO REST
+ * @param {object} market raw Kalshi market from DEMO REST (or PROD when MM_RUN_MODE=prod)
  * @param {{
  *   nowMs?: number,
  *   logger?: { warn?: (msg: string) => void },
  *   skipProdCrossCheck?: boolean,
  *   fetch?: typeof fetch,
+ *   runMode?: RunMode,
  * }} [opts]
  * @returns {Promise<{ ok: boolean, reason?: string }>}
  */
@@ -89,6 +175,10 @@ export async function validateTickerForMM(market, opts = {}) {
   const nowMs = opts.nowMs ?? Date.now();
   const logger = opts.logger ?? console;
   const skipProdCrossCheck = opts.skipProdCrossCheck === true;
+  const runMode = opts.runMode ?? RUN_MODE;
+  // In PROD mode, the cross-check is REQUIRED-PASS: any error condition
+  // (network, HTTP non-2xx, JSON parse) returns { ok: false } not { ok: true }.
+  const crossCheckRequired = runMode === "prod";
 
   const yesBid = Number.parseFloat(market?.yes_bid_dollars ?? "0");
   const yesAsk = Number.parseFloat(market?.yes_ask_dollars ?? "0");
@@ -132,12 +222,20 @@ export async function validateTickerForMM(market, opts = {}) {
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    logger.warn?.(`[rotator] prod market fetch failed ${ticker}: ${msg} — continuing`);
+    if (crossCheckRequired) {
+      logger.warn?.(`[rotator] prod market fetch failed ${ticker}: ${msg} — REJECTING (prod-mode required-pass)`);
+      return { ok: false, reason: "prod_cross_check_unavailable" };
+    }
+    logger.warn?.(`[rotator] prod market fetch failed ${ticker}: ${msg} — continuing (demo-mode best-effort)`);
     return { ok: true };
   }
 
   if (!res.ok) {
-    logger.warn?.(`[rotator] prod market fetch HTTP ${res.status} for ${ticker} — continuing`);
+    if (crossCheckRequired) {
+      logger.warn?.(`[rotator] prod market fetch HTTP ${res.status} for ${ticker} — REJECTING (prod-mode required-pass)`);
+      return { ok: false, reason: "prod_cross_check_unavailable" };
+    }
+    logger.warn?.(`[rotator] prod market fetch HTTP ${res.status} for ${ticker} — continuing (demo-mode best-effort)`);
     return { ok: true };
   }
 
@@ -145,7 +243,11 @@ export async function validateTickerForMM(market, opts = {}) {
   try {
     prodBody = await res.json();
   } catch {
-    logger.warn?.(`[rotator] prod market JSON parse failed for ${ticker} — continuing`);
+    if (crossCheckRequired) {
+      logger.warn?.(`[rotator] prod market JSON parse failed for ${ticker} — REJECTING (prod-mode required-pass)`);
+      return { ok: false, reason: "prod_cross_check_unavailable" };
+    }
+    logger.warn?.(`[rotator] prod market JSON parse failed for ${ticker} — continuing (demo-mode best-effort)`);
     return { ok: true };
   }
 
@@ -299,12 +401,43 @@ async function ensureProviderMarketRow(client, sel) {
 }
 
 /**
- * Upsert a row in pmci.mm_market_config with standard MM risk params, enabled=true.
+ * Derive a $50-notional-bounded `hard_position_limit` (contracts) from a fill-time
+ * expected price. Used in PROD mode per ADR-011: caps notional at $50 regardless
+ * of market price. In DEMO mode this returns the static DEFAULT_MM_PARAMS_DEMO value.
+ *
+ * @param {RunMode} mode
+ * @param {number|null} expectedPriceCents
+ */
+export function deriveHardPositionLimit(mode, expectedPriceCents) {
+  if (mode !== "prod") return DEFAULT_MM_PARAMS_DEMO.hard_position_limit;
+  if (
+    expectedPriceCents == null ||
+    !Number.isFinite(expectedPriceCents) ||
+    expectedPriceCents <= 0
+  ) {
+    // Conservative fallback when price unknown
+    return 5;
+  }
+  // $50 notional / price-in-cents = contracts. Floor at 5, ceiling at 100.
+  const raw = Math.floor(5000 / expectedPriceCents);
+  return Math.max(5, Math.min(100, raw));
+}
+
+/**
+ * Upsert a row in pmci.mm_market_config with mode-appropriate MM risk params, enabled=true.
+ *
+ * In PROD mode (ADR-011): hard_position_limit is fill-price-derived from the $50
+ * notional cap; soft = floor(hard / 4); the rest come from DEFAULT_MM_PARAMS_PROD.
  *
  * @param {import('pg').Client | import('pg').PoolClient} client
  * @param {number} marketId
+ * @param {{ expectedPriceCents?: number|null }} [opts]
  */
-async function upsertMmMarketConfig(client, marketId) {
+async function upsertMmMarketConfig(client, marketId, opts = {}) {
+  const expectedPriceCents = opts.expectedPriceCents ?? null;
+  const hardPos = deriveHardPositionLimit(RUN_MODE, expectedPriceCents);
+  const softPos = RUN_MODE === "prod" ? Math.max(1, Math.floor(hardPos / 4)) : DEFAULT_MM_PARAMS.soft_position_limit;
+
   const sql = `
     INSERT INTO pmci.mm_market_config (
       market_id, enabled, soft_position_limit, hard_position_limit,
@@ -314,18 +447,26 @@ async function upsertMmMarketConfig(client, marketId) {
       notes
     ) VALUES (
       $1::bigint, true, $2, $3, $4, $5, $6, false, $7, $8, $9, $10, $11, $12,
-      'rotator-managed: refreshed daily by scripts/mm/rotate-demo-tickers.mjs'
+      $13
     )
     ON CONFLICT (market_id) DO UPDATE SET
       enabled = true,
       kill_switch_active = false,
+      soft_position_limit = EXCLUDED.soft_position_limit,
+      hard_position_limit = EXCLUDED.hard_position_limit,
+      min_half_spread_cents = EXCLUDED.min_half_spread_cents,
+      max_order_notional_cents = EXCLUDED.max_order_notional_cents,
+      stale_quote_timeout_seconds = EXCLUDED.stale_quote_timeout_seconds,
+      daily_loss_limit_cents = EXCLUDED.daily_loss_limit_cents,
+      toxicity_threshold = EXCLUDED.toxicity_threshold,
       notes = COALESCE(pmci.mm_market_config.notes, '') ||
               ' | rotator-refreshed ' || to_char(now(), 'YYYY-MM-DD HH24:MI:SS')
   `;
+  const notes = `rotator-managed mode=${RUN_MODE} hard_pos=${hardPos}@${expectedPriceCents ?? "null"}c expected; refreshed daily by scripts/mm/rotate-demo-tickers.mjs`;
   await client.query(sql, [
     marketId,
-    DEFAULT_MM_PARAMS.soft_position_limit,
-    DEFAULT_MM_PARAMS.hard_position_limit,
+    softPos,
+    hardPos,
     DEFAULT_MM_PARAMS.min_half_spread_cents,
     DEFAULT_MM_PARAMS.base_size_contracts,
     DEFAULT_MM_PARAMS.k_vol,
@@ -335,6 +476,7 @@ async function upsertMmMarketConfig(client, marketId) {
     DEFAULT_MM_PARAMS.daily_loss_limit_cents,
     DEFAULT_MM_PARAMS.inventory_skew_cents,
     DEFAULT_MM_PARAMS.toxicity_threshold,
+    notes,
   ]);
 }
 
@@ -398,21 +540,28 @@ function logRotatorRejectionSummary(logger, rejected) {
  * Main rotator entry point. Returns a summary object — used as both the script
  * exit JSON and the in-process API response.
  *
- * @param {{client?: import('pg').Client, logger?: object}} [opts]
+ * Honors `MM_ROTATOR_DRY_RUN` / `--dry-run`: enumerates selected/rejected/disabled
+ * without writing to provider_markets, mm_market_config, or POSTing /admin/restart.
+ *
+ * @param {{client?: import('pg').Client, logger?: object, dryRun?: boolean}} [opts]
  */
 export async function runRotation(opts = {}) {
   const logger = opts.logger ?? console;
-  const ownsClient = opts.client == null;
-  /** @type {import('pg').Client} */
-  const client = opts.client ?? createPgClient();
-  if (ownsClient) await /** @type {any} */ (client).connect();
+  const dryRun = opts.dryRun ?? DRY_RUN;
+  const ownsClient = opts.client == null && !dryRun;
+  /** @type {import('pg').Client | null} */
+  const client = dryRun ? null : (opts.client ?? createPgClient());
+  if (ownsClient && client) await /** @type {any} */ (client).connect();
 
   const summary = {
     ok: true,
+    mode: RUN_MODE,
+    dry_run: dryRun,
     started_at: new Date().toISOString(),
     target_count: TARGET_COUNT,
+    rest_base: REST_BASE,
     fetched: 0,
-    selected: /** @type {Array<{ticker:string, market_id:number, score:number}>} */ ([]),
+    selected: /** @type {Array<{ticker:string, market_id:number|null, score:number, expected_price_cents:number|null, hard_pos:number}>} */ ([]),
     rejected: /** @type {Array<{ticker:string, reason?: string}>} */ ([]),
     disabled_count: 0,
     runtime_restart: /** @type {any} */ (null),
@@ -420,11 +569,16 @@ export async function runRotation(opts = {}) {
     error: /** @type {string|null} */ (null),
   };
 
+  logger.info?.(`[rotator] mode=${RUN_MODE} dry_run=${dryRun} rest_base=${REST_BASE} target=${TARGET_COUNT} min_close_hours=${MIN_CLOSE_HOURS}`);
+
   try {
-    const markets = await fetchOpenMarkets(DEMO_REST_BASE, logger);
+    const markets = await fetchOpenMarkets(REST_BASE, logger);
     summary.fetched = markets.length;
 
-    const { selections, rejected } = await selectMarketsForRotation(markets, { logger });
+    const { selections, rejected } = await selectMarketsForRotation(markets, {
+      logger,
+      runMode: RUN_MODE,
+    });
     summary.rejected = rejected;
 
     if (selections.length === 0) {
@@ -438,17 +592,47 @@ export async function runRotation(opts = {}) {
     /** @type {number[]} */
     const keepMarketIds = [];
     for (const sel of selections) {
-      const marketId = await ensureProviderMarketRow(client, sel);
-      await upsertMmMarketConfig(client, marketId);
+      const expectedPriceCents = computeExpectedPriceCents(sel.raw);
+      const hardPos = deriveHardPositionLimit(RUN_MODE, expectedPriceCents);
+
+      if (dryRun) {
+        summary.selected.push({
+          ticker: sel.ticker,
+          market_id: null,
+          score: sel.score,
+          expected_price_cents: expectedPriceCents,
+          hard_pos: hardPos,
+        });
+        logger.info?.(
+          `[rotator-dryrun] would-enable ticker=${sel.ticker} score=${sel.score.toFixed(2)} expected_price=${expectedPriceCents}c hard_pos=${hardPos}`,
+        );
+        continue;
+      }
+
+      const marketId = await ensureProviderMarketRow(/** @type {any} */ (client), sel);
+      await upsertMmMarketConfig(/** @type {any} */ (client), marketId, { expectedPriceCents });
       keepMarketIds.push(marketId);
-      summary.selected.push({ ticker: sel.ticker, market_id: marketId, score: sel.score });
-      logger.info?.(`[rotator] enabled ticker=${sel.ticker} market_id=${marketId} score=${sel.score.toFixed(2)}`);
+      summary.selected.push({
+        ticker: sel.ticker,
+        market_id: marketId,
+        score: sel.score,
+        expected_price_cents: expectedPriceCents,
+        hard_pos: hardPos,
+      });
+      logger.info?.(
+        `[rotator] enabled ticker=${sel.ticker} market_id=${marketId} score=${sel.score.toFixed(2)} expected_price=${expectedPriceCents}c hard_pos=${hardPos}`,
+      );
     }
 
-    summary.disabled_count = await disableStaleMmMarketConfig(client, keepMarketIds);
-    logger.info?.(`[rotator] disabled ${summary.disabled_count} prior mm_market_config rows`);
-
-    summary.runtime_restart = await triggerRuntimeRestart(logger);
+    if (dryRun) {
+      logger.info?.("[rotator-dryrun] skipping disableStaleMmMarketConfig + runtime_restart");
+      summary.disabled_count = 0;
+      summary.runtime_restart = { ok: false, skipped: "dry_run" };
+    } else if (client) {
+      summary.disabled_count = await disableStaleMmMarketConfig(client, keepMarketIds);
+      logger.info?.(`[rotator] disabled ${summary.disabled_count} prior mm_market_config rows`);
+      summary.runtime_restart = await triggerRuntimeRestart(logger);
+    }
 
     logRotatorRejectionSummary(logger, summary.rejected);
   } catch (err) {
@@ -456,11 +640,30 @@ export async function runRotation(opts = {}) {
     summary.error = err instanceof Error ? err.message : String(err);
     logger.error?.("[rotator] error", err);
   } finally {
-    if (ownsClient) await /** @type {any} */ (client).end().catch(() => {});
+    if (ownsClient && client) await /** @type {any} */ (client).end().catch(() => {});
   }
 
   summary.finished_at = new Date().toISOString();
   return summary;
+}
+
+/**
+ * Compute an expected fill price for a Kalshi market in integer cents,
+ * preferring the YES mid when both sides are present, else `last_price`.
+ * Returns `null` if no signal is available.
+ *
+ * @param {object} m raw Kalshi market
+ * @returns {number|null}
+ */
+export function computeExpectedPriceCents(m) {
+  const yb = parseDollarField(m?.yes_bid_dollars);
+  const ya = parseDollarField(m?.yes_ask_dollars);
+  if (yb != null && ya != null && ya > yb) {
+    return Math.round(((yb + ya) / 2) * 100);
+  }
+  const last = parseDollarField(m?.last_price_dollars);
+  if (last != null) return Math.round(last * 100);
+  return null;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

@@ -26,10 +26,14 @@ primary_region = "iad"
   min_machines_running = 1
 
   [[http_service.checks]]
-    # Returns 200 from /health/mm; body now includes `ready` + `severity` for ops (Fly checks path only).
+    # /health/mm returns 503 when severity=crit (set 2026-05-02 patch sweep,
+    # ADR-011). Fly will flip the machine after sustained failure. The grace
+    # period covers warm-up where loopTick=0 / depth 0/8 is expected. Combined
+    # with [[restart]] on-failure below, this becomes the runtime watchdog
+    # that ADR-011 requires before live cutover.
     interval = "15s"
     timeout = "5s"
-    grace_period = "45s"
+    grace_period = "60s"
     method = "get"
     path = "/health/mm"
 

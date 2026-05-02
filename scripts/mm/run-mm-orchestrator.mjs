@@ -129,19 +129,39 @@ let depthGetHealthSnapshot = null;
 
 async function main() {
   const app = Fastify({ logger: false });
-  app.get("/health/mm", async () => {
+  // /health/mm returns 503 when the runtime is in severity=crit so Fly's
+  // health-check actually flips the machine — the 2026-05-02 incident showed
+  // a "200 with severity=crit" response leaves Fly believing the machine is
+  // healthy while the orchestrator is stuck. ADR-011 cutover gate (runtime
+  // watchdog) requires Fly to recreate the machine on persistent failure.
+  app.get("/health/mm", async (req, reply) => {
     const h = /** @type {any} */ (health);
     const depthSnap =
       typeof depthGetHealthSnapshot === "function" ? depthGetHealthSnapshot() : null;
-    return buildMmHealthMmResponse({ health: h, depthSnap });
+    const body = buildMmHealthMmResponse({ health: h, depthSnap });
+    if (body && body.severity === "crit") {
+      reply.code(503);
+    }
+    return body;
   });
 
   // Used by the daily ticker rotator to force a clean restart so the depth WS
   // re-subscribes to the freshly-enabled mm_market_config rows. Fly auto-restarts
   // the machine on process.exit.
+  //
+  // Auth: PMCI_ADMIN_KEY MUST be set; this endpoint fails CLOSED when missing
+  // (returns 503). Prior versions used `if (adminKey && ...)` which silently
+  // failed OPEN when the env var was unset — see audit 2026-05-02 lane 06,
+  // which inadvertently restarted production by probing this endpoint.
   app.post("/admin/restart", async (req, reply) => {
     const adminKey = process.env.PMCI_ADMIN_KEY?.trim();
-    if (adminKey && req.headers["x-pmci-admin-key"] !== adminKey) {
+    if (!adminKey) {
+      return reply.code(503).send({
+        error: "service_unavailable",
+        message: "admin endpoint disabled: PMCI_ADMIN_KEY env var unset",
+      });
+    }
+    if (req.headers["x-pmci-admin-key"] !== adminKey) {
       return reply.code(403).send({ error: "forbidden", message: "admin key required" });
     }
     setTimeout(() => {

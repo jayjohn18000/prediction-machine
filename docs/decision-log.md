@@ -364,3 +364,86 @@ Tests run exclusively against Kalshi DEMO. Production cutover is a separate ADR 
 - **Rationale:** Operator caught the staleness while reading the master prompt mid-validation. Future agents reading the file should see current reality, not the assumptions baked in 24 hours earlier.
 - **Documentation cascade:** `CLAUDE.md` (CURRENT PHASE line + invariants), `docs/system-state.md` (Current status block + Drift from ADR-008 callout), `docs/decision-log.md` (this entry + ADR-010), and the master prompt itself were all updated in the same pass.
 
+---
+
+## ADR-011: Live-capital cutover spec — small-capital MM on PROD Kalshi — 2026-05-02
+
+**Status:** Accepted (precedes hour-168 verdict; gates the cutover)
+
+**Decision:** Pin the live-capital cutover spec for moving from Kalshi DEMO 7-day testing to small-capital live trading on PROD Kalshi. Spec is explicitly conservative — operator's stated risk envelope is *one-tenth* of the DEMO defaults that produced the day-2 storm.
+
+**Risk envelope (per-market, hard ceiling):**
+
+| Field | DEMO value (storm-tripping) | Live cutover value | Rationale |
+|---|---|---|---|
+| `daily_loss_limit_cents` | 2000 ($20) | **500 ($5)** | Lane 11 audit: DEMO's $20 was breached at PnL=−2,341.66c on day 2. Live cap is 4× tighter. |
+| `hard_position_limit` (contracts) | 20 | **≤50/expected_price_cents** floor 5, ceiling 100 | $50 notional cap converted to contract count at the rotator's fill price. e.g., 50¢ market → 100 ct cap; 25¢ market → 200 ct → clamped to 100 ct. |
+| `soft_position_limit` (contracts) | 5 | **hard × 0.25** | Quarter-of-hard, same as DEMO ratio. |
+| `max_order_notional_cents` | 1000 ($10) | **500 ($5)** | A single order cannot exceed the daily-loss cap. |
+| `min_half_spread_cents` | 1 | **2** | Conservative band on live; reduces post-only-cross frequency on real books vs DEMO stubs. |
+| `min_requote_cents` | 1 | 1 | Unchanged. |
+| `stale_quote_timeout_seconds` | 600 | **300** | Live needs faster quote freshness against real flow. |
+| `inventory_skew_cents` | 0 | 0 | Unchanged for the first live week; revisit after 25-fill re-bucket (lane 16 follow-up). |
+| `toxicity_threshold` | 500 | **200** | Tighter; halt earlier on adverse-selection signal under real flow. |
+| `kill_switch_active` (initial) | false | **false** | Default; the kill-switch fires automatically on `daily_loss` or `toxicity_score` breach. |
+
+**Universe:**
+- 1–2 markets at a time, drawn from lane 12's GREEN list (≥30d to settlement, inside spread ≤5c, ≥1000 contracts 24h volume, no UMA-equivalent dispute risk).
+- Initial recommended pair (per lane 12 audit): `KXNBA-26-OKC` (vol 86k, 1¢ spread, mid 55¢) + `CONTROLS-2026-D` (vol 34k, 1¢ spread, mid 49¢, symmetric book). Operator selects the actual pair the morning of cutover from a fresh lane-12 re-run.
+
+**Code-path separation (hard requirement, NOT config):**
+
+- Introduce `MM_RUN_MODE` env: `demo` (default; current behavior) | `prod` (new).
+- A new `DEFAULT_MM_PARAMS_PROD` object in `scripts/mm/rotate-demo-tickers.mjs` (or a successor file) contains the values above. The rotator MUST read `MM_RUN_MODE` and pick params accordingly. DEMO seed scripts (`scripts/mm/seed-w6-demo-mm-markets.mjs`) MUST NOT run in prod mode (guard at the top of the file).
+- The rotator's PROD cross-check (`validateTickerForMM`) MUST flip from "best-effort skip on error" (current `{ ok: true }` on every error path) to "required pass" (`{ ok: false, reason: "prod_cross_check_unavailable" }` on network/HTTP/JSON error) when `MM_RUN_MODE=prod`.
+- A `--dry-run` flag MUST exist on the rotator and emit the proposed `selected[]`/`rejected[]`/`disabled[]` without writing to `pmci.provider_markets`, `pmci.mm_market_config`, or POSTing to `/admin/restart`.
+
+**Admin-endpoint hardening (must precede cutover):**
+
+- `/admin/restart` on `pmci-mm-runtime` MUST fail-closed: returns `503 service_unavailable` when `PMCI_ADMIN_KEY` is unset (current code as of 2026-05-02 patch). Prior `if (adminKey && ...)` was a fail-OPEN bug — see audit lane 06.
+- `PMCI_ADMIN_KEY` MUST be set as a Fly secret on `pmci-mm-runtime` before live cutover. Operator command: `fly secrets set PMCI_ADMIN_KEY=$(openssl rand -hex 32) -a pmci-mm-runtime`.
+
+**Runtime watchdog (must precede cutover):**
+
+- The 2026-05-02 incident showed Track J's WS-level watchdog cannot catch process exits (3h17m outage 08:59→12:17Z, three restarts in <24h). Live trading requires either:
+  - (a) a Fly health-check on `/health/mm` that *flips the machine* on 5xx, OR
+  - (b) a sidecar liveness pinger on a separate Fly app that posts to `/admin/restart` if `/health/mm` returns 5xx for ≥120s.
+- Choice (a) is simpler; choice (b) is more tunable. Operator picks one before flipping `MM_RUN_MODE=prod`.
+
+**Settlement & accounting (must precede cutover):**
+
+- A `runMarketOutcomeIngest` cron MUST be wired into `JOB_MAP` (`supabase/functions/pmci-job-runner/index.ts`) plus pg_cron schedule. The validation SQL (Pattern 4: rows-actually-landing) MUST ship in the same PR as the cron migration.
+- A `kalshi_trade_fee_cents`, `kalshi_rounding_fee_cents`, `kalshi_rebate_cents`, `kalshi_net_fee_cents` migration on `pmci.mm_fills` MUST land before the first live order, so observed-fee reconciliation against Kalshi statements has an LHS.
+- A `~/Documents/Claude/Projects/Prediction Machine/95-runbooks/withdrawal-procedure.md` runbook MUST exist documenting the operator's procedure for withdrawing settled cash from Kalshi to bank.
+
+**Compliance gates (must precede cutover):**
+
+- `npm run lint:poly-write-guard` MUST pass.
+- All three Fly apps (`pmci-api`, `pmci-observer`, `pmci-mm-runtime`) MUST be pinned to a US region (`iad`).
+- `curl -H "Authorization: Bearer $KALSHI_PROD_KEY" .../portfolio/balance` MUST return HTTP 200.
+- Allowlist diff in `scripts/lint/no-polymarket-write.mjs` since 2026-04-27 MUST be reviewed (currently zero edits per lane 15).
+
+**Day-2 storm explicit acceptance:**
+
+The 7-day DEMO test breached `daily_loss_limit_cents=2000` on day 2 at PnL=−2,341.66c (44,372 `kill_switch_events`, all `reason=daily_loss`, fired 2026-04-29T17:09Z → 2026-04-30T13:43Z). The kill-switch DID fire correctly; the test confirms the *plumbing*. The exit-criterion verdict on the daily-loss dimension is RECORDED-FAIL, not WAIVED. The live-cutover spec compensates by tightening the cap 4×.
+
+**Intra-tick race:**
+
+`lib/mm/orchestrator.mjs:289-327` reads `cfg.kill_switch_active` from a row cached at the top of `runMmOrchestratorSession`. When one market trips kill_switch, sibling markets do NOT see the flag until the next outer loop tick (~1s). For DEMO this was acceptable (all markets converged on the same `daily_loss` portfolio-wide computation). For LIVE the race is unacceptable: at $5/day with Kalshi fees, even one extra tick of redundant placement can blow through the cap. Pre-cutover: re-read `cfg.kill_switch_active` per-market within the same loop tick after any market trips the flag. Tracked as P1 follow-up; OK to land *with* the cutover patch sweep.
+
+**Hour-168 verdict integration:**
+
+- The 7-day DEMO clock expires ~2026-05-05T17:41Z.
+- This ADR is `Accepted` BEFORE hour-168 because the audit (lane 11/14/17 FAIL) already establishes that cutover is not safe without these gates. The hour-168 verdict adds confirmation; it does not unblock cutover on its own.
+- After hour-168: a sister ADR (ADR-012) records the verdict per dimension and confirms or revises any item in this ADR.
+
+**Sources:**
+- `audits/post-pivot-review/synthesis/live-mm/2026-05-02/cutover-verdict.md`
+- Lane 11 findings (`/tmp/lane-11-findings.md`)
+- Lane 12 findings (`/tmp/lane-12-findings.md`)
+- Lane 14 findings (`/tmp/lane-14-findings.md`)
+- Lane 17 findings (`/tmp/lane-17-findings.md`)
+- ADR-008 (clock start), ADR-010 (drift documentation)
+
+**Open question for ADR-012:** confirm the `KXNBA-26-OKC` + `CONTROLS-2026-D` initial pair is still GREEN at hour 168, or re-pick from the lane-12 GREEN list as of cutover-day morning.
+
