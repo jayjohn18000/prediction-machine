@@ -104,17 +104,17 @@ const DEFAULT_MM_PARAMS_DEMO = Object.freeze({
 });
 
 /**
- * Default risk params for live capital per ADR-011.
- * 4× tighter daily-loss cap; $50 notional ceiling translates to a
- * fill-price-dependent contract count derived at upsert time.
+ * Default risk params for live capital per ADR-011 (amended 2026-05-02).
+ * Position cap tightened from $50 → $30 notional per operator decision before
+ * first-flip; everything else unchanged from ADR-011.
  *
  * `hard_position_limit` here is a FLOOR — the actual upsert clamps it
- * by max(5, min(100, floor(5000 / expected_price_cents))) for a
- * $50 notional cap.
+ * by max(5, min(60, floor(3000 / expected_price_cents))) for a
+ * $30 notional cap.
  */
 const DEFAULT_MM_PARAMS_PROD = Object.freeze({
   soft_position_limit: 5,
-  hard_position_limit: 20, // re-derived at upsert; this is the floor
+  hard_position_limit: 12, // re-derived at upsert; this is the floor
   min_half_spread_cents: 2,
   base_size_contracts: 1,
   k_vol: 1.0,
@@ -418,9 +418,10 @@ export function deriveHardPositionLimit(mode, expectedPriceCents) {
     // Conservative fallback when price unknown
     return 5;
   }
-  // $50 notional / price-in-cents = contracts. Floor at 5, ceiling at 100.
-  const raw = Math.floor(5000 / expectedPriceCents);
-  return Math.max(5, Math.min(100, raw));
+  // ADR-011 amended 2026-05-02: $30 notional ceiling (was $50).
+  // $30 / price-in-cents = contracts. Floor 5, ceiling 60.
+  const raw = Math.floor(3000 / expectedPriceCents);
+  return Math.max(5, Math.min(60, raw));
 }
 
 /**

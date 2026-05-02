@@ -447,3 +447,79 @@ The 7-day DEMO test breached `daily_loss_limit_cents=2000` on day 2 at PnL=−2,
 
 **Open question for ADR-012:** confirm the `KXNBA-26-OKC` + `CONTROLS-2026-D` initial pair is still GREEN at hour 168, or re-pick from the lane-12 GREEN list as of cutover-day morning.
 
+**Amendment 2026-05-02 (pre-flip):** Position-cap notional ceiling tightened from $50 → **$30** before first PROD flip. Operator decision: prefer 4-day full-cycle data at $30/position to reduce day-1 blast radius and re-evaluate at hour 96. Code change: `DEFAULT_MM_PARAMS_PROD.hard_position_limit = 12` (floor); `deriveHardPositionLimit` now returns `max(5, min(60, floor(3000 / price_cents)))`. All other ADR-011 values (daily_loss_limit_cents=500, max_order_notional_cents=500, min_half_spread=2, toxicity=200, stale_quote=300s) unchanged.
+
+---
+
+## ADR-012: PROD-MM 7-day clock starts (live capital, $5/$30) — 2026-05-02
+
+**Status:** Accepted
+
+**Decision:** Start a fresh 7-day continuous-quote test on PRODUCTION Kalshi at the moment `pmci-mm-runtime` finishes its first warm-up cycle in `MM_RUN_MODE=prod`. Replaces the DEMO 7-day test (ADR-008/010) which is hereby paused early at ~hour 92 of 168 with the daily-loss criterion already RECORDED-FAIL on day 2.
+
+**Clock anchor:** `T0` is the first `mm_pnl_snapshots` row written under `MM_RUN_MODE=prod` (capture from `SELECT min(observed_at) FROM pmci.mm_pnl_snapshots WHERE observed_at > '<deploy-ts>'`). T+168h = end-of-test.
+
+**Context:** ADR-011 pinned the cutover spec; ADR-011 amendment (above) tightened position cap to $30. The DEMO clock under ADR-008/010 was useful for plumbing validation — it proved kill-switch, fill ingestion, and PnL writers persist — but the day-2 storm and lane-A8 DEMO-fiction findings made it useless for strategy validation. A fresh PROD clock under ADR-011 spec is the actual cutover gate.
+
+**Risk envelope (per-market):** As ADR-011 amended:
+- `daily_loss_limit_cents = 500` ($5/day per market; portfolio cap = same)
+- `hard_position_limit = floor(3000 / price_cents)` clamped 5–60 (≤$30 notional)
+- `soft_position_limit = floor(hard / 4)`
+- `max_order_notional_cents = 500`
+- `min_half_spread_cents = 2`
+- `stale_quote_timeout_seconds = 300`
+- `toxicity_threshold = 200`
+
+**Universe:** 1–2 markets at a time from a fresh lane-12 GREEN list, picked the morning of cutover. Initial pair selected by operator post-deploy.
+
+**Code paths active in PROD mode:**
+- `MM_RUN_MODE=prod` Fly secret on `pmci-mm-runtime`
+- `KALSHI_PROD_API_KEY_ID` + `KALSHI_PROD_PRIVATE_KEY` Fly secrets staged
+- `lib/mm/kalshi-env.mjs` resolves REST + WS + auth from PROD-suffixed env
+- `scripts/mm/rotate-demo-tickers.mjs` honors `MM_RUN_MODE=prod` (PROD cross-check is required-pass; `DEFAULT_MM_PARAMS_PROD` written to `mm_market_config`)
+- `lib/mm/orchestrator.mjs::runMmOrchestratorSession` constructs `KalshiTrader` with PROD base + PROD key
+- `/admin/restart` fail-closed (ADR-011 patch)
+- `/health/mm` returns 503 on `severity=crit` (Fly health-check flips machine on persistent failure)
+- Per-tick re-read of `kill_switch_active` per market (intra-tick race fix)
+- Outcome-ingest cron `mm-ingest-outcomes` schedule `7 * * * *` (first cron run after deploy)
+- `mm_fills.kalshi_*_fee_cents` columns ready for live fee reconciliation
+
+**Exit criteria at hour 168:**
+- ≥1 market continuously quoted on PROD for 168 hours (tracked via `mm_pnl_snapshots` cadence + heartbeat verifier)
+- Net positive P&L after fees over the window (per-fill bucket, lane-16 protocol)
+- ≤1 auto-flatten event (kill-switch fire is auto-flatten)
+- Zero `daily_loss_limit_cents=500` breaches (this is the criterion DEMO failed)
+- Per-market P&L attribution legible (R7 attribution + observed-fee columns)
+- Lane-13 fee reconciliation against Kalshi monthly statement variance ≤2%
+
+**Pre-flip checklist (must all PASS before T0):**
+
+| Item | Source | Status |
+|---|---|---|
+| `pmci-mm-runtime` scaled to 0 | fly status | done at 2026-05-02 |
+| `MM_RUN_MODE=prod` set on Fly | fly secrets | pending deploy |
+| `KALSHI_PROD_API_KEY_ID` + `KALSHI_PROD_PRIVATE_KEY` staged | fly secrets list | done |
+| Code env-switch shipped (kalshi-env.mjs) | git log | this commit |
+| `npm test` green on touched suites | local | this commit |
+| Lane 12 fresh re-run produces ≥1 GREEN PROD ticker | audit | next step |
+| Operator selects initial pair | manual | next step |
+| Rotator dry-run output verified | `--dry-run` | next step |
+
+**Mid-flight tripwires (auto-pause, not auto-stop):**
+- Any `mm_kill_switch_events` insert in PROD mode → operator paged for review (no precedent in DEMO storm; this is real money)
+- Single-fill adverse-selection loss > $0.50 → lane-16 alarm
+- `/health/mm` `severity=crit` for >2 minutes → Fly flips machine; operator informed
+- Any `kalshi_error.body.error.code='market_closed'` rejection storm matching the 2026-05-02 DEMO pattern → halt rotator, investigate
+
+**Hour-96 review:** at T+96h, optional ramp from $30 → $50 position cap if all green. Operator decision; not automatic.
+
+**Hour-168 verdict:** ADR-013 records the PASS/FAIL per dimension and the cutover decision (continue, ramp, or roll back).
+
+**Sources:**
+- ADR-011 + amendment (2026-05-02)
+- `audits/post-pivot-review/synthesis/live-mm/2026-05-02/cutover-verdict.md`
+- `lib/mm/kalshi-env.mjs` (env switch)
+- `scripts/mm/rotate-demo-tickers.mjs` (PROD mode)
+
+**Open question for ADR-013:** is the day-1 fee-model variance against Kalshi's first PROD statement within the 2% tolerance? (Lane-13 cutover gate becomes evaluable post-T0.)
+

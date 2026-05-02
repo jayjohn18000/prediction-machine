@@ -18,8 +18,8 @@ import Fastify from "fastify";
 import {
   runMmOrchestratorLoop,
   fetchEnabledMarketConfigs,
-  kalshiTradeBaseUrlFromEnv,
 } from "../../lib/mm/orchestrator.mjs";
+import { kalshiEnvFromMode, guardKalshiTradingBase } from "../../lib/mm/kalshi-env.mjs";
 import { createPgClient } from "../../lib/mm/order-store.mjs";
 import { loadPrivateKey } from "../../lib/providers/kalshi-ws-auth.mjs";
 import { startDepthIngestion, makePgDepthWriter } from "../../lib/ingestion/depth.mjs";
@@ -28,28 +28,11 @@ import { buildMmHealthMmResponse } from "../../lib/mm/runtime-health-payload.mjs
 const PORT = Number(process.env.PORT ?? 8790);
 
 /**
- * DEMO depth WS only. Prefer explicit KALSHI_WS_URL / KALSHI_DEMO_WS_URL; else derive from
- * KALSHI_BASE (or kalshiTradeBaseUrlFromEnv default) when host is demo-api.kalshi.co;
- * otherwise fall back to the public demo WS endpoint (never production elections WS).
+ * Resolve the depth WS URL for the active run mode (DEMO or PROD per
+ * MM_RUN_MODE). All env reads delegate to lib/mm/kalshi-env.mjs.
  */
-function resolveKalshiDemoDepthWsUrl() {
-  const explicit =
-    process.env.KALSHI_WS_URL?.trim() || process.env.KALSHI_DEMO_WS_URL?.trim();
-  if (explicit) return explicit;
-
-  const rest = kalshiTradeBaseUrlFromEnv().replace(/\/$/, "");
-  try {
-    const u = new URL(rest);
-    if (!/demo-api\.kalshi\.co$/i.test(u.hostname)) {
-      return "wss://demo-api.kalshi.co/trade-api/ws/v2";
-    }
-    u.protocol = "wss:";
-    const p = u.pathname.replace(/\/$/, "");
-    u.pathname = p.endsWith("/trade-api/v2") ? p.replace(/\/v2$/, "/ws/v2") : "/trade-api/ws/v2";
-    return u.href.replace(/\/$/, "");
-  } catch {
-    return "wss://demo-api.kalshi.co/trade-api/ws/v2";
-  }
+function resolveKalshiDepthWsUrl() {
+  return kalshiEnvFromMode().wsUrl;
 }
 
 function createServiceRoleSupabase() {
@@ -173,6 +156,25 @@ async function main() {
 
   await app.listen({ port: PORT, host: "0.0.0.0" });
   console.error(`[mm] /health/mm listening on ${PORT}`);
+
+  // Boot banner — surface resolved Kalshi env to operator immediately so a misconfig
+  // (e.g., MM_RUN_MODE=prod without KALSHI_PROD_API_KEY_ID set) is visible at T+0.
+  {
+    const env = kalshiEnvFromMode();
+    console.error(
+      `[mm] kalshi-env mode=${env.runMode} rest=${env.restBase} ws=${env.wsUrl} ` +
+        `apiKeyId=${env.apiKeyId ? "set" : "MISSING"} ` +
+        `privateKey=${env.privateKeyInline ? "inline-set" : env.privateKeyPath ? "path-set" : "MISSING"}`,
+    );
+    /** @type {any} */
+    (health).kalshiEnv = {
+      runMode: env.runMode,
+      restBase: env.restBase,
+      wsUrl: env.wsUrl,
+      apiKeyIdSet: Boolean(env.apiKeyId),
+      privateKeySet: Boolean(env.privateKeyInline || env.privateKeyPath),
+    };
+  }
   const t0 = new Date().toISOString();
   /** @type {any} */
   (health).startedAt = t0;
@@ -246,10 +248,12 @@ async function main() {
     }
 
     if (supabase || depthWriteRow) {
-      const wsUrl = resolveKalshiDemoDepthWsUrl();
-      const keyId = process.env.KALSHI_DEMO_API_KEY_ID ?? process.env.KALSHI_API_KEY_ID;
-      const pemPath = process.env.KALSHI_DEMO_PRIVATE_KEY_PATH;
-      const pemInline = process.env.KALSHI_DEMO_PRIVATE_KEY;
+      const kalshiEnv = kalshiEnvFromMode();
+      guardKalshiTradingBase(kalshiEnv.restBase, kalshiEnv.runMode);
+      const wsUrl = kalshiEnv.wsUrl;
+      const keyId = kalshiEnv.apiKeyId;
+      const pemPath = kalshiEnv.privateKeyPath;
+      const pemInline = kalshiEnv.privateKeyInline;
       const marketTickers = enabled.map((r) => String(r.kalshi_ticker));
       const tickerToProviderMarketId = new Map(
         enabled.map((r) => [String(r.kalshi_ticker), r.market_id]),
@@ -266,7 +270,9 @@ async function main() {
         if (!keyId?.trim()) {
           /** @type {any} */
           (health).depthStartError =
-            "KALSHI_DEMO_API_KEY_ID (or KALSHI_API_KEY_ID) required for depth";
+            kalshiEnv.runMode === "prod"
+              ? "KALSHI_PROD_API_KEY_ID required for depth (MM_RUN_MODE=prod)"
+              : "KALSHI_DEMO_API_KEY_ID (or KALSHI_API_KEY_ID) required for depth";
           return;
         }
         let privateKey;

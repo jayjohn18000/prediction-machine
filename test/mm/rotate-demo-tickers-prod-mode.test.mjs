@@ -94,26 +94,30 @@ describe("validateTickerForMM PROD cross-check fail-closed", () => {
   });
 });
 
-describe("deriveHardPositionLimit ($50 notional cap, ADR-011)", () => {
+describe("deriveHardPositionLimit ($30 notional cap, ADR-011 amended 2026-05-02)", () => {
   it("DEMO mode returns the static demo value", () => {
     assert.equal(deriveHardPositionLimit("demo", 50), 20);
     assert.equal(deriveHardPositionLimit("demo", null), 20);
   });
 
-  it("PROD mode at 50c → 100 contracts ($50 notional)", () => {
-    assert.equal(deriveHardPositionLimit("prod", 50), 100);
+  it("PROD mode at 50c → 60 contracts ($30 notional, clamped at ceiling)", () => {
+    assert.equal(deriveHardPositionLimit("prod", 50), 60);
   });
 
-  it("PROD mode at 99c → 50 contracts (≈$49.50 notional)", () => {
-    assert.equal(deriveHardPositionLimit("prod", 99), 50);
+  it("PROD mode at 99c → 30 contracts (≈$29.70 notional)", () => {
+    assert.equal(deriveHardPositionLimit("prod", 99), 30);
   });
 
-  it("PROD mode at 25c → clamped at ceiling of 100 (would be 200)", () => {
-    assert.equal(deriveHardPositionLimit("prod", 25), 100);
+  it("PROD mode at 25c → clamped at ceiling of 60 (would be 120)", () => {
+    assert.equal(deriveHardPositionLimit("prod", 25), 60);
   });
 
-  it("PROD mode at 1c → clamped at ceiling of 100", () => {
-    assert.equal(deriveHardPositionLimit("prod", 1), 100);
+  it("PROD mode at 1c → clamped at ceiling of 60", () => {
+    assert.equal(deriveHardPositionLimit("prod", 1), 60);
+  });
+
+  it("PROD mode at 75c → 40 contracts ($30 notional)", () => {
+    assert.equal(deriveHardPositionLimit("prod", 75), 40);
   });
 
   it("PROD mode with null price → conservative floor 5", () => {
