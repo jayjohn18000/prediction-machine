@@ -66,9 +66,6 @@ test("backfill skips when depth gap leaves no mid — no adverse update", async 
       if (q.startsWith("UPDATE pmci.mm_fills")) {
         sawUpdate = true;
       }
-      if (q.includes("SELECT post_fill_mid_1m") && q.includes("WHERE id = $1")) {
-        return { rows: [fillRow] };
-      }
       return { rows: [] };
     },
   };
@@ -76,6 +73,8 @@ test("backfill skips when depth gap leaves no mid — no adverse update", async 
   const now = new Date();
   const st = await backfillPostFillMids({ client, now });
   assert.equal(st.updated5m, 0);
+  assert.equal(st.skipped5m, 1);
+  assert.equal(st.skipReasons.depth_missing, 2);
   assert.ok(touchedDepth >= 1);
   assert.equal(sawUpdate, false);
 });
@@ -104,7 +103,7 @@ test("5m backfill writes adverse_cents_5m = side_sign × (post_mid − fv) for e
     const client = {
       async query(sql, params) {
         const q = String(sql);
-        if (q.includes("FROM pmci.mm_fills WHERE") && q.includes("post_fill_mid_30m")) {
+        if (q.includes("FROM pmci.mm_fills") && q.includes("LIMIT 5000")) {
           return { rows: [{ ...fillRow }] };
         }
         if (q.includes("FROM pmci.provider_market_depth")) {
@@ -114,20 +113,17 @@ test("5m backfill writes adverse_cents_5m = side_sign × (post_mid − fv) for e
           assert.equal(Number(params[2]), c.expected, `side ${c.side} adverse mismatch`);
           return { rows: [], rowCount: 1 };
         }
-        if (q.includes("SELECT post_fill_mid_1m") && q.includes("WHERE id = $1")) {
-          const copy = {
-            ...fillRow,
-            post_fill_mid_1m: 49,
-            post_fill_mid_5m: postMid,
-            adverse_cents_5m: c.expected,
-            post_fill_mid_30m: postMid,
-          };
-          return { rows: [copy] };
+        if (q.startsWith("UPDATE pmci.mm_fills") && q.includes("post_fill_mid_1m")) {
+          return { rows: [], rowCount: 1 };
+        }
+        if (q.startsWith("UPDATE pmci.mm_fills") && q.includes("post_fill_mid_30m")) {
+          return { rows: [], rowCount: 1 };
         }
         return { rows: [] };
       },
     };
 
-    await backfillPostFillMids({ client, now: new Date() });
+    const st = await backfillPostFillMids({ client, now: new Date() });
+    assert.equal(st.updated5m, 1, `side ${c.side}`);
   }
 });

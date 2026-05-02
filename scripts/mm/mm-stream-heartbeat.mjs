@@ -5,6 +5,9 @@
  * Threshold semantics: per-hour rates rather than 24h totals, so the alarm
  * doesn't false-fire for the first day after a daily ticker rotation.
  *
+ * 2026-05-02: MIN_QUOTING default raised 6→7 so two dead markets (of 8) trip the alarm instead of
+ * being masked; one gap (e.g. mid-rotation) remains tolerated.
+ *
  * For each enabled mm_market_config row, "quoting" requires:
  *   - has currently-open orders on Kalshi (≥1 with status='open') — counts existing resting
  *     orders, not just new placements, because the MM correctly leaves a quote in place when
@@ -17,7 +20,7 @@
  *
  * Env:
  *   DATABASE_URL                  — required
- *   MM_HEARTBEAT_MIN_QUOTING      — default 6
+ *   MM_HEARTBEAT_MIN_QUOTING      — default 7
  *   MM_HEARTBEAT_WINDOW_MIN       — default 60 (minutes lookback)
  *   MM_HEARTBEAT_MIN_DEPTH        — default 120 (depth rows in window)
  *   MM_HEARTBEAT_MIN_PNL          — default 6 (pnl_snapshots in window)
@@ -26,7 +29,7 @@
 import "dotenv/config";
 import { createPgClient } from "../../lib/mm/order-store.mjs";
 
-const MIN_QUOTING = Number.parseInt(process.env.MM_HEARTBEAT_MIN_QUOTING ?? "6", 10);
+const MIN_QUOTING = Number.parseInt(process.env.MM_HEARTBEAT_MIN_QUOTING ?? "7", 10);
 const WINDOW_MIN = Number.parseInt(process.env.MM_HEARTBEAT_WINDOW_MIN ?? "60", 10);
 const MIN_DEPTH = Number.parseInt(process.env.MM_HEARTBEAT_MIN_DEPTH ?? "120", 10);
 const MIN_PNL = Number.parseInt(process.env.MM_HEARTBEAT_MIN_PNL ?? "6", 10);
