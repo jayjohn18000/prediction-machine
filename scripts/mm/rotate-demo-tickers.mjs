@@ -17,7 +17,7 @@
  *   DATABASE_URL                   — required
  *   KALSHI_DEMO_REST_BASE          — defaults to https://demo-api.kalshi.co/trade-api/v2
  *   MM_ROTATOR_TARGET_COUNT        — default 8
- *   MM_ROTATOR_MIN_CLOSE_HOURS     — default 24 (skip markets closing sooner than this)
+ *   MM_ROTATOR_MIN_CLOSE_HOURS     — default 48 (skip markets closing sooner than this)
  *   MM_ROTATOR_RESTART_URL         — runtime restart endpoint (default https://pmci-mm-runtime.fly.dev/admin/restart)
  *   PMCI_ADMIN_KEY                 — admin key for the restart call (skipped if unset)
  */
@@ -31,7 +31,7 @@ const DEMO_REST_BASE =
   "https://demo-api.kalshi.co/trade-api/v2";
 
 const TARGET_COUNT = Number.parseInt(process.env.MM_ROTATOR_TARGET_COUNT ?? "8", 10);
-const MIN_CLOSE_HOURS = Number.parseFloat(process.env.MM_ROTATOR_MIN_CLOSE_HOURS ?? "24");
+const MIN_CLOSE_HOURS = Number.parseFloat(process.env.MM_ROTATOR_MIN_CLOSE_HOURS ?? "48");
 const RESTART_URL =
   process.env.MM_ROTATOR_RESTART_URL?.trim() || "https://pmci-mm-runtime.fly.dev/admin/restart";
 
@@ -50,14 +50,139 @@ const DEFAULT_MM_PARAMS = Object.freeze({
   toxicity_threshold: 500,
 });
 
+const PROD_KALSHI_MARKET_URL = "https://api.elections.kalshi.com/trade-api/v2/markets";
+
+/**
+ * Parse Kalshi *_dollars field to number or null when absent.
+ * @param {unknown} v
+ */
+function parseDollarField(v) {
+  if (v == null || v === "") return null;
+  const n = typeof v === "number" ? v : Number.parseFloat(String(v));
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Mid-price when bid and ask are both present.
+ * @param {number|null} bid
+ * @param {number|null} ask
+ */
+function yesMidFromSides(bid, ask) {
+  if (bid == null || ask == null) return null;
+  return (bid + ask) / 2;
+}
+
+/**
+ * Pre-enable checks for DEMO MM rotation (runs after coarse REST filters).
+ * `skipProdCrossCheck` skips the prod API call — use in unit tests to avoid outbound HTTP.
+ *
+ * @param {object} market raw Kalshi market from DEMO REST
+ * @param {{
+ *   nowMs?: number,
+ *   logger?: { warn?: (msg: string) => void },
+ *   skipProdCrossCheck?: boolean,
+ *   fetch?: typeof fetch,
+ * }} [opts]
+ * @returns {Promise<{ ok: boolean, reason?: string }>}
+ */
+export async function validateTickerForMM(market, opts = {}) {
+  const nowMs = opts.nowMs ?? Date.now();
+  const logger = opts.logger ?? console;
+  const skipProdCrossCheck = opts.skipProdCrossCheck === true;
+
+  const yesBid = Number.parseFloat(market?.yes_bid_dollars ?? "0");
+  const yesAsk = Number.parseFloat(market?.yes_ask_dollars ?? "0");
+
+  const volFp = Number.parseFloat(market?.volume_24h_fp ?? "0") || 0;
+  const bidCents = Math.round(yesBid * 100);
+  const askCents = Math.round(yesAsk * 100);
+  const spreadCentsOrLess = Number.isFinite(bidCents) && Number.isFinite(askCents) && askCents - bidCents <= 1;
+  if (spreadCentsOrLess && volFp < 100) {
+    return { ok: false, reason: "locked_and_thin" };
+  }
+
+  const openIso = market?.open_time;
+  if (typeof openIso === "string") {
+    const openMs = Date.parse(openIso);
+    if (
+      Number.isFinite(openMs) &&
+      openMs > nowMs &&
+      openMs - nowMs > 12 * 3600 * 1000
+    ) {
+      return { ok: false, reason: "pre_event_dead_air" };
+    }
+  }
+
+  if (skipProdCrossCheck) return { ok: true };
+
+  const ticker = String(market?.ticker ?? "");
+  const fetchFn = opts.fetch ?? globalThis.fetch;
+
+  /** @type {Response | undefined} */
+  let res;
+  try {
+    const ac = new AbortController();
+    const t = setTimeout(() => ac.abort(), 2000);
+    try {
+      res = await fetchFn(`${PROD_KALSHI_MARKET_URL}/${encodeURIComponent(ticker)}`, {
+        signal: ac.signal,
+      });
+    } finally {
+      clearTimeout(t);
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    logger.warn?.(`[rotator] prod market fetch failed ${ticker}: ${msg} — continuing`);
+    return { ok: true };
+  }
+
+  if (!res.ok) {
+    logger.warn?.(`[rotator] prod market fetch HTTP ${res.status} for ${ticker} — continuing`);
+    return { ok: true };
+  }
+
+  let prodBody;
+  try {
+    prodBody = await res.json();
+  } catch {
+    logger.warn?.(`[rotator] prod market JSON parse failed for ${ticker} — continuing`);
+    return { ok: true };
+  }
+
+  const prodM = prodBody?.market ?? prodBody;
+
+  const demoBidNullable = parseDollarField(market?.yes_bid_dollars);
+  const prodBidNullable = parseDollarField(prodM?.yes_bid_dollars);
+
+  if (prodBidNullable == null && demoBidNullable != null) {
+    return { ok: false, reason: "demo_only_book" };
+  }
+
+  const demoMid = yesMidFromSides(
+    parseDollarField(market?.yes_bid_dollars),
+    parseDollarField(market?.yes_ask_dollars),
+  );
+  const prodMid = yesMidFromSides(
+    parseDollarField(prodM?.yes_bid_dollars),
+    parseDollarField(prodM?.yes_ask_dollars),
+  );
+
+  if (demoMid != null && prodMid != null && Math.abs(demoMid - prodMid) > 0.05) {
+    return { ok: false, reason: "demo_prod_divergence" };
+  }
+
+  return { ok: true };
+}
+
 /**
  * Pure: pick the top N markets by score.
  * Score = volume_24h + (close_in_days * 5). Filters out wide spreads and near-close markets.
  *
  * @param {Array<object>} markets raw market objects from the Kalshi REST endpoint
- * @param {{nowMs?: number, target?: number, minCloseHours?: number}} [opts]
+ * @param {{nowMs?: number, target?: number, minCloseHours?: number, logger?: object, skipProdCrossCheck?: boolean, fetch?: typeof fetch}} [opts]
+ * @returns {Promise<{ selections: Array<{ ticker: string, score: number, raw: object }>, rejected: Array<{ ticker: string, reason: string|undefined }> }>}
  */
-export function selectMarketsForRotation(markets, opts = {}) {
+export async function selectMarketsForRotation(markets, opts = {}) {
   const nowMs = opts.nowMs ?? Date.now();
   const target = opts.target ?? TARGET_COUNT;
   const minCloseHours = opts.minCloseHours ?? MIN_CLOSE_HOURS;
@@ -65,6 +190,8 @@ export function selectMarketsForRotation(markets, opts = {}) {
 
   /** @type {Array<{ ticker: string, score: number, raw: object }>} */
   const scored = [];
+  /** @type {Array<{ ticker: string, reason: string | undefined }>} */
+  const rejected = [];
   for (const m of Array.isArray(markets) ? markets : []) {
     const ticker = String(m?.ticker ?? "");
     if (!ticker) continue;
@@ -86,13 +213,25 @@ export function selectMarketsForRotation(markets, opts = {}) {
     if (typeof closeIso !== "string") continue;
     const closeMs = Date.parse(closeIso);
     if (!Number.isFinite(closeMs) || closeMs < minCloseMs) continue;
+
+    const validation = await validateTickerForMM(m, {
+      nowMs,
+      logger: opts.logger,
+      skipProdCrossCheck: opts.skipProdCrossCheck === true,
+      fetch: opts.fetch,
+    });
+    if (!validation.ok) {
+      rejected.push({ ticker, reason: validation.reason });
+      continue;
+    }
+
     const vol = Number.parseFloat(m?.volume_24h_fp ?? "0") || 0;
     const closeDays = (closeMs - nowMs) / (24 * 3600 * 1000);
     const score = vol + closeDays * 5;
     scored.push({ ticker, score, raw: m });
   }
   scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, target);
+  return { selections: scored.slice(0, target), rejected };
 }
 
 async function fetchOpenMarkets(restBase, logger = console) {
@@ -238,6 +377,23 @@ async function triggerRuntimeRestart(logger = console) {
   }
 }
 
+function logRotatorRejectionSummary(logger, rejected) {
+  if (rejected.length === 0) {
+    logger.info?.("[rotator] rejected 0 candidates");
+    return;
+  }
+  const byReason = new Map();
+  for (const { reason } of rejected) {
+    const key = reason ?? "unknown";
+    byReason.set(key, (byReason.get(key) ?? 0) + 1);
+  }
+  const rejectionsByReason = [...byReason.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k}=${v}`)
+    .join(", ");
+  logger.info?.(`[rotator] rejected ${rejected.length} candidates: ${rejectionsByReason}`);
+}
+
 /**
  * Main rotator entry point. Returns a summary object — used as both the script
  * exit JSON and the in-process API response.
@@ -257,6 +413,7 @@ export async function runRotation(opts = {}) {
     target_count: TARGET_COUNT,
     fetched: 0,
     selected: /** @type {Array<{ticker:string, market_id:number, score:number}>} */ ([]),
+    rejected: /** @type {Array<{ticker:string, reason?: string}>} */ ([]),
     disabled_count: 0,
     runtime_restart: /** @type {any} */ (null),
     finished_at: /** @type {string|null} */ (null),
@@ -267,11 +424,14 @@ export async function runRotation(opts = {}) {
     const markets = await fetchOpenMarkets(DEMO_REST_BASE, logger);
     summary.fetched = markets.length;
 
-    const selections = selectMarketsForRotation(markets);
+    const { selections, rejected } = await selectMarketsForRotation(markets, { logger });
+    summary.rejected = rejected;
+
     if (selections.length === 0) {
       summary.ok = false;
       summary.error = "no_markets_matched_selection";
       logger.error?.("[rotator] no markets matched the selection criteria — aborting rotation");
+      logRotatorRejectionSummary(logger, summary.rejected);
       return summary;
     }
 
@@ -289,6 +449,8 @@ export async function runRotation(opts = {}) {
     logger.info?.(`[rotator] disabled ${summary.disabled_count} prior mm_market_config rows`);
 
     summary.runtime_restart = await triggerRuntimeRestart(logger);
+
+    logRotatorRejectionSummary(logger, summary.rejected);
   } catch (err) {
     summary.ok = false;
     summary.error = err instanceof Error ? err.message : String(err);

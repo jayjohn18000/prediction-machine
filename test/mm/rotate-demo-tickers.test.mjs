@@ -11,6 +11,9 @@ const MID_CLOSE = "2026-05-02T17:00:00Z"; // ~2 days out — passes
 const NEAR_CLOSE = "2026-04-30T18:00:00Z"; // ~4h out — fails minCloseHours=24
 const PAST_CLOSE = "2026-04-29T18:00:00Z"; // already past — fails
 
+/** Selection tests omit prod Kalshi comparison (fake tickers) for speed and determinism. */
+const selOpts = { skipProdCrossCheck: true };
+
 const m = (overrides) => ({
   ticker: "KXTEST-FAR",
   yes_bid_dollars: "0.20",
@@ -20,35 +23,35 @@ const m = (overrides) => ({
   ...overrides,
 });
 
-test("selectMarketsForRotation picks top by volume + close-time score", () => {
-  const out = selectMarketsForRotation(
+test("selectMarketsForRotation picks top by volume + close-time score", async () => {
+  const { selections: out } = await selectMarketsForRotation(
     [
       m({ ticker: "A", volume_24h_fp: "100" }),
       m({ ticker: "B", volume_24h_fp: "50" }),
       m({ ticker: "C", volume_24h_fp: "5" }),
     ],
-    { nowMs: NOW_MS, target: 2, minCloseHours: 24 },
+    { nowMs: NOW_MS, target: 2, minCloseHours: 24, ...selOpts },
   );
   assert.equal(out.length, 2);
   assert.equal(out[0].ticker, "A");
   assert.equal(out[1].ticker, "B");
 });
 
-test("selectMarketsForRotation rejects near-close markets", () => {
-  const out = selectMarketsForRotation(
+test("selectMarketsForRotation rejects near-close markets", async () => {
+  const { selections: out } = await selectMarketsForRotation(
     [
       m({ ticker: "A", close_time: NEAR_CLOSE }),
       m({ ticker: "B", close_time: PAST_CLOSE }),
       m({ ticker: "C", close_time: FAR_CLOSE }),
     ],
-    { nowMs: NOW_MS, target: 8, minCloseHours: 24 },
+    { nowMs: NOW_MS, target: 8, minCloseHours: 24, ...selOpts },
   );
   assert.equal(out.length, 1);
   assert.equal(out[0].ticker, "C");
 });
 
-test("selectMarketsForRotation rejects no-bid / no-ask / crossed / wide-only books", () => {
-  const out = selectMarketsForRotation(
+test("selectMarketsForRotation rejects no-bid / no-ask / crossed / wide-only books", async () => {
+  const { selections: out } = await selectMarketsForRotation(
     [
       m({ ticker: "NO_BID", yes_bid_dollars: "0" }),
       m({ ticker: "NO_ASK", yes_ask_dollars: "0" }),
@@ -56,23 +59,23 @@ test("selectMarketsForRotation rejects no-bid / no-ask / crossed / wide-only boo
       m({ ticker: "FULL_NO_ASK", yes_bid_dollars: "0.10", yes_ask_dollars: "1.0000" }),
       m({ ticker: "OK", yes_bid_dollars: "0.10", yes_ask_dollars: "0.20" }),
     ],
-    { nowMs: NOW_MS, target: 8, minCloseHours: 24 },
+    { nowMs: NOW_MS, target: 8, minCloseHours: 24, ...selOpts },
   );
   assert.equal(out.length, 1);
   assert.equal(out[0].ticker, "OK");
 });
 
-test("selectMarketsForRotation skips multi-event KXMVE tickers", () => {
-  const out = selectMarketsForRotation(
+test("selectMarketsForRotation skips multi-event KXMVE tickers", async () => {
+  const { selections: out } = await selectMarketsForRotation(
     [m({ ticker: "KXMVECROSSCATEGORY-XXX" }), m({ ticker: "KXNORMAL-A" })],
-    { nowMs: NOW_MS, target: 8, minCloseHours: 24 },
+    { nowMs: NOW_MS, target: 8, minCloseHours: 24, ...selOpts },
   );
   assert.equal(out.length, 1);
   assert.equal(out[0].ticker, "KXNORMAL-A");
 });
 
-test("selectMarketsForRotation excludes -B<digit> strike markets (Kalshi DEMO post-only rejects)", () => {
-  const out = selectMarketsForRotation(
+test("selectMarketsForRotation excludes -B<digit> strike markets (Kalshi DEMO post-only rejects)", async () => {
+  const { selections: out } = await selectMarketsForRotation(
     [
       m({ ticker: "KXHIGHTLV-26MAY01-B89.5" }),
       m({ ticker: "KXHIGHMIA-26MAY01-B90.5" }),
@@ -80,29 +83,29 @@ test("selectMarketsForRotation excludes -B<digit> strike markets (Kalshi DEMO po
       m({ ticker: "KXHIGHTNOLA-26MAY01-T77" }),
       m({ ticker: "KXHIGHPHIL-26MAY01-T63" }),
     ],
-    { nowMs: NOW_MS, target: 8, minCloseHours: 24 },
+    { nowMs: NOW_MS, target: 8, minCloseHours: 24, ...selOpts },
   );
   const tickers = out.map((s) => s.ticker);
   assert.deepEqual(tickers.sort(), ["KXHIGHPHIL-26MAY01-T63", "KXHIGHTNOLA-26MAY01-T77"]);
 });
 
-test("selectMarketsForRotation prefers longer close time when volume tied", () => {
-  const out = selectMarketsForRotation(
+test("selectMarketsForRotation prefers longer close time when volume tied", async () => {
+  const { selections: out } = await selectMarketsForRotation(
     [
       m({ ticker: "MID", close_time: MID_CLOSE, volume_24h_fp: "0" }),
       m({ ticker: "FAR", close_time: FAR_CLOSE, volume_24h_fp: "0" }),
     ],
-    { nowMs: NOW_MS, target: 8, minCloseHours: 24 },
+    { nowMs: NOW_MS, target: 8, minCloseHours: 24, ...selOpts },
   );
   assert.equal(out[0].ticker, "FAR");
 });
 
-test("selectMarketsForRotation respects target cap", () => {
-  const out = selectMarketsForRotation(
+test("selectMarketsForRotation respects target cap", async () => {
+  const { selections: out } = await selectMarketsForRotation(
     Array.from({ length: 20 }, (_, i) =>
       m({ ticker: `T${i}`, volume_24h_fp: String(20 - i) }),
     ),
-    { nowMs: NOW_MS, target: 8, minCloseHours: 24 },
+    { nowMs: NOW_MS, target: 8, minCloseHours: 24, ...selOpts },
   );
   assert.equal(out.length, 8);
   assert.equal(out[0].ticker, "T0"); // highest volume
