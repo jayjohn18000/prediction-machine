@@ -523,3 +523,28 @@ The 7-day DEMO test breached `daily_loss_limit_cents=2000` on day 2 at PnL=−2,
 
 **Open question for ADR-013:** is the day-1 fee-model variance against Kalshi's first PROD statement within the 2% tolerance? (Lane-13 cutover gate becomes evaluable post-T0.)
 
+### Amendment 2026-05-02T22:37Z (T0 captured)
+
+**T0 = 2026-05-02T22:37:20.567Z** — first PROD-mode order written to `pmci.mm_orders` (id=55169, KXNBA-26-OKC yes_buy @ 54c).
+
+**Expires (T0 + 168h) = 2026-05-09T22:37:20.567Z.**
+
+**Initial pair (operator-selected after lane-12 fresh re-probe):**
+- `KXNBA-26-OKC` (`provider_markets.id=449027`) — "Will the Oklahoma City win the 2026 Pro Basketball Finals?" — mid 55.5c, spread 1c, vol_24h 91,912, closes 2028-06-29. `hard_position_limit=54` (≈$30 notional at 55c). `daily_loss_limit_cents=500`. Sports/NBA family.
+- `CONTROLS-2026-D` (`provider_markets.id=5353265`) — "Will Democrats win the U.S. Senate in 2026?" — mid 48.5c, spread 1c, vol_24h 34,122, closes 2027-02-01. `hard_position_limit=60` (clamped at $30 ceiling). `daily_loss_limit_cents=500`. Political/macro family.
+
+**Initial seed bypassed `validateTickerForMM`** (manual UPSERT into `mm_market_config`). Lane 12 fresh re-probe at T-3min validated both tickers under ADR-012 spec. Future daily-rotator cycles (cron `mm-rotate-tickers`) will use the rotator path with `MM_RUN_MODE=prod` and validateTickerForMM's required-pass cross-check.
+
+**Pre-T0 incidents (logged for ADR-013 review):**
+
+1. **Brief 30-second window of stale-DEMO-rows quoting against PROD** (~22:08:30Z–22:09:52Z): the runtime came up in PROD mode while 8 leftover DEMO `mm_market_config` rows were still `enabled=true`. Placed 52 orders against PROD with DEMO sizing ($20/day cap, $10 notional). 28 rejected by Kalshi (likely `market_closed` or `invalid_market` for tickers that don't exist on PROD); 24 left open. All 24 cancelled successfully via `scripts/mm/cancel-orphan-prod-orders.mjs` SSH-executed in-container at 22:30Z. **No fills landed during the window.** Total realized P&L impact: $0.
+
+2. **Fly proxy connectivity outage** (~22:11Z–22:28Z): `/health/mm` returning 503 (severity=crit) because `lastMainLoopTickAt` never advanced when `enabled=0`. Fly's proxy refused public traffic. Fixed by adding an idle-state liveness heartbeat in `scripts/mm/run-mm-orchestrator.mjs` that advances `lastMainLoopTickAt` only when there are zero enabled rows (preserves the watchdog when there ARE enabled rows). Commit `3302f5c`.
+
+**Pre-T0 invariant violations narrowly avoided:**
+- HA-pair created two MM machines on first PROD deploy (single-instance invariant). Manually scaled to 1 within ~1 minute. Subsequent deploys use `--ha=false`.
+
+**Daily-loss cap math (live):** Per-market $5/day. Aggregate cap with 2 enabled markets ≈ $10/day. Operator's stated risk envelope is $5/day; if the system is actually trading both markets simultaneously, a single bad day could spend $10. Operator decision needed: accept ($10 aggregate at 2 markets) or further tighten per-market to $2.50.
+
+**Sources update:** `pmci.mm_orders` first 4 PROD orders (id 55169-55172) at 22:37:20Z; `pmci-mm-runtime.fly.dev/health/mm` showing `runMode=prod, depthConnected=2/2, severity=none`.
+
