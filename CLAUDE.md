@@ -1,6 +1,6 @@
 # Prediction Machine — Claude Context
 
-> **CURRENT PHASE (2026-05-01): MM MVP 7-day validation, day 3 of 7.**
+> **CURRENT PHASE (2026-05-02): MM MVP 7-day validation, day 4 of 7.**
 >
 > Status is tracked across three independent axes. Conflating them produces "we shipped" claims that survive only until the next status check.
 >
@@ -8,24 +8,26 @@
 > - MM Pre-W2 + W2–W6 merged 2026-04-28 (W6 closed feature-complete).
 > - MM triage A (PnL+positions), B (depth feed), C (order reconciler) merged 2026-04-29.
 > - Daily ticker rotator + 24h heartbeat verifier merged 2026-04-30.
+> - Tracks B (B.1–B.8 arb sunset cleanup), C (MM v2 prep docs at `docs/plans/mm-v2/`), D (open-decisions Q1–Q8 with operator answers), E (runtime triage memo) all merged 2026-05-01.
+> - Tracks F (F.1–F.5 MM runtime fixes: `lastStartupReconcileAt` rename, PnL daily-net fix, structured Kalshi error capture, `mm_orders.status` lifecycle + backfill, `/health/mm` `ready`/`severity` composite), H (reconcile-timeout hotfix), I (Kalshi DEMO WS spaced subscribes), J (WS heartbeat + per-ticker staleness watchdog) all merged 2026-05-01 → 2026-05-02. HEAD = `1777db1`.
 > - Polymarket indexer Pre-W1 + W1 merged 2026-04-28 (ADR-009: read-only `lib/poly-indexer/clients/`, CI lint guard `npm run lint:poly-write-guard`, `lib/poly-indexer/reorg.mjs`, migration `20260430130000_pmci_poly_w1.sql`, all 4 `poly_*` tables service-role only).
 > - Polymarket indexer W2 (live Polygon ingestion via `pmci-poly-indexer` Fly app) NOT started.
 >
 > **(b) Writers verified persisting** (DB rows in expected intervals — Pattern 4 of the audit):
-> - `pmci-mm-runtime` health endpoint: ⚠️ surface returns `ok=true`, but `lastReconcileAt` has been frozen at `2026-04-30T19:03:23Z` since an unannounced runtime restart at `2026-04-30T19:03:22Z`. Reconciler ran exactly once at boot and has not advanced for ~21h as of 2026-05-01 15:55Z. Handed to **Track E (MM runtime triage)**. Do not treat the runtime as trustworthy on the reconcile dimension until Track E returns a verdict.
-> - Orders / fills writers: ✅ persisting, but order placement collapsed from steady ~1,080/h to sporadic single-digit hours after the 2026-04-30T19:03Z restart — `mm_orders` 24h=3,589 / 1h=27 (2026-05-01 15:33Z); `mm_fills` 24h=47 (~1.3% of orders). Track E owns root cause; suspected downstream of the frozen reconciler.
-> - `kill_switch_events`: ⚠️ 44,372 rows — all reason=`daily_loss`, fired in a 20-hour storm 2026-04-29T17:09Z → 2026-04-30T13:43Z (then stopped). PnL at trip = −2,341.66 cents vs `daily_loss_limit_cents=2000`. **The 7-day run already breached the daily-loss exit criterion on day 2.** Operator decision (2026-05-01): accept as a controlled-failure observation; do not declare PASS at hour 168 on this dimension.
-> - PnL writer + post-fill backfill: ✅ both verified persisting via cron-row check + DB-row landing check on 2026-05-01 (pmci-mm-pnl-snapshot every 5min; pmci-mm-post-fill-backfill every minute; 2,040 PnL snapshots in 24h; backfill column populated to last-fill timestamp).
-> - `mm_orders.status` propagation: ⚠️ lifetime `status='filled'` count = 0 despite 118 `mm_fills` rows. Either intentional (orders track open/cancel only, fills are source of truth for matched volume) or a propagation gap. Track E confirms intent.
-> - `_job_runner_url()` lookup: re-confirmed working as of 2026-05-01 (cron rows in `cron.job_run_details` showing `succeeded` for all four `pmci-mm-*` jobs).
-> - Polymarket indexer (W1): tables exist and are service-role-locked, but no live writer until W2 ships.
+> - `pmci-mm-runtime` health endpoint: ⚠️ runtime restarted at `2026-05-02T12:17:09Z` (likely Track J redeploy). At T+0 reported `ready=false`, `severity=crit`, `loopTick=0`, `depthSubscribedConnected=0/8`. At T+2min recovered to `severity=warn`, `loopTick=22`, depth `8/8` connected, `lastReconcileAt` advancing — warm-up appears nominal. Track F's new readiness fields are doing their job (surfaces real warm-up state instead of false `ok=true`). Watch the next probe to confirm steady-state.
+> - Orders / fills writers: ✅ persisting — `mm_orders` 24h=4,511 / 1h=16 (2026-05-02 12:17Z; 1h sample is during warm-up window after restart); `mm_fills` 24h=42 (~0.93% of orders, within healthy band 0.1%–10%). Lifetime `mm_orders=49,864`, `mm_fills=157`.
+> - `kill_switch_events`: ✅ 24h delta = **0** — storm has stayed stopped since 2026-04-30T13:43Z. Cumulative still 44,372 (all `reason=daily_loss` from the 2026-04-29/30 storm). Daily-loss exit-criterion breach on day 2 stands as the controlled-failure observation; not declared PASS at hour 168 on this dimension.
+> - PnL writer + post-fill backfill: ✅ both verified persisting (2,304 PnL snapshots in 24h on 2026-05-02; latest snapshot `2026-05-02T12:15:02Z`).
+> - `mm_orders.status` propagation: ✅ Track F.4 backfill landed — lifetime `status='filled'` count = 127 (was 0 on 2026-05-01).
+> - `_job_runner_url()` lookup: still working (PnL snapshot every 5min cadence holding).
+> - Polymarket indexer (W1): tables exist and are service-role-locked; `poly_wallet_trades` count = 0 (no live writer until W2 ships).
 >
 > **(c) 7-day continuous-quote test on Kalshi DEMO** (ADR-008/010 clock state):
-> - Status: **IN FLIGHT** (day 3 of 7).
+> - Status: **IN FLIGHT** (day 4 of 7; ~hour 91 of 168).
 > - Started: **2026-04-28T17:41:28.638Z** (ADR-008).
 > - Expires: **~2026-05-05T17:41Z**.
 > - Live config: 8 enabled markets + daily ticker rotator (drift from ADR-008's static 5; documented retroactively in **ADR-010**, 2026-05-01).
-> - Verdict at hour 168: pending. Do not declare PASS while (b) carries any ⚠️.
+> - Verdict at hour 168: pending. Daily-loss criterion already breached on day 2; do not declare full PASS.
 >
 > Arb thesis closed RED 2026-04-24; closed-pivot archive at `docs/archive/pivot-2026-04/` is reference-only — do not revive on this provider pair.
 

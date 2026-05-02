@@ -46,15 +46,15 @@ were corrected in the 2026-04-24 W1 spec check.
 
 ---
 
-## Current status (2026-05-01)
+## Current status (2026-05-02)
 
-- **Branch / phase:** `main` (merged Track F / ops branches 2026-05-01; push to `origin/main` up to deploy). **MM MVP 7-day validation in progress, day 3 of 7.** Clock started 2026-04-28T17:41:28.638Z (ADR-008); window expires ~2026-05-05T17:41Z. **Polymarket on-chain wallet indexer Pre-W1 + W1 shipped** 2026-04-28 (ADR-009; commit `2ab3160`).
+- **Branch / phase:** `main` at HEAD `1777db1` (Track J Layer 2 watchdog merge). **MM MVP 7-day validation in progress, day 4 of 7** (~hour 91 of 168). Clock started 2026-04-28T17:41:28.638Z (ADR-008); window expires ~2026-05-05T17:41Z. **Polymarket on-chain wallet indexer Pre-W1 + W1 shipped** 2026-04-28 (ADR-009; commit `2ab3160`).
 - **Production runtime (3 Fly apps):**
   - `pmci-api.fly.dev` — Fastify API + `/v1/mm/*` admin routes for runtime dashboard
-  - `pmci-observer.fly.dev` — observer loop (Kalshi + Polymarket REST + Kalshi WS depth)
+  - `pmci-observer.fly.dev` — observer loop (Kalshi + Polymarket REST + Kalshi WS depth) — `/health` probe returned empty in today's sync; not a hard-down signal but worth re-probing if cron/freshness drift
   - `pmci-mm-runtime.fly.dev` — MM orchestrator, **single-instance invariant**, `/health/mm` endpoint, W4 reconcile phase
-- **MM live state (2026-05-01 ~14:36Z):** 8 enabled demo markets (drift from ADR-008's static 5 — see "Drift from ADR-008" below); ~45,582 mm_orders; 118 mm_fills; **44,372 mm_kill_switch_events** (suspiciously high, investigate before production cutover); latest mm_pnl_snapshot from <1 min ago; 8/8 depth subscriptions connected; depth ticker staleness 160–273s (likely normal for demo low-activity markets).
-- **API freshness (2026-05-01 ~14:36Z):** Kalshi + Polymarket lag 30s; provider_markets=161,083; snapshots=6,095,067; families=205; current_links=356.
+- **MM live state (2026-05-02 ~12:17Z):** 8 enabled demo markets (rotator-managed); lifetime `mm_orders=49,864` (+4,282 vs 2026-05-01) / 24h=4,511 / 1h=16 (1h sample taken during the post-restart warm-up); lifetime `mm_fills=157` (+39) / 24h=42 (~0.93% of orders); cumulative `mm_kill_switch_events=44,372` with **24h delta=0** (storm stopped 2026-04-30T13:43Z and has stayed stopped); latest `mm_pnl_snapshots.observed_at`=2026-05-02T12:15:02Z (cron healthy, 2,304 snapshots in 24h); `mm_orders.status='filled'` count=127 (Track F.4 backfill landed — was 0 on 2026-05-01); `pmci-mm-runtime` restarted 2026-05-02T12:17:09Z (likely Track J redeploy) — at T+2min reported `ok=true`, `ready=false`, `severity=warn`, `loopTick=22`, depth 8/8 connected, reconcile advancing (warm-up nominal — Track F readiness fields working as intended).
+- **API freshness (2026-05-02 ~12:17Z):** Kalshi + Polymarket lag 24–50s; provider_markets=172,333 (+11,250); snapshots=6,595,519 (+500,452); families=205 (unchanged); current_links=356 (unchanged).
 - **Polymarket indexer state:** schema + reorg state machine + read-only client namespace + CI lint guard all merged. `pmci.poly_wallet_trades` count = 0 (W2 ingestion process not yet started). `pmci-poly-indexer` Fly app not deployed.
 - **Cron:** pg_cron now includes the MM stack (depth pruning daily, post-fill backfill every minute, P&L snapshot every 5 min, daily ticker rotator, 24h stream heartbeat) plus the legacy ingest/audit/review crons. Job runner via Supabase `pmci-job-runner` Edge Function.
 - **Ops:** `npm run pmci:status` for API health + smoke counts. `curl -sS https://pmci-mm-runtime.fly.dev/health/mm` for MM runtime status. `curl -sS -H "X-PMCI-API-KEY: $PMCI_API_KEY" https://pmci-api.fly.dev/v1/mm/{markets,orders,positions,pnl,fills,kill-switch-events}` for runtime dashboard.
@@ -62,23 +62,24 @@ were corrected in the 2026-04-24 W1 spec check.
 ### Drift from ADR-008 (captured retroactively in ADR-010, 2026-05-01)
 ADR-008 specified "5 hand-curated demo markets continuously quoted for 7 days." The actual test design as of 2026-04-30 includes 8 markets enabled at any time PLUS a daily ticker rotator (`scripts/mm/rotate-demo-tickers.mjs` + cron migration `20260430140000_pmci_mm_rotator_cron.sql`) PLUS a 24h stream-heartbeat verifier (`scripts/mm/mm-stream-heartbeat.mjs`). The exit-criterion semantics changed from "5 markets continuous" to a rotating set. ADR-010 documents this drift; an open question (Track D Q10) asks whether ADR-010 should stand or whether ADR-008 should be revised in place to remove the two-ADR tension.
 
-### Open work (post Track G 2026-05-01)
-- **Track B — remaining:** `pmci.unmatched_markets` / `link_gold_labels` / `linker_runs` / `linker_run_metrics` **not** dropped — `linker_runs` had 140 rows at pre-drop check (B.3 blocked). **Migration-secrets rotation** deferred by operator until the 7-day clock closes (`track-b-rotate-migration-secrets`). `pmci.proposed_links` truncate migration is in-repo (`20260501123000_pmci_truncate_proposed_links.sql`) but was **not** applied on this track (only B.3 + post-api pg_cron unschedule were in scope for DB apply).
-- **Track C — MM v2 prep:** landed under `docs/plans/mm-v2/` (merge from `track-c-mm-v2-prep`).
-- **Track D — open decisions:** `docs/plans/2026-05-01-open-decisions-for-jay.md` (8 questions; blanks intentional).
-- **Indexer W2:** `pmci-poly-indexer` Fly app design + deployment + live-tail Polygon RPC ingestion all unstarted.
+### Open work (post Tracks B/C/D/E/F/H/I/J — 2026-05-02)
+- **Tracks B / C / D / E / F / H / I / J shipped** 2026-05-01 → 2026-05-02. The 2026-05-01 master prompt's open work has all landed (B = arb sunset cleanup B.1–B.8; C = MM v2 prep docs at `docs/plans/mm-v2/`; D = open-decisions Q1–Q8 with operator answers; E = runtime triage memo; F = MM runtime fixes F.1–F.5; H = reconcile-timeout hotfix; I = Kalshi DEMO WS spaced subscribes; J = WS heartbeat + per-ticker staleness watchdog).
+- **Track B residual (deferred until clock closes):** migration-secrets rotation (anon JWT + PMCI_API_KEY in two old migrations) is intentionally deferred by operator until the 7-day clock closes — see `track-b-rotate-migration-secrets`.
+- **Indexer W2 (Polymarket on-chain ingestion):** `pmci-poly-indexer` Fly app design + deployment + live-tail Polygon RPC ingestion all unstarted. Becomes the next workstream once the MM clock closes.
+- **Post-W6 audit / production cutover:** gated on hour-168 verdict (~2026-05-05T17:41Z). Daily-loss criterion is already a documented FAIL on day 2; cutover decision needs to address that explicitly in a new ADR.
 
-### Known risks (2026-05-01)
-- **Runtime redeployed 2026-05-01 ~18:34Z with Track F fixes** — `lastStartupReconcileAt` field added (alias of legacy `lastReconcileAt`); `/health/mm` exposes new `ready` and `severity` fields; PnL rollup now sums latest snapshot per market; `mm_orders.status` lifecycle patched (backfill applied: 121 parent rows synced from `mm_fills`). Daily-loss exit criterion remains breached on day 2 (controlled-failure observation).
-- **44k mm_kill_switch_events** all reason=`daily_loss`, fired 2026-04-29T17:09Z → 2026-04-30T13:43Z (then stopped). PnL at trip = −2,341.66 cents vs `daily_loss_limit_cents=2000`. **The 7-day run already breached the daily-loss exit criterion on day 2.** Operator decision (2026-05-01): accept as a controlled-failure observation; use the data; do not declare PASS at hour 168 on this dimension.
-- **Unannounced `pmci-mm-runtime` restart 2026-04-30T19:03:22Z** (historical). Post–Track F deploy, watch `/health/mm` for `ready`, `severity`, and main-loop tick/reconcile fields — **2026-05-01 ~18:35Z check:** `ok=true` but `ready=false`, `severity=crit`, `loopTick=0`, `lastStartupReconcileAt=null` while depth remained 8/8 connected (orchestrator warm-up or startup fault; Track E should re-triage after the new health surface).
-- **Daily ticker rotator** changes the test design from ADR-008; ADR-010 captures this. Open question (Track D Q10) is whether to keep both ADRs or revise ADR-008 in place.
-- Depth ticker staleness on every ticker (160–273s); acceptable for demo but won't be acceptable on production where active book updates should arrive sub-second. (Note: 2026-05-01 ~15:33Z showed `depthSubscribedConnected=0/8` for ~22 minutes; recovered to 8/8 by 15:55Z. Transient WS reconnect window — Track E should investigate why the runtime didn't surface this in `/health/mm` as anything other than "ok=true" while it lasted.)
+### Known risks (2026-05-02)
+- **`pmci-mm-runtime` restart at 2026-05-02T12:17:09Z** — coincided with Track J merge (likely deploy event). Post-restart `/health/mm` showed expected warm-up profile: `severity=crit` at T+0 (`loopTick=0`, depth `0/8`), recovering to `severity=warn` at T+2min (`loopTick=22`, depth `8/8`, reconcile advancing). Track F's readiness fields are working as designed — the `ok=true` field alone would have hidden the warm-up window. Watch for steady-state `severity=info` / `ready=true` at the next probe.
+- **Untracked `scripts/hooks/`** in working tree on `main` — operator's local pre-deploy hook scripts (write-protect, single-instance check, post-migration verify-schema, etc.). Expected; not committed by design.
+- **44k `mm_kill_switch_events` cumulative** — all `reason=daily_loss`, fired 2026-04-29T17:09Z → 2026-04-30T13:43Z, then stopped. 24h delta has been 0 for 48h. PnL at trip = −2,341.66 cents vs `daily_loss_limit_cents=2000`. The 7-day run **already breached the daily-loss exit criterion on day 2.** Operator decision (2026-05-01): accept as a controlled-failure observation; use the data; do not declare PASS at hour 168 on this dimension.
+- **Daily ticker rotator** changes the test design from ADR-008; ADR-010 captures this. Open question (Track D Q10) is whether to keep both ADRs or revise ADR-008 in place — operator answers landed on Track D for Q1–Q8; Q10 still open.
+- **Depth ticker staleness** — 5/8 tickers showed 138–141s since last update (2026-05-02 12:19Z), likely normal for demo low-activity markets. The Track J per-ticker watchdog now forces reconnect when this exceeds threshold; behavior in steady-state should be observed over the next 24h.
 - Freshness thresholds differ between CLI and API by design; align operator expectations via `PMCI_MAX_LAG_SECONDS` / API config.
 
 ### Carry-forward
 - Canonical event lifecycle after settlement (archive vs delete) — ADR pending.
-- Production cutover from Kalshi DEMO to live Kalshi after 7-day validation closes — gated on validation outcome, kill_switch investigation, and a separate ADR.
+- Production cutover from Kalshi DEMO to live Kalshi after 7-day validation closes — gated on validation outcome, kill_switch investigation, and a separate ADR. With daily-loss already FAILED on day 2, the cutover ADR will need to either re-spec the exit criteria or document accepting the failure mode in production.
+- Migration-secrets rotation (two old migrations contain anon JWT + PMCI_API_KEY) — deferred until 7-day clock closes.
 
 ---
 
