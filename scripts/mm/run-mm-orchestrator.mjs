@@ -175,6 +175,35 @@ async function main() {
       privateKeySet: Boolean(env.privateKeyInline || env.privateKeyPath),
     };
   }
+
+  // Idle-state liveness — when there are zero enabled mm_market_config rows the
+  // orchestrator loop short-circuits and lastMainLoopTickAt never advances, so
+  // severity=crit forever (and Fly's proxy refuses to route). This timer counts
+  // the enabled rows and only advances `lastMainLoopTickAt` when the count is
+  // ZERO (legitimate idle state). When the count is non-zero, the real
+  // orchestrator loop owns the tick and a stalled loop still surfaces as crit.
+  setInterval(async () => {
+    try {
+      const c = createPgClient();
+      await c.connect();
+      try {
+        const r = await c.query(
+          `SELECT count(*)::int AS n FROM pmci.mm_market_config WHERE enabled = true`,
+        );
+        const n = r.rows[0]?.n ?? 0;
+        /** @type {any} */ (health).enabledMarketsCount = n;
+        /** @type {any} */ (health).idleHeartbeatAt = new Date().toISOString();
+        if (n === 0) {
+          /** @type {any} */ (health).lastMainLoopTickAt = new Date().toISOString();
+        }
+      } finally {
+        await c.end().catch(() => {});
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      /** @type {any} */ (health).idleHeartbeatError = msg;
+    }
+  }, 10_000).unref();
   const t0 = new Date().toISOString();
   /** @type {any} */
   (health).startedAt = t0;
