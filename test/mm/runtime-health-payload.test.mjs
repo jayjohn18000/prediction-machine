@@ -69,6 +69,23 @@ test("ready false when mmSkippedPlacementTickers non-empty", () => {
   assert.equal(j.severity, "warn");
 });
 
+test("ready false when mmWatchdogActiveAlerts non-empty", () => {
+  const health = {
+    ok: true,
+    lastOrchestratorError: null,
+    lastMainLoopTickAt: new Date().toISOString(),
+    mmWatchdogActiveAlerts: [{ ticker: "KX", reason: "fill_rate_floor" }],
+  };
+  const depthSnap = {
+    depthSubscribedConfigured: 1,
+    depthSubscribedConnected: 1,
+    depthTickersStale: [],
+  };
+  const j = buildMmHealthMmResponse({ health, depthSnap });
+  assert.equal(j.ready, false);
+  assert.equal(j.severity, "warn");
+});
+
 test("severity crit when loop tick stale > 60s", () => {
   const health = {
     ok: true,
