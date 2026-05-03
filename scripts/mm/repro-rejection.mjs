@@ -78,6 +78,7 @@ async function main() {
     sizeContracts: 1,
     clientOrderId: `repro-${Date.now()}`,
     postOnly: true,
+    priceLevelStructure: meta.price_level_structure != null ? String(meta.price_level_structure) : null,
   });
   console.error("[repro] create_order_body", JSON.stringify(body));
 

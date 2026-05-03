@@ -101,6 +101,7 @@ async function main() {
     sizeContracts: 1,
     clientOrderId: client_order_id,
     postOnly: true,
+    priceLevelStructure: mk.price_level_structure != null ? String(mk.price_level_structure) : null,
   });
 
   console.log("[mm:dev] Placing...", { ticker, client_order_id, placeBody });

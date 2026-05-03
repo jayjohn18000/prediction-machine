@@ -35,9 +35,19 @@ test("buildCreateOrderBody maps MM sides to Kalshi openapi", async () => {
   assert.deepEqual(b1.side, "yes");
   assert.deepEqual(b1.action, "buy");
   assert.equal(b1.yes_price, 45);
-  assert.equal(b1.yes_price_dollars, "0.4500");
+  assert.equal(b1.yes_price_dollars, undefined);
   assert.equal(b1.count_fp, "2.00");
   assert.equal(b1.count, 2);
+  const b1d = trader.buildCreateOrderBody({
+    ticker: "T",
+    mmSide: "yes_buy",
+    priceCents: 45,
+    sizeContracts: 2,
+    clientOrderId: "cid-deci",
+    priceLevelStructure: "deci_cent",
+  });
+  assert.equal(b1d.yes_price, undefined);
+  assert.equal(b1d.yes_price_dollars, "0.4500");
   const b2 = trader.buildCreateOrderBody({
     ticker: "T",
     mmSide: "no_buy",
@@ -47,7 +57,7 @@ test("buildCreateOrderBody maps MM sides to Kalshi openapi", async () => {
   });
   assert.equal(b2.side, "no");
   assert.equal(b2.no_price, 40);
-  assert.equal(b2.no_price_dollars, "0.4000");
+  assert.equal(b2.no_price_dollars, undefined);
   assert.equal(b2.count_fp, "1.00");
 });
 
