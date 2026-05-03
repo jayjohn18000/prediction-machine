@@ -69,7 +69,7 @@ test("bestAsk 50: bid 49 unchanged, ask 51 (half=1, no skew)", () => {
   }
 });
 
-test("inventory short YES pushes bid to 51; bestAsk 50 clamps bid to 49", () => {
+test("inventory short YES pushes bid to 51; bestAsk 50 clamps bid to 49; ask fair-band capped", () => {
   const q = decideQuote({
     fairCents: 50,
     netContractsYes: -10,
@@ -78,7 +78,8 @@ test("inventory short YES pushes bid to 51; bestAsk 50 clamps bid to 49", () => 
     topOfBook: { bestAskCents: 50 },
   });
   assert.equal(q.bidPx, 49);
-  assert.equal(q.askPx, 59);
+  // skewed ask 59 is pulled back to fair+half (50+4) by clampQuotePxToFairBand (workstream C)
+  assert.equal(q.askPx, 54);
 });
 
 test("bestAsk 1 forces bid side would_cross (bidSize 0)", () => {
@@ -138,7 +139,7 @@ test("both top-of-book sides null: no clamp (same as no topOfBook)", () => {
   assert.deepEqual(pickComparable(a), pickComparable(b));
 });
 
-test("without topOfBook: heavy short-YES skew keeps internal spread (self-cross path unchanged)", () => {
+test("without topOfBook: short-YES skew + fair-band clamp keeps spread (ask capped vs raw skew)", () => {
   const q = decideQuote({
     fairCents: 50,
     netContractsYes: -10,
@@ -147,7 +148,7 @@ test("without topOfBook: heavy short-YES skew keeps internal spread (self-cross 
   });
   assert.ok(q.askPx > q.bidPx);
   assert.equal(q.bidPx, 51);
-  assert.equal(q.askPx, 59);
+  assert.equal(q.askPx, 54);
   assert.equal(q.bidSkippedReason, undefined);
   assert.equal(q.askSkippedReason, undefined);
 });
