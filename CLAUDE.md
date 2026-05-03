@@ -1,6 +1,6 @@
 # Prediction Machine — Claude Context
 
-> **CURRENT PHASE (2026-05-02): MM MVP 7-day validation, day 4 of 7.**
+> **CURRENT PHASE (2026-05-03): PROD MM live capital, day 1 of 7 (ADR-012 clock).**
 >
 > Status is tracked across three independent axes. Conflating them produces "we shipped" claims that survive only until the next status check.
 >
@@ -8,26 +8,30 @@
 > - MM Pre-W2 + W2–W6 merged 2026-04-28 (W6 closed feature-complete).
 > - MM triage A (PnL+positions), B (depth feed), C (order reconciler) merged 2026-04-29.
 > - Daily ticker rotator + 24h heartbeat verifier merged 2026-04-30.
-> - Tracks B (B.1–B.8 arb sunset cleanup), C (MM v2 prep docs at `docs/plans/mm-v2/`), D (open-decisions Q1–Q8 with operator answers), E (runtime triage memo) all merged 2026-05-01.
-> - Tracks F (F.1–F.5 MM runtime fixes: `lastStartupReconcileAt` rename, PnL daily-net fix, structured Kalshi error capture, `mm_orders.status` lifecycle + backfill, `/health/mm` `ready`/`severity` composite), H (reconcile-timeout hotfix), I (Kalshi DEMO WS spaced subscribes), J (WS heartbeat + per-ticker staleness watchdog) all merged 2026-05-01 → 2026-05-02. HEAD = `1777db1`.
-> - Polymarket indexer Pre-W1 + W1 merged 2026-04-28 (ADR-009: read-only `lib/poly-indexer/clients/`, CI lint guard `npm run lint:poly-write-guard`, `lib/poly-indexer/reorg.mjs`, migration `20260430130000_pmci_poly_w1.sql`, all 4 `poly_*` tables service-role only).
+> - Tracks B/C/D/E (arb sunset cleanup, v2 prep docs, open decisions, triage memo) merged 2026-05-01.
+> - Tracks F (F.1–F.5 MM runtime fixes), H (reconcile-timeout hotfix), I (Kalshi DEMO WS spaced subscribes), J (WS heartbeat + per-ticker staleness watchdog) all merged 2026-05-01 → 2026-05-02.
+> - **2026-05-02 same-day cutover patch sweep + ADR-011 + ADR-012:** `/admin/restart` fail-closed, `/health/mm` 503-on-crit, `MM_RUN_MODE=prod` env switch (`lib/mm/kalshi-env.mjs`), `DEFAULT_MM_PARAMS_PROD` ($5/day, $30 notional via `deriveHardPositionLimit`), outcome-ingest cron, `mm_fills.kalshi_*_fee_cents` columns, RLS+revoke on poly partition children, intra-tick `kill_switch_active` re-read, idle-state liveness heartbeat, withdrawal runbook. Commits `f80c05b`, `66c1444`, `ff207c6`, `f6907ba`, `d62bff2`, `3302f5c`, `073528b`. **HEAD at start of 2026-05-03 update = `073528b`**.
+> - Polymarket indexer Pre-W1 + W1 merged 2026-04-28 (ADR-009).
 > - Polymarket indexer W2 (live Polygon ingestion via `pmci-poly-indexer` Fly app) NOT started.
 >
 > **(b) Writers verified persisting** (DB rows in expected intervals — Pattern 4 of the audit):
-> - `pmci-mm-runtime` health endpoint: ⚠️ runtime restarted at `2026-05-02T12:17:09Z` (likely Track J redeploy). At T+0 reported `ready=false`, `severity=crit`, `loopTick=0`, `depthSubscribedConnected=0/8`. At T+2min recovered to `severity=warn`, `loopTick=22`, depth `8/8` connected, `lastReconcileAt` advancing — warm-up appears nominal. Track F's new readiness fields are doing their job (surfaces real warm-up state instead of false `ok=true`). Watch the next probe to confirm steady-state.
-> - Orders / fills writers: ✅ persisting — `mm_orders` 24h=4,511 / 1h=16 (2026-05-02 12:17Z; 1h sample is during warm-up window after restart); `mm_fills` 24h=42 (~0.93% of orders, within healthy band 0.1%–10%). Lifetime `mm_orders=49,864`, `mm_fills=157`.
-> - `kill_switch_events`: ✅ 24h delta = **0** — storm has stayed stopped since 2026-04-30T13:43Z. Cumulative still 44,372 (all `reason=daily_loss` from the 2026-04-29/30 storm). Daily-loss exit-criterion breach on day 2 stands as the controlled-failure observation; not declared PASS at hour 168 on this dimension.
-> - PnL writer + post-fill backfill: ✅ both verified persisting (2,304 PnL snapshots in 24h on 2026-05-02; latest snapshot `2026-05-02T12:15:02Z`).
-> - `mm_orders.status` propagation: ✅ Track F.4 backfill landed — lifetime `status='filled'` count = 127 (was 0 on 2026-05-01).
-> - `_job_runner_url()` lookup: still working (PnL snapshot every 5min cadence holding).
-> - Polymarket indexer (W1): tables exist and are service-role-locked; `poly_wallet_trades` count = 0 (no live writer until W2 ships).
+> - `pmci-mm-runtime` health endpoint: ✅ `ok=true ready=false severity=warn loopTick=950+ depth 7/7 connected runMode=prod` (2026-05-03 02:42Z). `severity=warn` is Track J's WS-staleness watchdog firing on `KXETHMINY-27JAN01-1250` (255s) and `KXLCPIMAXYOY-27-P4.5` (164s) — both new low-vol PROD tickers, expected behaviour, not actionable.
+> - Orders / fills writers: ✅ persisting — lifetime `mm_orders=57,113` (+7,249 vs 2026-05-02 sync; PROD cutover absorbed most of that); lifetime `mm_fills=197` (+40); `mm_orders_24h=10,946`. **Since ADR-012 T0 (2026-05-02T22:37:20Z): 1,945 orders, 1 fill** (KXNBA-26-OKC yes_sell @ 57c, 02:26:41Z, fair_value_at_fill 55.4c, adverse_5m −2.11c).
+> - `kill_switch_events`: ✅ 24h delta = **5** (well within healthy band; likely from the 30s stale-DEMO-rows window during cutover). Cumulative still 44,377 from the 2026-04-29/30 DEMO storm.
+> - PnL writer + post-fill backfill: ✅ both verified persisting (188 PnL snapshots since T0 ≈ 5min cadence × 7 markets × 4h; latest snapshot `2026-05-03T02:40:00Z`).
+> - `mm_orders.status` propagation: ✅ Track F.4 working (parent of fill 197 went `filled`).
+> - `mm-ingest-outcomes` cron (new, ADR-011): ✅ first writes confirmed — `market_outcomes=109` (was 76 on 2026-05-02; +33 in 24h). Lane 14 cutover gate self-validated post-T0.
+> - Polymarket indexer (W1): tables exist and are service-role-locked; `poly_wallet_trades=0` (no live writer until W2 ships).
 >
-> **(c) 7-day continuous-quote test on Kalshi DEMO** (ADR-008/010 clock state):
-> - Status: **IN FLIGHT** (day 4 of 7; ~hour 91 of 168).
-> - Started: **2026-04-28T17:41:28.638Z** (ADR-008).
-> - Expires: **~2026-05-05T17:41Z**.
-> - Live config: 8 enabled markets + daily ticker rotator (drift from ADR-008's static 5; documented retroactively in **ADR-010**, 2026-05-01).
-> - Verdict at hour 168: pending. Daily-loss criterion already breached on day 2; do not declare full PASS.
+> **(c) 7-day continuous-quote test on Kalshi PROD** (ADR-012 clock state):
+> - Status: **IN FLIGHT** (day 1 of 7).
+> - **T0 = 2026-05-02T22:37:20.567Z** (first PROD-mode order id 55169, KXNBA-26-OKC yes_buy @ 54c).
+> - **Expires: 2026-05-09T22:37:20Z.**
+> - Live config: **7 markets enabled** (mids 36–74c, spreads 1–6c). Original pair: `KXNBA-26-OKC`, `CONTROLS-2026-D` (both 1c PROD spread, low fill rate by design). Lane-12 v2 expansion at 01:13Z added 5 wider-spread tickers across diverse families: `KXMIDTERMMOV-MAGOVD-P26` (MA-gov margin), `KXWTIMAX-26DEC31-T135` (WTI ≥$135), `GOVPARTYAZ-26-D` (AZ-gov party=D), `KXETHMINY-27JAN01-1250` (ETH ≤$1250), `KXLCPIMAXYOY-27-P4.5` (CPI YoY ≥4.5%; HPL depth-capped to 9 contracts).
+> - Spec per ADR-012: $5/day portfolio loss cap, $30 notional position cap, min_half_spread=2c, toxicity=200, stale_quote=300s.
+> - Verdict at hour 168: pending. Anomaly to track: 24h fill ratio at 0.05% (1/1945) is BELOW the 0.1% healthy-band floor — expected for the original pair at 1c PROD spread; the 5 wider-spread additions should lift the ratio over the next 24h.
+>
+> **(c-prior) Historical: 7-day DEMO clock (ADR-008/010) PAUSED early 2026-05-02:** clock ran ~hour 92 of 168. Daily-loss criterion already RECORDED-FAIL on day 2 (44k events, PnL=−2,341.66c vs configured 2000c). Useful plumbing data, not strategy data — superseded by ADR-012 PROD clock.
 >
 > Arb thesis closed RED 2026-04-24; closed-pivot archive at `docs/archive/pivot-2026-04/` is reference-only — do not revive on this provider pair.
 
