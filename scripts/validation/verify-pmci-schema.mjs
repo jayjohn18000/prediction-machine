@@ -112,6 +112,11 @@ const REQUIRED_COLUMNS = {
     'placed_at',
     'fair_value_at_place',
     'kalshi_order_id',
+    'rejected_at',
+    'best_bid_cents_at_place',
+    'best_ask_cents_at_place',
+    'book_depth_at_place_jsonb',
+    'cancel_reason',
   ],
   mm_fills: [
     'order_id',
