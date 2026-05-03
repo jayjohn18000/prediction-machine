@@ -99,6 +99,7 @@
     "mm:dev:demo-smoke": "node scripts/mm/dev-place-cancel.mjs",
     "mm:seed": "node scripts/mm/seed-mm-market-config.mjs",
     "mm:enforce:adr012-config": "node scripts/mm/enforce-adr012-mm-config.mjs",
+    "mm:repro-rejection": "node scripts/mm/repro-rejection.mjs",
     "mm:orchestrator": "node scripts/mm/run-mm-orchestrator.mjs"
   },
   "dependencies": {
