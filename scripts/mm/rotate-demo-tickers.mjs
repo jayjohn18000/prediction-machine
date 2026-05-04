@@ -7,7 +7,7 @@
  *
  * Each daily run:
  *   1. Pulls open markets from the appropriate Kalshi REST endpoint
- *   2. Picks the top N (DEMO=8, PROD=2) by volume + close-time score
+ *   2. Picks the top N (DEMO=8, PROD=10) by liquidity × category × urgency × spread score
  *   3. Inserts any new tickers into pmci.provider_markets
  *   4. Upserts pmci.mm_market_config rows with mode-appropriate risk params
  *      (enabled=true, kill_switch=false)
@@ -21,11 +21,12 @@
  *   DATABASE_URL                   — required
  *   KALSHI_DEMO_REST_BASE          — defaults to https://demo-api.kalshi.co/trade-api/v2 (demo mode)
  *   KALSHI_PROD_REST_BASE          — defaults to https://api.elections.kalshi.com/trade-api/v2 (prod mode)
- *   MM_ROTATOR_TARGET_COUNT        — default 8 (demo) / 2 (prod)
- *   MM_ROTATOR_MIN_CLOSE_HOURS     — default 48 (demo) / 720 (prod ≥30 days per ADR-011)
+ *   MM_ROTATOR_TARGET_COUNT        — default 8 (demo) / 10 (prod)
+ *   MM_ROTATOR_MIN_CLOSE_HOURS     — default 48 (demo) / 4 (prod)
  *   MM_ROTATOR_RESTART_URL         — runtime restart endpoint (default https://pmci-mm-runtime.fly.dev/admin/restart)
  *   PMCI_ADMIN_KEY                 — admin key for the restart call (skipped if unset)
  *   MM_ROTATOR_DRY_RUN             — '1' | true: enumerate selected/rejected/disabled, perform NO writes
+ *   MM_ROTATOR_MARKET_PAGES        — max REST pagination pages for /markets (default 25, ~25k rows cap)
  *
  * CLI flags (override env): --dry-run, --mode=prod|demo
  */
@@ -73,15 +74,29 @@ const PROD_REST_BASE =
   process.env.KALSHI_PROD_REST_BASE?.trim() ||
   "https://api.elections.kalshi.com/trade-api/v2";
 
-const REST_BASE = RUN_MODE === "prod" ? PROD_REST_BASE : DEMO_REST_BASE;
+/** @param {RunMode} mode */
+export function resolveRestBase(mode) {
+  return mode === "prod" ? PROD_REST_BASE : DEMO_REST_BASE;
+}
 
-const TARGET_COUNT = Number.parseInt(
-  process.env.MM_ROTATOR_TARGET_COUNT ?? (RUN_MODE === "prod" ? "2" : "8"),
-  10,
-);
-const MIN_CLOSE_HOURS = Number.parseFloat(
-  process.env.MM_ROTATOR_MIN_CLOSE_HOURS ?? (RUN_MODE === "prod" ? "720" : "48"),
-);
+/** @param {RunMode} mode */
+export function getTargetCountForMode(mode) {
+  return Number.parseInt(
+    process.env.MM_ROTATOR_TARGET_COUNT ?? (mode === "prod" ? "10" : "8"),
+    10,
+  );
+}
+
+/** @param {RunMode} mode */
+export function getMinCloseHoursForMode(mode) {
+  return Number.parseFloat(
+    process.env.MM_ROTATOR_MIN_CLOSE_HOURS ?? (mode === "prod" ? "4" : "48"),
+  );
+}
+
+const REST_BASE = resolveRestBase(RUN_MODE);
+const TARGET_COUNT = getTargetCountForMode(RUN_MODE);
+const MIN_CLOSE_HOURS = getMinCloseHoursForMode(RUN_MODE);
 const RESTART_URL =
   process.env.MM_ROTATOR_RESTART_URL?.trim() || "https://pmci-mm-runtime.fly.dev/admin/restart";
 
@@ -128,6 +143,184 @@ const DEFAULT_MM_PARAMS_PROD = Object.freeze({
 
 export const DEFAULT_MM_PARAMS =
   RUN_MODE === "prod" ? DEFAULT_MM_PARAMS_PROD : DEFAULT_MM_PARAMS_DEMO;
+
+export const CATEGORY_MULTIPLIERS = Object.freeze({
+  sports: 1.0,
+  crypto: 1.0,
+  politics: 0.6,
+  economics: 0.0,
+  finance: 0.0,
+  "finance/macro": 0.0,
+  climate: 0.5,
+  culture: 0.7,
+  mentions: 0.5,
+  DEFAULT: 0.4,
+});
+
+export const URGENCY_BANDS = Object.freeze([
+  { maxHours: 4, mult: 1.5 },
+  { maxHours: 24, mult: 1.2 },
+  { maxHours: 72, mult: 1.0 },
+  { maxHours: 336, mult: 0.7 },
+  { maxHours: Number.POSITIVE_INFINITY, mult: 0.3 },
+]);
+
+export const SPREAD_BANDS = Object.freeze([
+  { maxCents: 1, mult: 0.0 },
+  { maxCents: 8, mult: 1.0 },
+  { maxCents: 15, mult: 0.8 },
+  { maxCents: Number.POSITIVE_INFINITY, mult: 0.4 },
+]);
+
+export const MAX_PER_EVENT = 3;
+export const MAX_PER_SPORT = 5;
+
+/** @param {string} categoryKey */
+export function categoryMultiplier(categoryKey) {
+  const k = categoryKey in CATEGORY_MULTIPLIERS ? categoryKey : "DEFAULT";
+  return /** @type {number} */ (CATEGORY_MULTIPLIERS[k]);
+}
+
+/** @param {number} closeInHours */
+export function urgencyMultiplier(closeInHours) {
+  for (const b of URGENCY_BANDS) {
+    if (closeInHours <= b.maxHours) return b.mult;
+  }
+  return 0.3;
+}
+
+/** @param {number} spreadCents */
+export function spreadQuality(spreadCents) {
+  for (const b of SPREAD_BANDS) {
+    if (spreadCents <= b.maxCents) return b.mult;
+  }
+  return 0.4;
+}
+
+/**
+ * Map Kalshi market → category key for CATEGORY_MULTIPLIERS.
+ * Prefix order is load-bearing — check specific families before broad tokens.
+ * @param {object} market
+ */
+export function inferRotatorCategoryKey(market) {
+  const t = String(market?.ticker ?? "");
+  const ev = String(market?.event_ticker ?? "");
+  const u = `${t} ${ev}`.toUpperCase();
+
+  if (/\bMIDTERM\b|CONTROLS-|GOVPARTY|^GOV[A-Z]/i.test(u)) return "politics";
+  if (/KX.*CPI|CPIMAX|UNEMP/i.test(u)) return "economics";
+  if (/\bWTI\b|KXWTI|\bOIL\b/i.test(u)) return "finance";
+  if (/KXNBA|\bNBA\b/i.test(u)) return "sports";
+  if (/KXMLB|\bMLB\b/i.test(u)) return "sports";
+  if (/KXNHL|\bNHL\b/i.test(u)) return "sports";
+  if (/KXUFC|\bUFC\b/i.test(u)) return "sports";
+  if (/KXPGA|\bPGA\b/i.test(u)) return "sports";
+  if (/KXATP|\bATP\b/i.test(u)) return "sports";
+  if (/KXIPL|\bIPL\b/i.test(u)) return "sports";
+  if (/KXNFL|\bNFL\b/i.test(u)) return "sports";
+  if (/KXBTC|KXETH|\bBTC\b|\bETH\b/i.test(u)) return "crypto";
+
+  const apiCat = market?.category;
+  if (typeof apiCat === "string") {
+    const lc = apiCat.toLowerCase();
+    if (lc.includes("sport")) return "sports";
+    if (lc.includes("crypto")) return "crypto";
+    if (lc.includes("politic")) return "politics";
+    if (lc.includes("econ") || lc.includes("inflation") || lc.includes("employ")) return "economics";
+    if (lc.includes("financial") || lc.includes("macro")) return "finance/macro";
+    if (lc.includes("climate")) return "climate";
+    if (lc.includes("culture") || lc.includes("entertain")) return "culture";
+    if (lc.includes("mention")) return "mentions";
+  }
+
+  return "DEFAULT";
+}
+
+/**
+ * Bucket for diversification caps — sports split by league; non-sports by category.
+ * @param {object} market
+ */
+export function inferSportDiversificationKey(market) {
+  const cat = inferRotatorCategoryKey(market);
+  if (cat !== "sports") return cat;
+  const u = `${market?.ticker ?? ""} ${market?.event_ticker ?? ""}`.toUpperCase();
+  if (/KXNBA|\bNBA\b/i.test(u)) return "sports:nba";
+  if (/KXMLB|\bMLB\b/i.test(u)) return "sports:mlb";
+  if (/KXNHL|\bNHL\b/i.test(u)) return "sports:nhl";
+  if (/KXNFL|\bNFL\b/i.test(u)) return "sports:nfl";
+  if (/KXUFC|\bUFC\b/i.test(u)) return "sports:mma";
+  if (/KXPGA|\bPGA\b/i.test(u)) return "sports:golf";
+  if (/KXATP|\bATP\b/i.test(u)) return "sports:tennis";
+  if (/KXIPL|\bIPL\b/i.test(u)) return "sports:cricket";
+  return "sports:other";
+}
+
+/**
+ * @param {object} market
+ * @param {number} nowMs
+ */
+export function computeRotatorScoreFields(market, nowMs) {
+  const vol = Number.parseFloat(market?.volume_24h_fp ?? "0") || 0;
+  const closeIso = market?.close_time;
+  const closeMs = typeof closeIso === "string" ? Date.parse(closeIso) : NaN;
+  const closeInHours = Number.isFinite(closeMs) ? (closeMs - nowMs) / (3600 * 1000) : 0;
+  const yesBid = Number.parseFloat(market?.yes_bid_dollars ?? "0");
+  const yesAsk = Number.parseFloat(market?.yes_ask_dollars ?? "0");
+  const spreadCents =
+    Number.isFinite(yesBid) && Number.isFinite(yesAsk) && yesAsk > yesBid
+      ? Math.round((yesAsk - yesBid) * 100)
+      : 0;
+  const categoryKey = inferRotatorCategoryKey(market);
+  const catM = categoryMultiplier(categoryKey);
+  const urgM = urgencyMultiplier(closeInHours);
+  const sprM = spreadQuality(spreadCents);
+  const score = vol * catM * urgM * sprM;
+  return {
+    score,
+    volume: vol,
+    categoryKey,
+    catM,
+    closeInHours,
+    urgM,
+    spreadCents,
+    sprM,
+  };
+}
+
+/**
+ * @param {Array<{ ticker: string, score: number, raw: object, score_breakdown?: object }>} sortedScored descending score
+ * @param {number} target
+ */
+export function applyDiversificationCap(sortedScored, target) {
+  const out = [];
+  const perEvent = new Map();
+  const perSport = new Map();
+  for (const row of sortedScored) {
+    if (out.length >= target) break;
+    if (!(row.score > 0)) continue;
+    const m = row.raw;
+    const eventKey = String(m?.event_ticker ?? m?.ticker ?? "").trim() || "(none)";
+    const sportKey = inferSportDiversificationKey(m);
+    const ec = perEvent.get(eventKey) ?? 0;
+    const sc = perSport.get(sportKey) ?? 0;
+    if (ec >= MAX_PER_EVENT || sc >= MAX_PER_SPORT) continue;
+    out.push(row);
+    perEvent.set(eventKey, ec + 1);
+    perSport.set(sportKey, sc + 1);
+  }
+  return out;
+}
+
+/**
+ * @param {import('pg').Client | import('pg').PoolClient} client
+ * @returns {Promise<Set<string>>}
+ */
+export async function fetchActiveBlocklist(client) {
+  const r = await client.query(
+    `SELECT ticker FROM pmci.mm_ticker_blocklist WHERE expires_at > now()`,
+  );
+  return new Set(r.rows.map((/** @type {{ ticker: string }} */ row) => String(row.ticker)));
+}
 
 const PROD_KALSHI_MARKET_URL = "https://api.elections.kalshi.com/trade-api/v2/markets";
 
@@ -277,26 +470,42 @@ export async function validateTickerForMM(market, opts = {}) {
 }
 
 /**
- * Pure: pick the top N markets by score.
- * Score = volume_24h + (close_in_days * 5). Filters out wide spreads and near-close markets.
+ * Pure: pick the top N markets by score, then apply mandatory diversification caps.
+ * Score = volume_24h × category × urgency(close) × spreadQuality(bid/ask width).
  *
  * @param {Array<object>} markets raw market objects from the Kalshi REST endpoint
- * @param {{nowMs?: number, target?: number, minCloseHours?: number, logger?: object, skipProdCrossCheck?: boolean, fetch?: typeof fetch}} [opts]
- * @returns {Promise<{ selections: Array<{ ticker: string, score: number, raw: object }>, rejected: Array<{ ticker: string, reason: string|undefined }> }>}
+ * @param {{
+ *   nowMs?: number,
+ *   target?: number,
+ *   minCloseHours?: number,
+ *   logger?: object,
+ *   skipProdCrossCheck?: boolean,
+ *   fetch?: typeof fetch,
+ *   runMode?: RunMode,
+ *   blockedTickers?: Set<string>,
+ * }} [opts]
+ * @returns {Promise<{ selections: Array<{ ticker: string, score: number, raw: object, score_breakdown: object }>, rejected: Array<{ ticker: string, reason: string|undefined }> }>}
  */
 export async function selectMarketsForRotation(markets, opts = {}) {
   const nowMs = opts.nowMs ?? Date.now();
   const target = opts.target ?? TARGET_COUNT;
   const minCloseHours = opts.minCloseHours ?? MIN_CLOSE_HOURS;
   const minCloseMs = nowMs + minCloseHours * 3600 * 1000;
+  const runMode = opts.runMode ?? RUN_MODE;
+  const blocked =
+    opts.blockedTickers instanceof Set ? opts.blockedTickers : new Set();
 
-  /** @type {Array<{ ticker: string, score: number, raw: object }>} */
+  /** @type {Array<{ ticker: string, score: number, raw: object, score_breakdown: object }>} */
   const scored = [];
   /** @type {Array<{ ticker: string, reason: string | undefined }>} */
   const rejected = [];
   for (const m of Array.isArray(markets) ? markets : []) {
     const ticker = String(m?.ticker ?? "");
     if (!ticker) continue;
+    if (blocked.has(ticker)) {
+      rejected.push({ ticker, reason: "blocklist" });
+      continue;
+    }
     if (ticker.startsWith("KXMVE")) continue; // multi-event combos — exotic, skip
     // Empirically (2026-04-30) Kalshi DEMO returns HTTP 400 invalid_parameters on every
     // post-only order against `KXHIGH*-B*` (below-threshold) markets, regardless of price.
@@ -321,31 +530,52 @@ export async function selectMarketsForRotation(markets, opts = {}) {
       logger: opts.logger,
       skipProdCrossCheck: opts.skipProdCrossCheck === true,
       fetch: opts.fetch,
+      runMode,
     });
     if (!validation.ok) {
       rejected.push({ ticker, reason: validation.reason });
       continue;
     }
 
-    const vol = Number.parseFloat(m?.volume_24h_fp ?? "0") || 0;
-    const closeDays = (closeMs - nowMs) / (24 * 3600 * 1000);
-    const score = vol + closeDays * 5;
-    scored.push({ ticker, score, raw: m });
+    const breakdown = computeRotatorScoreFields(m, nowMs);
+    scored.push({
+      ticker,
+      score: breakdown.score,
+      raw: m,
+      score_breakdown: breakdown,
+    });
   }
-  scored.sort((a, b) => b.score - a.score);
-  return { selections: scored.slice(0, target), rejected };
+  scored.sort((a, b) => b.score - a.score || a.ticker.localeCompare(b.ticker));
+  const selections = applyDiversificationCap(scored, target);
+  return { selections, rejected };
 }
 
 async function fetchOpenMarkets(restBase, logger = console) {
-  const url = `${restBase.replace(/\/$/, "")}/markets?status=open&limit=1000`;
-  const r = await fetch(url);
-  if (!r.ok) {
-    throw new Error(`fetch markets failed: ${r.status} ${await r.text().catch(() => "")}`);
-  }
-  const j = await r.json();
-  const markets = Array.isArray(j?.markets) ? j.markets : [];
-  logger.info?.(`[rotator] fetched ${markets.length} open markets from ${url}`);
-  return markets;
+  const base = `${restBase.replace(/\/$/, "")}/markets`;
+  const maxPages = Number.parseInt(process.env.MM_ROTATOR_MARKET_PAGES ?? "25", 10);
+  /** @type {object[]} */
+  const all = [];
+  /** @type {string | null} */
+  let cursor = null;
+  let page = 0;
+  do {
+    const qs = new URLSearchParams({ status: "open", limit: "1000" });
+    if (cursor) qs.set("cursor", cursor);
+    const url = `${base}?${qs}`;
+    const r = await fetch(url);
+    if (!r.ok) {
+      throw new Error(`fetch markets failed: ${r.status} ${await r.text().catch(() => "")}`);
+    }
+    const j = await r.json();
+    const markets = Array.isArray(j?.markets) ? j.markets : [];
+    all.push(...markets);
+    const next = j?.cursor;
+    cursor = typeof next === "string" && next.trim() ? next : null;
+    page += 1;
+  } while (cursor && page < maxPages);
+
+  logger.info?.(`[rotator] fetched ${all.length} open markets from ${base} (${page} page(s), cap=${maxPages})`);
+  return all;
 }
 
 /**
@@ -353,16 +583,17 @@ async function fetchOpenMarkets(restBase, logger = console) {
  *
  * @param {import('pg').Client | import('pg').PoolClient} client
  * @param {{ticker: string, raw: object}} sel
+ * @param {string} [linkRestBase] Kalshi REST root for permalink (matches run mode)
  * @returns {Promise<number>} provider_markets.id
  */
-async function ensureProviderMarketRow(client, sel) {
+async function ensureProviderMarketRow(client, sel, linkRestBase = DEMO_REST_BASE) {
   const m = sel.raw;
   const closeIso = typeof m?.close_time === "string" ? m.close_time : null;
   const openIso = typeof m?.open_time === "string" ? m.open_time : null;
   const title = (m?.title ?? sel.ticker).toString().slice(0, 500);
   const status = (m?.status ?? "active").toString();
   const eventRef = (m?.event_ticker ?? null) && String(m.event_ticker);
-  const url = m?.market_id ? `${DEMO_REST_BASE.replace(/\/$/, "")}/markets/${sel.ticker}` : null;
+  const url = m?.market_id ? `${linkRestBase.replace(/\/$/, "")}/markets/${sel.ticker}` : null;
   const metadata = {
     rotator_source: "kalshi-demo",
     rotator_inserted_at: new Date().toISOString(),
@@ -432,12 +663,14 @@ export function deriveHardPositionLimit(mode, expectedPriceCents) {
  *
  * @param {import('pg').Client | import('pg').PoolClient} client
  * @param {number} marketId
- * @param {{ expectedPriceCents?: number|null }} [opts]
+ * @param {{ expectedPriceCents?: number|null, runMode?: RunMode }} [opts]
  */
 async function upsertMmMarketConfig(client, marketId, opts = {}) {
   const expectedPriceCents = opts.expectedPriceCents ?? null;
-  const hardPos = deriveHardPositionLimit(RUN_MODE, expectedPriceCents);
-  const softPos = RUN_MODE === "prod" ? Math.max(1, Math.floor(hardPos / 4)) : DEFAULT_MM_PARAMS.soft_position_limit;
+  const mode = opts.runMode ?? RUN_MODE;
+  const hardPos = deriveHardPositionLimit(mode, expectedPriceCents);
+  const mmParams = mode === "prod" ? DEFAULT_MM_PARAMS_PROD : DEFAULT_MM_PARAMS_DEMO;
+  const softPos = mode === "prod" ? Math.max(1, Math.floor(hardPos / 4)) : mmParams.soft_position_limit;
 
   const sql = `
     INSERT INTO pmci.mm_market_config (
@@ -463,20 +696,20 @@ async function upsertMmMarketConfig(client, marketId, opts = {}) {
       notes = COALESCE(pmci.mm_market_config.notes, '') ||
               ' | rotator-refreshed ' || to_char(now(), 'YYYY-MM-DD HH24:MI:SS')
   `;
-  const notes = `rotator-managed mode=${RUN_MODE} hard_pos=${hardPos}@${expectedPriceCents ?? "null"}c expected; refreshed daily by scripts/mm/rotate-demo-tickers.mjs`;
+  const notes = `rotator-managed mode=${mode} hard_pos=${hardPos}@${expectedPriceCents ?? "null"}c expected; refreshed daily by scripts/mm/rotate-demo-tickers.mjs`;
   await client.query(sql, [
     marketId,
     softPos,
     hardPos,
-    DEFAULT_MM_PARAMS.min_half_spread_cents,
-    DEFAULT_MM_PARAMS.base_size_contracts,
-    DEFAULT_MM_PARAMS.k_vol,
-    DEFAULT_MM_PARAMS.max_order_notional_cents,
-    DEFAULT_MM_PARAMS.min_requote_cents,
-    DEFAULT_MM_PARAMS.stale_quote_timeout_seconds,
-    DEFAULT_MM_PARAMS.daily_loss_limit_cents,
-    DEFAULT_MM_PARAMS.inventory_skew_cents,
-    DEFAULT_MM_PARAMS.toxicity_threshold,
+    mmParams.min_half_spread_cents,
+    mmParams.base_size_contracts,
+    mmParams.k_vol,
+    mmParams.max_order_notional_cents,
+    mmParams.min_requote_cents,
+    mmParams.stale_quote_timeout_seconds,
+    mmParams.daily_loss_limit_cents,
+    mmParams.inventory_skew_cents,
+    mmParams.toxicity_threshold,
     notes,
   ]);
 }
@@ -544,11 +777,21 @@ function logRotatorRejectionSummary(logger, rejected) {
  * Honors `MM_ROTATOR_DRY_RUN` / `--dry-run`: enumerates selected/rejected/disabled
  * without writing to provider_markets, mm_market_config, or POSTing /admin/restart.
  *
- * @param {{client?: import('pg').Client, logger?: object, dryRun?: boolean}} [opts]
+ * @param {{
+ *   client?: import('pg').Client,
+ *   logger?: object,
+ *   dryRun?: boolean,
+ *   runMode?: RunMode,
+ *   blockedTickers?: Set<string>,
+ * }} [opts]
  */
 export async function runRotation(opts = {}) {
   const logger = opts.logger ?? console;
   const dryRun = opts.dryRun ?? DRY_RUN;
+  const effectiveMode = opts.runMode ?? RUN_MODE;
+  const targetCount = getTargetCountForMode(effectiveMode);
+  const minCloseH = getMinCloseHoursForMode(effectiveMode);
+  const restBase = resolveRestBase(effectiveMode);
   const ownsClient = opts.client == null && !dryRun;
   /** @type {import('pg').Client | null} */
   const client = dryRun ? null : (opts.client ?? createPgClient());
@@ -556,13 +799,13 @@ export async function runRotation(opts = {}) {
 
   const summary = {
     ok: true,
-    mode: RUN_MODE,
+    mode: effectiveMode,
     dry_run: dryRun,
     started_at: new Date().toISOString(),
-    target_count: TARGET_COUNT,
-    rest_base: REST_BASE,
+    target_count: targetCount,
+    rest_base: restBase,
     fetched: 0,
-    selected: /** @type {Array<{ticker:string, market_id:number|null, score:number, expected_price_cents:number|null, hard_pos:number}>} */ ([]),
+    selected: /** @type {Array<{ticker:string, market_id:number|null, score:number, score_breakdown?: object, expected_price_cents:number|null, hard_pos:number}>} */ ([]),
     rejected: /** @type {Array<{ticker:string, reason?: string}>} */ ([]),
     disabled_count: 0,
     runtime_restart: /** @type {any} */ (null),
@@ -570,15 +813,32 @@ export async function runRotation(opts = {}) {
     error: /** @type {string|null} */ (null),
   };
 
-  logger.info?.(`[rotator] mode=${RUN_MODE} dry_run=${dryRun} rest_base=${REST_BASE} target=${TARGET_COUNT} min_close_hours=${MIN_CLOSE_HOURS}`);
+  logger.info?.(
+    `[rotator] mode=${effectiveMode} dry_run=${dryRun} rest_base=${restBase} target=${targetCount} min_close_hours=${minCloseH}`,
+  );
 
   try {
-    const markets = await fetchOpenMarkets(REST_BASE, logger);
+    let blocked = opts.blockedTickers instanceof Set ? opts.blockedTickers : null;
+    if (!blocked && client) {
+      try {
+        blocked = await fetchActiveBlocklist(client);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        logger.warn?.(`[rotator] blocklist fetch failed (${msg}) — continuing with empty blocklist`);
+        blocked = new Set();
+      }
+    }
+    if (!blocked) blocked = new Set();
+
+    const markets = await fetchOpenMarkets(restBase, logger);
     summary.fetched = markets.length;
 
     const { selections, rejected } = await selectMarketsForRotation(markets, {
       logger,
-      runMode: RUN_MODE,
+      runMode: effectiveMode,
+      target: targetCount,
+      minCloseHours: minCloseH,
+      blockedTickers: blocked,
     });
     summary.rejected = rejected;
 
@@ -594,34 +854,44 @@ export async function runRotation(opts = {}) {
     const keepMarketIds = [];
     for (const sel of selections) {
       const expectedPriceCents = computeExpectedPriceCents(sel.raw);
-      const hardPos = deriveHardPositionLimit(RUN_MODE, expectedPriceCents);
+      const hardPos = deriveHardPositionLimit(effectiveMode, expectedPriceCents);
+      const bd = sel.score_breakdown;
 
       if (dryRun) {
         summary.selected.push({
           ticker: sel.ticker,
           market_id: null,
           score: sel.score,
+          score_breakdown: bd,
           expected_price_cents: expectedPriceCents,
           hard_pos: hardPos,
         });
         logger.info?.(
-          `[rotator-dryrun] would-enable ticker=${sel.ticker} score=${sel.score.toFixed(2)} expected_price=${expectedPriceCents}c hard_pos=${hardPos}`,
+          `[rotator-dryrun] would-enable ticker=${sel.ticker} score=${sel.score.toFixed(4)} vol=${bd?.volume} cat=${bd?.categoryKey}×${bd?.catM} urg×${bd?.urgM} spr×${bd?.sprM} expected_price=${expectedPriceCents}c hard_pos=${hardPos}`,
         );
         continue;
       }
 
-      const marketId = await ensureProviderMarketRow(/** @type {any} */ (client), sel);
-      await upsertMmMarketConfig(/** @type {any} */ (client), marketId, { expectedPriceCents });
+      const marketId = await ensureProviderMarketRow(
+        /** @type {any} */ (client),
+        sel,
+        restBase,
+      );
+      await upsertMmMarketConfig(/** @type {any} */ (client), marketId, {
+        expectedPriceCents,
+        runMode: effectiveMode,
+      });
       keepMarketIds.push(marketId);
       summary.selected.push({
         ticker: sel.ticker,
         market_id: marketId,
         score: sel.score,
+        score_breakdown: bd,
         expected_price_cents: expectedPriceCents,
         hard_pos: hardPos,
       });
       logger.info?.(
-        `[rotator] enabled ticker=${sel.ticker} market_id=${marketId} score=${sel.score.toFixed(2)} expected_price=${expectedPriceCents}c hard_pos=${hardPos}`,
+        `[rotator] enabled ticker=${sel.ticker} market_id=${marketId} score=${sel.score.toFixed(4)} expected_price=${expectedPriceCents}c hard_pos=${hardPos}`,
       );
     }
 

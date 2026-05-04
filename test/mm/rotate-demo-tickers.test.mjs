@@ -16,6 +16,7 @@ const selOpts = { skipProdCrossCheck: true };
 
 const m = (overrides) => ({
   ticker: "KXTEST-FAR",
+  event_ticker: "KXTESTEV-FAR",
   yes_bid_dollars: "0.20",
   yes_ask_dollars: "0.30",
   volume_24h_fp: "10",
@@ -23,12 +24,12 @@ const m = (overrides) => ({
   ...overrides,
 });
 
-test("selectMarketsForRotation picks top by volume + close-time score", async () => {
+test("selectMarketsForRotation picks top by volume when category/spread/urgency tied", async () => {
   const { selections: out } = await selectMarketsForRotation(
     [
-      m({ ticker: "A", volume_24h_fp: "100" }),
-      m({ ticker: "B", volume_24h_fp: "50" }),
-      m({ ticker: "C", volume_24h_fp: "5" }),
+      m({ ticker: "A", event_ticker: "EV-A", volume_24h_fp: "100" }),
+      m({ ticker: "B", event_ticker: "EV-B", volume_24h_fp: "50" }),
+      m({ ticker: "C", event_ticker: "EV-C", volume_24h_fp: "5" }),
     ],
     { nowMs: NOW_MS, target: 2, minCloseHours: 24, ...selOpts },
   );
@@ -89,24 +90,123 @@ test("selectMarketsForRotation excludes -B<digit> strike markets (Kalshi DEMO po
   assert.deepEqual(tickers.sort(), ["KXHIGHPHIL-26MAY01-T63", "KXHIGHTNOLA-26MAY01-T77"]);
 });
 
-test("selectMarketsForRotation prefers longer close time when volume tied", async () => {
+test("selectMarketsForRotation prefers nearer-term sports when volume tied (urgency)", async () => {
   const { selections: out } = await selectMarketsForRotation(
     [
-      m({ ticker: "MID", close_time: MID_CLOSE, volume_24h_fp: "0" }),
-      m({ ticker: "FAR", close_time: FAR_CLOSE, volume_24h_fp: "0" }),
+      m({
+        ticker: "KXNBA-MID",
+        event_ticker: "E-MID",
+        close_time: MID_CLOSE,
+        volume_24h_fp: "100",
+      }),
+      m({
+        ticker: "KXNBA-FAR",
+        event_ticker: "E-FAR",
+        close_time: FAR_CLOSE,
+        volume_24h_fp: "100",
+      }),
     ],
     { nowMs: NOW_MS, target: 8, minCloseHours: 24, ...selOpts },
   );
-  assert.equal(out[0].ticker, "FAR");
+  assert.equal(out[0].ticker, "KXNBA-MID");
 });
 
 test("selectMarketsForRotation respects target cap", async () => {
+  const leagues = ["KXNBA", "KXMLB", "KXNHL", "KXNFL", "KXUFC", "KXPGA", "KXATP", "KXIPL"];
   const { selections: out } = await selectMarketsForRotation(
     Array.from({ length: 20 }, (_, i) =>
-      m({ ticker: `T${i}`, volume_24h_fp: String(20 - i) }),
+      m({
+        ticker: `${leagues[i % 8]}-R${i}`,
+        event_ticker: `EV-${i}`,
+        volume_24h_fp: String(20 - i),
+      }),
     ),
     { nowMs: NOW_MS, target: 8, minCloseHours: 24, ...selOpts },
   );
   assert.equal(out.length, 8);
-  assert.equal(out[0].ticker, "T0"); // highest volume
+  assert.equal(out[0].ticker, "KXNBA-R0"); // highest volume among first batch
+});
+
+test("selectMarketsForRotation applies max 3 per event_ticker", async () => {
+  const markets = Array.from({ length: 10 }, (_, i) =>
+    m({
+      ticker: `KXNBA-X${i}`,
+      event_ticker: "SAME-EVENT",
+      volume_24h_fp: String(1000 - i),
+    }),
+  );
+  const { selections } = await selectMarketsForRotation(markets, {
+    nowMs: NOW_MS,
+    target: 8,
+    minCloseHours: 24,
+    ...selOpts,
+  });
+  assert.equal(selections.length, 3);
+});
+
+test("selectMarketsForRotation diversification 3 events × 5 → 9 selections", async () => {
+  const markets = [];
+  const leagues = ["KXNBA", "KXMLB", "KXNHL"];
+  for (let e = 0; e < 3; e++) {
+    const league = leagues[e];
+    for (let i = 0; i < 5; i++) {
+      markets.push(
+        m({
+          ticker: `${league}-E${e}-M${i}`,
+          event_ticker: `EVENT-${e}`,
+          volume_24h_fp: String(500 - e * 10 - i),
+        }),
+      );
+    }
+  }
+  const { selections } = await selectMarketsForRotation(markets, {
+    nowMs: NOW_MS,
+    target: 20,
+    minCloseHours: 24,
+    ...selOpts,
+  });
+  assert.equal(selections.length, 9);
+});
+
+test("selectMarketsForRotation diversification max 5 per sport then fills target 10", async () => {
+  const leagues = ["KXNBA", "KXMLB", "KXNHL", "KXNFL"];
+  const markets = [];
+  for (let s = 0; s < 4; s++) {
+    const league = leagues[s];
+    for (let i = 0; i < 5; i++) {
+      markets.push(
+        m({
+          ticker: `${league}-E${s}M${i}`,
+          event_ticker: `EV-${s}-${i}`,
+          volume_24h_fp: String(2000 - s * 100 - i),
+        }),
+      );
+    }
+  }
+  const { selections } = await selectMarketsForRotation(markets, {
+    nowMs: NOW_MS,
+    target: 10,
+    minCloseHours: 24,
+    ...selOpts,
+  });
+  assert.equal(selections.length, 10);
+});
+
+test("selectMarketsForRotation excludes blocklist tickers", async () => {
+  const { selections, rejected } = await selectMarketsForRotation(
+    [
+      m({ ticker: "KEEP", event_ticker: "E1", volume_24h_fp: "1" }),
+      m({ ticker: "BLOCKED", event_ticker: "E2", volume_24h_fp: "9999" }),
+    ],
+    {
+      nowMs: NOW_MS,
+      target: 8,
+      minCloseHours: 24,
+      blockedTickers: new Set(["BLOCKED"]),
+      ...selOpts,
+    },
+  );
+  assert.equal(selections.length, 1);
+  assert.equal(selections[0].ticker, "KEEP");
+  assert.ok(rejected.some((r) => r.ticker === "BLOCKED" && r.reason === "blocklist"));
 });

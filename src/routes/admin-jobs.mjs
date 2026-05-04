@@ -9,6 +9,7 @@ import { createPgClient } from "../../lib/mm/order-store.mjs";
 import { insertPnlSnapshotsAllEnabledMarkets } from "../../lib/mm/pnl-attribution.mjs";
 import { backfillPostFillMids } from "../../lib/mm/post-fill-backfill.mjs";
 import { runRotation } from "../../scripts/mm/rotate-demo-tickers.mjs";
+import { runRotatorDisableWatcher } from "../../scripts/mm/rotator-disable-watcher.mjs";
 import { runHeartbeat } from "../../scripts/mm/mm-stream-heartbeat.mjs";
 import { runMarketOutcomeIngest } from "../../lib/resolution/ingest-market-outcomes.mjs";
 
@@ -93,7 +94,31 @@ export function registerAdminJobRoutes(app, deps) {
         const client = createPgClient();
         await client.connect();
         try {
-          const summary = await runRotation({ client });
+          const body = req.body && typeof req.body === "object" ? req.body : {};
+          const runMode =
+            body.mm_run_mode === "demo" || body.mm_run_mode === "prod"
+              ? body.mm_run_mode
+              : process.env.MM_RUN_MODE?.trim().toLowerCase() === "demo"
+                ? "demo"
+                : "prod";
+          const summary = await runRotation({ client, runMode });
+          return reply.code(summary.ok ? 200 : 500).send({ job: jobName, ...summary });
+        } catch (err) {
+          return reply.code(500).send({
+            ok: false,
+            job: jobName,
+            error: /** @type {Error} */ (err).message,
+          });
+        } finally {
+          await client.end().catch(() => {});
+        }
+      }
+
+      if (jobName === "mm-rotator-disable-watcher") {
+        const client = createPgClient();
+        await client.connect();
+        try {
+          const summary = await runRotatorDisableWatcher({ client });
           return reply.code(summary.ok ? 200 : 500).send({ job: jobName, ...summary });
         } catch (err) {
           return reply.code(500).send({
@@ -170,6 +195,7 @@ export function registerAdminJobRoutes(app, deps) {
             "mm-pnl-snapshot",
             "mm-post-fill-backfill",
             "mm-rotate-tickers",
+            "mm-rotator-disable-watcher",
             "mm-stream-heartbeat",
             "mm-ingest-outcomes",
           ],
@@ -201,6 +227,7 @@ export function registerAdminJobRoutes(app, deps) {
         "mm-pnl-snapshot",
         "mm-post-fill-backfill",
         "mm-rotate-tickers",
+        "mm-rotator-disable-watcher",
         "mm-stream-heartbeat",
         "mm-ingest-outcomes",
       ].sort(),

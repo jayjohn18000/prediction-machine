@@ -40,6 +40,7 @@ const PMCI_TABLES = [
   'mm_pnl_snapshots',
   'mm_market_config',
   'mm_kill_switch_events',
+  'mm_ticker_blocklist',
   // Poly indexer W1 (migration 20260430130000_pmci_poly_w1.sql).
   'poly_wallet_trades',
   'poly_market_flow_5m',
@@ -144,6 +145,7 @@ const REQUIRED_COLUMNS = {
     'toxicity_threshold',
   ],
   mm_kill_switch_events: ['observed_at', 'reason', 'market_id'],
+  mm_ticker_blocklist: ['ticker', 'reason', 'blocked_at', 'expires_at', 'rejected_count', 'notes'],
   poly_wallet_trades: [
     'block_number',
     'block_hash',

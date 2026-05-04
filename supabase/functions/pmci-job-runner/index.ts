@@ -20,9 +20,17 @@ const JOB_MAP: Record<string, string> = {
   "mm-post-fill-backfill": "/v1/admin/jobs/mm-post-fill-backfill",
   "mm-pnl-snapshot": "/v1/admin/jobs/mm-pnl-snapshot",
   "mm-rotate-tickers": "/v1/admin/jobs/mm-rotate-tickers",
+  "mm-rotator-disable-watcher": "/v1/admin/jobs/mm-rotator-disable-watcher",
   "mm-stream-heartbeat": "/v1/admin/jobs/mm-stream-heartbeat",
   "mm-ingest-outcomes": "/v1/admin/jobs/mm-ingest-outcomes",
 };
+
+function jobRunnerBody(job: string): Record<string, unknown> {
+  if (job === "mm-rotate-tickers") {
+    return { job, mm_run_mode: "prod" };
+  }
+  return { job };
+}
 
 serve(async (req: Request) => {
   const key = req.headers.get("x-pmci-api-key");
@@ -66,7 +74,7 @@ serve(async (req: Request) => {
     const res = await fetch(targetUrl, {
       method: "POST",
       headers: fwdHeaders,
-      body: "{}",
+      body: JSON.stringify(jobRunnerBody(job)),
     });
     const result = await res.json();
     console.log(`[pmci-job-runner] job=${job} status=${res.status}`, result);
