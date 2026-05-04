@@ -86,6 +86,23 @@ test("ready false when mmWatchdogActiveAlerts non-empty", () => {
   assert.equal(j.severity, "warn");
 });
 
+test("ready true when mmWatchdogActiveAlerts only worst_trade_alarm (non-blocking)", () => {
+  const health = {
+    ok: true,
+    lastOrchestratorError: null,
+    lastMainLoopTickAt: new Date().toISOString(),
+    mmWatchdogActiveAlerts: [{ ticker: "KX-FUBAR", reason: "worst_trade_alarm", details: {} }],
+  };
+  const depthSnap = {
+    depthSubscribedConfigured: 1,
+    depthSubscribedConnected: 1,
+    depthTickersStale: [],
+  };
+  const j = buildMmHealthMmResponse({ health, depthSnap });
+  assert.equal(j.ready, true);
+  assert.equal(j.severity, "none");
+});
+
 test("severity crit when loop tick stale > 60s", () => {
   const health = {
     ok: true,

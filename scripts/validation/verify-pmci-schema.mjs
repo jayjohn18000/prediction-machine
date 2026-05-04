@@ -126,6 +126,8 @@ const REQUIRED_COLUMNS = {
     'post_fill_mid_5m',
     'observed_at',
     'kalshi_fill_id',
+    'quote_age_ms_at_fill',
+    'kalshi_net_fee_cents',
   ],
   mm_positions: ['market_id', 'net_contracts', 'last_updated'],
   mm_pnl_snapshots: ['market_id', 'observed_at', 'spread_capture_cents', 'net_pnl_cents'],
