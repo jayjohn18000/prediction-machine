@@ -1,6 +1,6 @@
 # Prediction Machine — Claude Context
 
-> **CURRENT PHASE (2026-05-03): PROD MM live capital, day 1 of 7 (ADR-012 clock).**
+> **CURRENT PHASE (2026-05-05): PROD MM live capital, day 3 of 7 (ADR-012 clock). 🚨 QUOTING PAUSED ~11h — see anomaly below.**
 >
 > Status is tracked across three independent axes. Conflating them produces "we shipped" claims that survive only until the next status check.
 >
@@ -10,26 +10,29 @@
 > - Daily ticker rotator + 24h heartbeat verifier merged 2026-04-30.
 > - Tracks B/C/D/E (arb sunset cleanup, v2 prep docs, open decisions, triage memo) merged 2026-05-01.
 > - Tracks F (F.1–F.5 MM runtime fixes), H (reconcile-timeout hotfix), I (Kalshi DEMO WS spaced subscribes), J (WS heartbeat + per-ticker staleness watchdog) all merged 2026-05-01 → 2026-05-02.
-> - **2026-05-02 same-day cutover patch sweep + ADR-011 + ADR-012:** `/admin/restart` fail-closed, `/health/mm` 503-on-crit, `MM_RUN_MODE=prod` env switch (`lib/mm/kalshi-env.mjs`), `DEFAULT_MM_PARAMS_PROD` ($5/day, $30 notional via `deriveHardPositionLimit`), outcome-ingest cron, `mm_fills.kalshi_*_fee_cents` columns, RLS+revoke on poly partition children, intra-tick `kill_switch_active` re-read, idle-state liveness heartbeat, withdrawal runbook. Commits `f80c05b`, `66c1444`, `ff207c6`, `f6907ba`, `d62bff2`, `3302f5c`, `073528b`. **HEAD at start of 2026-05-03 update = `073528b`**.
+> - **2026-05-02 same-day cutover patch sweep + ADR-011 + ADR-012:** `/admin/restart` fail-closed, `/health/mm` 503-on-crit, `MM_RUN_MODE=prod` env switch (`lib/mm/kalshi-env.mjs`), `DEFAULT_MM_PARAMS_PROD` ($5/day, $30 notional via `deriveHardPositionLimit`), outcome-ingest cron, `mm_fills.kalshi_*_fee_cents` columns, RLS+revoke on poly partition children, intra-tick `kill_switch_active` re-read, idle-state liveness heartbeat, withdrawal runbook. Commits `f80c05b`, `66c1444`, `ff207c6`, `f6907ba`, `d62bff2`, `3302f5c`, `073528b`.
+> - **2026-05-04 Track M merged:** `fe38286` — fee capture from Kalshi fills (`mm_fills.kalshi_*_fee_cents` writer), `quote_age_ms_at_fill` column + writer, worst-trade alarm. Migration `20260504120000_pmci_mm_fills_quote_age_ms.sql` was already on live DB at 2026-05-04 sync; code now matches.
+> - **2026-05-04 Rotator quality merged:** `de5fbc3` — score rewrite (vol×category×urgency×spread), `pmci.mm_ticker_blocklist` table + `mm-rotator-disable-watcher` cron (5min), reject-rate auto-blocklist (1h/24h windows), diversification caps (3/event, 5/sport), Kalshi /markets cursor pagination, PROD target=10 / min_close=4h, multi-cron MLB/NBA UTC anchors. Authored as "ADR-013 selection-only; no quoting changes" — note that ADR-013 is reserved for the hour-168 verdict and decision-log has not been touched. **HEAD at start of 2026-05-05 update = `de5fbc3`**.
 > - Polymarket indexer Pre-W1 + W1 merged 2026-04-28 (ADR-009).
 > - Polymarket indexer W2 (live Polygon ingestion via `pmci-poly-indexer` Fly app) NOT started.
 >
 > **(b) Writers verified persisting** (DB rows in expected intervals — Pattern 4 of the audit):
-> - `pmci-mm-runtime` health endpoint: ✅ `ok=true ready=false severity=warn loopTick=950+ depth 7/7 connected runMode=prod` (2026-05-03 02:42Z). `severity=warn` is Track J's WS-staleness watchdog firing on `KXETHMINY-27JAN01-1250` (255s) and `KXLCPIMAXYOY-27-P4.5` (164s) — both new low-vol PROD tickers, expected behaviour, not actionable.
-> - Orders / fills writers: ✅ persisting — lifetime `mm_orders=57,113` (+7,249 vs 2026-05-02 sync; PROD cutover absorbed most of that); lifetime `mm_fills=197` (+40); `mm_orders_24h=10,946`. **Since ADR-012 T0 (2026-05-02T22:37:20Z): 1,945 orders, 1 fill** (KXNBA-26-OKC yes_sell @ 57c, 02:26:41Z, fair_value_at_fill 55.4c, adverse_5m −2.11c).
-> - `kill_switch_events`: ✅ 24h delta = **5** (well within healthy band; likely from the 30s stale-DEMO-rows window during cutover). Cumulative still 44,377 from the 2026-04-29/30 DEMO storm.
-> - PnL writer + post-fill backfill: ✅ both verified persisting (188 PnL snapshots since T0 ≈ 5min cadence × 7 markets × 4h; latest snapshot `2026-05-03T02:40:00Z`).
-> - `mm_orders.status` propagation: ✅ Track F.4 working (parent of fill 197 went `filled`).
-> - `mm-ingest-outcomes` cron (new, ADR-011): ✅ first writes confirmed — `market_outcomes=109` (was 76 on 2026-05-02; +33 in 24h). Lane 14 cutover gate self-validated post-T0.
+> - `pmci-mm-runtime` health endpoint: ⚠️ `ok=true ready=false severity=warn loopTick=7713 depth 1/1 connected runMode=prod` (2026-05-05 13:31Z). The `1/1 depth` figure is **stale config**: only `KXMLBSPREAD-26MAY042138CWSLAA-CWS7` is subscribed, and that ticker was auto-blocklisted at 02:50Z (`high_reject_rate`, 314/404 rejects = 77.7%). The 8 currently-enabled rotator-seeded markets have **no depth subscription** — orchestrator process is alive (idleHeartbeatAt ticking) but functionally paused.
+> - Orders / fills writers: ✅ writes persisting *when issued* — lifetime `mm_orders=61,556` (+1,143 vs 2026-05-04 sync); lifetime `mm_fills=425` (+102); `mm_orders_24h=1,140` (552 open / 469 rejected / 94 filled / 25 cancelled). **24h fill ratio = 8.7%** (above the 0.1% floor; healthy band). 🚨 **`mm_orders_6h=0`, `mm_orders_1h=0` — last order at 2026-05-05T03:15:17Z, last fill at 03:15:14Z. ~11h of zero quoting, all on yesterday's universe (NBA totals + MLB spread).**
+> - `kill_switch_events`: ✅ 24h delta = **5** (3× `reject_storm`, 1× `consecutive_adverse_fills`, 1× `fill_rate_floor` — all firing on the now-blocklisted KXMLBSPREAD before its disable; cumulative 44,427 = unchanged 44,377 DEMO-storm baseline + 50 since T0).
+> - PnL writer: ✅ persisting — `mm_pnl_snapshots_24h=2,288`, latest snapshot `2026-05-05T14:45:00Z`. Net PnL since ADR-012 T0 = **−77.8c** (spread_capture +311.5, adverse −159.2, inv_drift −7.0, fees −223). Within $5/day cap cumulatively over ~2.7 days.
+> - `mm_orders.status` propagation: ✅ working (552 open / 469 rejected / 94 filled / 25 cancelled in 24h).
+> - `mm-ingest-outcomes` cron: ✅ writes confirmed — `market_outcomes=119` (+6 in 24h, vs +33 the previous day; cron healthy, just lower outcome volume).
+> - `provider_market_snapshots`: ✅ resumed at full pace — 8,711,852 (+2.1M vs 2026-05-04 frozen 6,595,519); the 2026-05-03→04 stall was a real observer pause, now caught up.
 > - Polymarket indexer (W1): tables exist and are service-role-locked; `poly_wallet_trades=0` (no live writer until W2 ships).
 >
 > **(c) 7-day continuous-quote test on Kalshi PROD** (ADR-012 clock state):
-> - Status: **IN FLIGHT** (day 1 of 7).
+> - Status: **IN FLIGHT** (day 3 of 7, ~hour 64 of 168 elapsed). 🚨 **At-risk: criterion "continuous quoting on ≥1 market" fails any rolling 1h window since 03:15Z today.** Operator restart of `pmci-mm-runtime` (or admin trigger that re-syncs depth subscriptions to the rotator-current universe) is the unblock.
 > - **T0 = 2026-05-02T22:37:20.567Z** (first PROD-mode order id 55169, KXNBA-26-OKC yes_buy @ 54c).
 > - **Expires: 2026-05-09T22:37:20Z.**
-> - Live config: **7 markets enabled** (mids 36–74c, spreads 1–6c). Original pair: `KXNBA-26-OKC`, `CONTROLS-2026-D` (both 1c PROD spread, low fill rate by design). Lane-12 v2 expansion at 01:13Z added 5 wider-spread tickers across diverse families: `KXMIDTERMMOV-MAGOVD-P26` (MA-gov margin), `KXWTIMAX-26DEC31-T135` (WTI ≥$135), `GOVPARTYAZ-26-D` (AZ-gov party=D), `KXETHMINY-27JAN01-1250` (ETH ≤$1250), `KXLCPIMAXYOY-27-P4.5` (CPI YoY ≥4.5%; HPL depth-capped to 9 contracts).
+> - Live config: **8 markets enabled** (rotator-managed, refreshed daily). Today's universe: `KXNHLSERIES-26MINCOLR2-MIN`, `KXNBAGAME-26MAY08SASMIN-SAS`, `KXMLBTOTAL-26MAY041940CINCHC-10`, `KXPGATOUR-ONMBC26-BHOR`, `KXMETGALA-26-DUA`, 3× BTC monthly (`KXBTCMAXMON-BTC-26MAY31-{8500000,8750000,9000000}`). All carry vestigial `notes: "rotator-managed mode=demo …"` even though `kalshiEnv.runMode=prod` — M.5 in `de5fbc3` was supposed to fix the rotator's mode-resolution but the notes string didn't get updated. Cosmetic but worth flagging because next-session diagnostic might mistake it for a DEMO-mode runtime.
 > - Spec per ADR-012: $5/day portfolio loss cap, $30 notional position cap, min_half_spread=2c, toxicity=200, stale_quote=300s.
-> - Verdict at hour 168: pending. Anomaly to track: 24h fill ratio at 0.05% (1/1945) is BELOW the 0.1% healthy-band floor — expected for the original pair at 1c PROD spread; the 5 wider-spread additions should lift the ratio over the next 24h.
+> - Verdict at hour 168: pending. Track: net PnL ($−0.78 cumulative), continuous-quote criterion (currently breaking — 11h gap), fill ratio trend (last live 24h was 8.7%).
 >
 > **(c-prior) Historical: 7-day DEMO clock (ADR-008/010) PAUSED early 2026-05-02:** clock ran ~hour 92 of 168. Daily-loss criterion already RECORDED-FAIL on day 2 (44k events, PnL=−2,341.66c vs configured 2000c). Useful plumbing data, not strategy data — superseded by ADR-012 PROD clock.
 >
