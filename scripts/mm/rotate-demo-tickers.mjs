@@ -302,6 +302,13 @@ export function mergeMarketDetailQuote(target, detail) {
   }
 }
 
+/** @returns {'events' | 'markets'} */
+export function resolveRotatorBackend() {
+  const v = process.env.MM_ROTATOR_BACKEND?.trim().toLowerCase();
+  if (v === "markets") return "markets";
+  return "events";
+}
+
 /** @param {string} categoryKey */
 export function categoryMultiplier(categoryKey) {
   const k = categoryKey in CATEGORY_MULTIPLIERS ? categoryKey : "DEFAULT";
@@ -1100,6 +1107,7 @@ function logRotatorRejectionSummary(logger, rejected) {
  *   dryRun?: boolean,
  *   runMode?: RunMode,
  *   blockedTickers?: Set<string>,
+ *   rotatorBackend?: 'events' | 'markets',
  * }} [opts]
  */
 export async function runRotation(opts = {}) {
@@ -1109,6 +1117,7 @@ export async function runRotation(opts = {}) {
   const targetCount = getTargetCountForMode(effectiveMode);
   const minCloseH = getMinCloseHoursForMode(effectiveMode);
   const restBase = resolveRestBase(effectiveMode);
+  const candidateBackend = opts.rotatorBackend ?? resolveRotatorBackend();
   const ownsClient = opts.client == null && !dryRun;
   /** @type {import('pg').Client | null} */
   const client = dryRun ? null : (opts.client ?? createPgClient());
@@ -1121,6 +1130,7 @@ export async function runRotation(opts = {}) {
     started_at: new Date().toISOString(),
     target_count: targetCount,
     rest_base: restBase,
+    candidate_backend: candidateBackend,
     fetched: 0,
     selected: /** @type {Array<{ticker:string, market_id:number|null, score:number, score_breakdown?: object, expected_price_cents:number|null, hard_pos:number}>} */ ([]),
     rejected: /** @type {Array<{ticker:string, reason?: string}>} */ ([]),
@@ -1131,7 +1141,7 @@ export async function runRotation(opts = {}) {
   };
 
   logger.info?.(
-    `[rotator] mode=${effectiveMode} dry_run=${dryRun} rest_base=${restBase} target=${targetCount} min_close_hours=${minCloseH}`,
+    `[rotator] mode=${effectiveMode} dry_run=${dryRun} candidate_backend=${candidateBackend} rest_base=${restBase} target=${targetCount} min_close_hours=${minCloseH}`,
   );
 
   try {
@@ -1147,7 +1157,10 @@ export async function runRotation(opts = {}) {
     }
     if (!blocked) blocked = new Set();
 
-    const markets = await fetchOpenMarketsViaEvents(restBase, logger);
+    const markets =
+      candidateBackend === "markets"
+        ? await fetchOpenMarketsFromMarketsEndpoint(restBase, logger)
+        : await fetchOpenMarketsViaEvents(restBase, logger);
     summary.fetched = markets.length;
 
     const { selections, rejected } = await selectMarketsForRotation(markets, {
