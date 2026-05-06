@@ -14,6 +14,7 @@ import {
   parseGameStartFromTicker,
   selectMarketsForRotation,
   ensureProviderMarketRow,
+  rotator429BackoffMs,
 } from "../../scripts/mm/rotate-demo-tickers.mjs";
 
 /** Minimal Kalshi-shaped row that survives `selectMarketsForRotation` coarse filters. */
@@ -407,6 +408,26 @@ test("selectMarketsForRotation keeps in-progress game inside buffer window", asy
   );
   assert.equal(selections.length, 1);
   assert.ok(!rejected.some((r) => r.reason === "game_already_ended"));
+});
+
+test("rotator429BackoffMs applies jitter so successive delays differ", (t) => {
+  const prev = process.env.MM_ROTATOR_429_BACKOFF_BASE_MS;
+  process.env.MM_ROTATOR_429_BACKOFF_BASE_MS = "1000";
+  const origRandom = Math.random;
+  let call = 0;
+  Math.random = () => {
+    call += 1;
+    return call === 1 ? 0 : 0.999999;
+  };
+  t.after(() => {
+    Math.random = origRandom;
+    if (prev === undefined) delete process.env.MM_ROTATOR_429_BACKOFF_BASE_MS;
+    else process.env.MM_ROTATOR_429_BACKOFF_BASE_MS = prev;
+  });
+
+  const a = rotator429BackoffMs(1);
+  const b = rotator429BackoffMs(1);
+  assert.notEqual(a, b);
 });
 
 test("ensureProviderMarketRow sets rotator_source from runMode", async () => {

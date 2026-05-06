@@ -773,9 +773,10 @@ export async function selectMarketsForRotation(markets, opts = {}) {
 }
 
 /** @param {number} attempt 1-based attempt index after receiving 429 */
-function rotator429BackoffMs(attempt) {
-  const base = Number.parseInt(process.env.MM_ROTATOR_429_BACKOFF_BASE_MS ?? "1000", 10);
-  return Math.max(0, base) * Math.pow(2, attempt - 1);
+export function rotator429BackoffMs(attempt) {
+  const baseMs = Number.parseInt(process.env.MM_ROTATOR_429_BACKOFF_BASE_MS ?? "1000", 10);
+  const jitter = 0.8 + Math.random() * 0.4; // ±20%
+  return Math.round(Math.max(0, baseMs) * Math.pow(2, attempt - 1) * jitter);
 }
 
 async function fetchOpenMarketsFromMarketsEndpoint(restBase, logger = console) {
