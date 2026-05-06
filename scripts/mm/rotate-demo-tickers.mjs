@@ -35,6 +35,7 @@
  *   MM_ROTATOR_PRICE_FETCH_CONCURRENCY — parallel GET /markets/{ticker} (default 8)
  *   MM_ROTATOR_PRICE_FETCH_STAGGER_MS  — optional delay ms after each detail fetch (default 0)
  *   MM_ROTATOR_429_BACKOFF_BASE_MS      — exponential backoff base for 429 retries (default 1000)
+ *   MM_ROTATOR_GAME_END_BUFFER_HOURS    — hours after parsed ticker game-start to treat as ended (default 4)
  *
  * CLI flags (override env): --dry-run, --mode=prod|demo
  */
@@ -390,6 +391,63 @@ export function inferSportDiversificationKey(market) {
   return "sports:other";
 }
 
+/** Kalshi single-game stems embed first pitch / tap-off as YY + MON + DD + HHMM (UTC). */
+const TICKER_GAME_START_RE =
+  /^KX[A-Z]+(?:GAME|TOTAL|SPREAD|HIT|HR|GOAL|RUNS)-(\d{2}[A-Z]{3}\d{2}\d{4})/;
+
+const TICKER_GAME_MONTH_TO_INDEX = Object.freeze({
+  JAN: 0,
+  FEB: 1,
+  MAR: 2,
+  APR: 3,
+  MAY: 4,
+  JUN: 5,
+  JUL: 6,
+  AUG: 7,
+  SEP: 8,
+  OCT: 9,
+  NOV: 10,
+  DEC: 11,
+});
+
+/**
+ * Parse embedded UTC game start from Kalshi sports tickers; series-level markets return null.
+ *
+ * @param {string} ticker
+ * @returns {Date | null}
+ */
+export function parseGameStartFromTicker(ticker) {
+  const m = String(ticker).match(TICKER_GAME_START_RE);
+  if (!m) return null;
+  const cap = m[1];
+  const yy = Number.parseInt(cap.slice(0, 2), 10);
+  const mon = cap.slice(2, 5).toUpperCase();
+  const dd = Number.parseInt(cap.slice(5, 7), 10);
+  const hhmm = cap.slice(7, 11);
+  const hour = Number.parseInt(hhmm.slice(0, 2), 10);
+  const minute = Number.parseInt(hhmm.slice(2, 4), 10);
+  const monthIdx = TICKER_GAME_MONTH_TO_INDEX[mon];
+  if (
+    monthIdx === undefined ||
+    !Number.isFinite(yy) ||
+    !Number.isFinite(dd) ||
+    !Number.isFinite(hour) ||
+    !Number.isFinite(minute)
+  ) {
+    return null;
+  }
+  const year = 2000 + yy;
+  const d = new Date(Date.UTC(year, monthIdx, dd, hour, minute, 0, 0));
+  if (!Number.isFinite(d.getTime())) return null;
+  return d;
+}
+
+/** Hours after parsed game start before treating the market as post-game for rotator filtering. */
+export function resolveRotatorGameEndBufferHours() {
+  const n = Number.parseFloat(process.env.MM_ROTATOR_GAME_END_BUFFER_HOURS ?? "4");
+  return Number.isFinite(n) && n >= 0 ? n : 4;
+}
+
 /**
  * @param {object} market
  * @param {number} nowMs
@@ -688,15 +746,37 @@ export async function selectMarketsForRotation(markets, opts = {}) {
       score_breakdown: breakdown,
     });
   }
-  scored.sort((a, b) => b.score - a.score || a.ticker.localeCompare(b.ticker));
-  const selections = applyDiversificationCap(scored, target);
+
+  const bufferH = resolveRotatorGameEndBufferHours();
+  const bufferMs = bufferH * 3600 * 1000;
+  /** @type {typeof scored} */
+  const scoredLiveGames = [];
+  let gameEndedFiltered = 0;
+  for (const row of scored) {
+    const gameStart = parseGameStartFromTicker(row.ticker);
+    if (gameStart != null && gameStart.getTime() + bufferMs < nowMs) {
+      rejected.push({ ticker: row.ticker, reason: "game_already_ended" });
+      gameEndedFiltered += 1;
+      continue;
+    }
+    scoredLiveGames.push(row);
+  }
+  if (gameEndedFiltered > 0) {
+    opts.logger?.info?.(
+      `[rotator] events path: filtered ${gameEndedFiltered} tickers as game_already_ended`,
+    );
+  }
+
+  scoredLiveGames.sort((a, b) => b.score - a.score || a.ticker.localeCompare(b.ticker));
+  const selections = applyDiversificationCap(scoredLiveGames, target);
   return { selections, rejected };
 }
 
 /** @param {number} attempt 1-based attempt index after receiving 429 */
-function rotator429BackoffMs(attempt) {
-  const base = Number.parseInt(process.env.MM_ROTATOR_429_BACKOFF_BASE_MS ?? "1000", 10);
-  return Math.max(0, base) * Math.pow(2, attempt - 1);
+export function rotator429BackoffMs(attempt) {
+  const baseMs = Number.parseInt(process.env.MM_ROTATOR_429_BACKOFF_BASE_MS ?? "1000", 10);
+  const jitter = 0.8 + Math.random() * 0.4; // ±20%
+  return Math.round(Math.max(0, baseMs) * Math.pow(2, attempt - 1) * jitter);
 }
 
 async function fetchOpenMarketsFromMarketsEndpoint(restBase, logger = console) {
@@ -915,9 +995,15 @@ export async function fetchOpenMarketsViaEvents(restBase, logger = console, opti
  * @param {import('pg').Client | import('pg').PoolClient} client
  * @param {{ticker: string, raw: object}} sel
  * @param {string} [linkRestBase] Kalshi REST root for permalink (matches run mode)
+ * @param {RunMode} [runMode] defaults demo for back-compat
  * @returns {Promise<number>} provider_markets.id
  */
-async function ensureProviderMarketRow(client, sel, linkRestBase = DEMO_REST_BASE) {
+export async function ensureProviderMarketRow(
+  client,
+  sel,
+  linkRestBase = DEMO_REST_BASE,
+  runMode = "demo",
+) {
   const m = sel.raw;
   const closeIso = typeof m?.close_time === "string" ? m.close_time : null;
   const openIso = typeof m?.open_time === "string" ? m.open_time : null;
@@ -926,7 +1012,7 @@ async function ensureProviderMarketRow(client, sel, linkRestBase = DEMO_REST_BAS
   const eventRef = (m?.event_ticker ?? null) && String(m.event_ticker);
   const url = m?.market_id ? `${linkRestBase.replace(/\/$/, "")}/markets/${sel.ticker}` : null;
   const metadata = {
-    rotator_source: "kalshi-demo",
+    rotator_source: `kalshi-${runMode}`,
     rotator_inserted_at: new Date().toISOString(),
     yes_bid_dollars: m?.yes_bid_dollars ?? null,
     yes_ask_dollars: m?.yes_ask_dollars ?? null,
@@ -1213,6 +1299,7 @@ export async function runRotation(opts = {}) {
         /** @type {any} */ (client),
         sel,
         restBase,
+        effectiveMode,
       );
       await upsertMmMarketConfig(/** @type {any} */ (client), marketId, {
         expectedPriceCents,
