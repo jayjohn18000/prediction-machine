@@ -398,6 +398,14 @@ export async function validateTickerForMM(market, opts = {}) {
 
   if (skipProdCrossCheck) return { ok: true };
 
+  // PROD-only mode (post-2026-05-02 ADR-012 cutover): the rotator already pulled
+  // candidates from PROD Kalshi. Cross-checking PROD-vs-PROD adds another network
+  // call per ticker (rate-limit risk) AND rejects ~95% of candidates on price
+  // flapping within the 5c divergence threshold (two near-simultaneous fetches
+  // of a moving market will diverge naturally). The cross-check was designed to
+  // validate DEMO data against PROD; in PROD-only mode it has no purpose. Skip.
+  if (runMode === "prod") return { ok: true };
+
   const ticker = String(market?.ticker ?? "");
   const fetchFn = opts.fetch ?? globalThis.fetch;
 
@@ -553,18 +561,48 @@ export async function selectMarketsForRotation(markets, opts = {}) {
 async function fetchOpenMarkets(restBase, logger = console) {
   const base = `${restBase.replace(/\/$/, "")}/markets`;
   const maxPages = Number.parseInt(process.env.MM_ROTATOR_MARKET_PAGES ?? "25", 10);
+  const interPageDelayMs = Number.parseInt(
+    process.env.MM_ROTATOR_INTER_PAGE_DELAY_MS ?? "250",
+    10,
+  );
+  const maxRetries = Number.parseInt(process.env.MM_ROTATOR_MAX_429_RETRIES ?? "4", 10);
   /** @type {object[]} */
   const all = [];
   /** @type {string | null} */
   let cursor = null;
   let page = 0;
+  let total429s = 0;
   do {
     const qs = new URLSearchParams({ status: "open", limit: "1000" });
     if (cursor) qs.set("cursor", cursor);
     const url = `${base}?${qs}`;
-    const r = await fetch(url);
-    if (!r.ok) {
-      throw new Error(`fetch markets failed: ${r.status} ${await r.text().catch(() => "")}`);
+
+    // 429 retry with exponential backoff: 1s, 2s, 4s (max 3 retries by default).
+    // Kalshi PROD enforces stricter rate limits than DEMO; bursts of pagination
+    // calls hit the limit and return 429 too_many_requests. Retry with backoff.
+    /** @type {Response | undefined} */
+    let r;
+    let attempt = 0;
+    while (attempt < maxRetries) {
+      r = await fetch(url);
+      if (r.status !== 429) break;
+      total429s += 1;
+      attempt += 1;
+      if (attempt >= maxRetries) {
+        throw new Error(
+          `fetch markets failed: 429 too_many_requests after ${maxRetries} attempts on page ${page}`,
+        );
+      }
+      const backoffMs = 1000 * Math.pow(2, attempt - 1);
+      logger.warn?.(
+        `[rotator] page ${page} got 429 — backoff ${backoffMs}ms before retry ${attempt + 1}/${maxRetries}`,
+      );
+      await new Promise((res) => setTimeout(res, backoffMs));
+    }
+    if (!r || !r.ok) {
+      const status = r?.status ?? "no-response";
+      const body = r ? await r.text().catch(() => "") : "";
+      throw new Error(`fetch markets failed: ${status} ${body}`);
     }
     const j = await r.json();
     const markets = Array.isArray(j?.markets) ? j.markets : [];
@@ -572,9 +610,18 @@ async function fetchOpenMarkets(restBase, logger = console) {
     const next = j?.cursor;
     cursor = typeof next === "string" && next.trim() ? next : null;
     page += 1;
+
+    // Inter-page delay reduces sustained-rate pressure on Kalshi PROD when
+    // paginating through 25k+ markets. Set MM_ROTATOR_INTER_PAGE_DELAY_MS=0
+    // to disable for tests or low-volume environments.
+    if (cursor && page < maxPages && interPageDelayMs > 0) {
+      await new Promise((res) => setTimeout(res, interPageDelayMs));
+    }
   } while (cursor && page < maxPages);
 
-  logger.info?.(`[rotator] fetched ${all.length} open markets from ${base} (${page} page(s), cap=${maxPages})`);
+  logger.info?.(
+    `[rotator] fetched ${all.length} open markets from ${base} (${page} page(s), cap=${maxPages}, 429-retries=${total429s})`,
+  );
   return all;
 }
 
