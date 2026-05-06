@@ -1,11 +1,8 @@
-// ADR-011 cutover gate (lane 17): in PROD mode, validateTickerForMM's
-// cross-check error paths MUST flip from "best-effort skip" (`{ ok: true }`)
-// to "required pass" (`{ ok: false, reason: "prod_cross_check_unavailable" }`).
+// ADR-012 (2026-05-02): PROD rotator pulls PROD Kalshi directly; validateTickerForMM
+// skips the legacy DEMO-vs-PROD cross-check in prod (no second fetch per ticker).
+// Fail-closed cross-check behavior remains testable under runMode: "demo".
 //
-// Audit 2026-05-02 lane 17 verdict was DEGRADED-FAIL because the validator
-// silently passed on every error path. This test guards against regression.
-//
-// Also verifies deriveHardPositionLimit clamps at the $50 notional cap per ADR-011.
+// Also verifies deriveHardPositionLimit clamps at the $30 notional cap per ADR-011 amended.
 
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
@@ -15,7 +12,7 @@ import {
   computeExpectedPriceCents,
 } from "../../scripts/mm/rotate-demo-tickers.mjs";
 
-describe("validateTickerForMM PROD cross-check fail-closed", () => {
+describe("validateTickerForMM PROD skips legacy cross-check (ADR-012)", () => {
   const baseMarket = {
     ticker: "KX-FAKE-1",
     yes_bid_dollars: "0.40",
@@ -24,46 +21,17 @@ describe("validateTickerForMM PROD cross-check fail-closed", () => {
     open_time: new Date(Date.now() - 3600 * 1000).toISOString(), // already open
   };
 
-  it("PROD mode returns { ok: false } on network error", async () => {
-    const r = await validateTickerForMM(baseMarket, {
-      runMode: "prod",
-      fetch: async () => {
-        throw new Error("ENOTFOUND prod.example");
-      },
-      logger: { warn: () => {} },
-    });
-    assert.equal(r.ok, false);
-    assert.equal(r.reason, "prod_cross_check_unavailable");
-  });
+  const fetchMustNotRun = async () => {
+    throw new Error("fetch must not run in prod validateTickerForMM cross-check skip");
+  };
 
-  it("PROD mode returns { ok: false } on HTTP 500", async () => {
+  it("PROD mode skips cross-check and does not invoke fetch", async () => {
     const r = await validateTickerForMM(baseMarket, {
       runMode: "prod",
-      fetch: async () => /** @type {any} */ ({
-        ok: false,
-        status: 500,
-        json: async () => ({}),
-      }),
+      fetch: fetchMustNotRun,
       logger: { warn: () => {} },
     });
-    assert.equal(r.ok, false);
-    assert.equal(r.reason, "prod_cross_check_unavailable");
-  });
-
-  it("PROD mode returns { ok: false } on JSON parse error", async () => {
-    const r = await validateTickerForMM(baseMarket, {
-      runMode: "prod",
-      fetch: async () => /** @type {any} */ ({
-        ok: true,
-        status: 200,
-        json: async () => {
-          throw new Error("invalid JSON");
-        },
-      }),
-      logger: { warn: () => {} },
-    });
-    assert.equal(r.ok, false);
-    assert.equal(r.reason, "prod_cross_check_unavailable");
+    assert.equal(r.ok, true);
   });
 
   it("DEMO mode returns { ok: true } on network error (best-effort skip preserved)", async () => {
@@ -77,21 +45,6 @@ describe("validateTickerForMM PROD cross-check fail-closed", () => {
     assert.equal(r.ok, true);
   });
 
-  it("PROD mode passes when prod book matches demo book", async () => {
-    const prodBody = {
-      market: { yes_bid_dollars: "0.41", yes_ask_dollars: "0.46" },
-    };
-    const r = await validateTickerForMM(baseMarket, {
-      runMode: "prod",
-      fetch: async () => /** @type {any} */ ({
-        ok: true,
-        status: 200,
-        json: async () => prodBody,
-      }),
-      logger: { warn: () => {} },
-    });
-    assert.equal(r.ok, true);
-  });
 });
 
 describe("deriveHardPositionLimit ($30 notional cap, ADR-011 amended 2026-05-02)", () => {

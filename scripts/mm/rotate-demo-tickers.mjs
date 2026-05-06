@@ -34,6 +34,7 @@
  *   MM_ROTATOR_EVENT_PAGES         — max pages for /events cursor pagination (default 50)
  *   MM_ROTATOR_PRICE_FETCH_CONCURRENCY — parallel GET /markets/{ticker} (default 8)
  *   MM_ROTATOR_PRICE_FETCH_STAGGER_MS  — optional delay ms after each detail fetch (default 0)
+ *   MM_ROTATOR_429_BACKOFF_BASE_MS      — exponential backoff base for 429 retries (default 1000)
  *
  * CLI flags (override env): --dry-run, --mode=prod|demo
  */
@@ -692,6 +693,12 @@ export async function selectMarketsForRotation(markets, opts = {}) {
   return { selections, rejected };
 }
 
+/** @param {number} attempt 1-based attempt index after receiving 429 */
+function rotator429BackoffMs(attempt) {
+  const base = Number.parseInt(process.env.MM_ROTATOR_429_BACKOFF_BASE_MS ?? "1000", 10);
+  return Math.max(0, base) * Math.pow(2, attempt - 1);
+}
+
 async function fetchOpenMarketsFromMarketsEndpoint(restBase, logger = console) {
   const base = `${restBase.replace(/\/$/, "")}/markets`;
   const maxPages = Number.parseInt(process.env.MM_ROTATOR_MARKET_PAGES ?? "25", 10);
@@ -727,7 +734,7 @@ async function fetchOpenMarketsFromMarketsEndpoint(restBase, logger = console) {
           `fetch markets failed: 429 too_many_requests after ${maxRetries} attempts on page ${page}`,
         );
       }
-      const backoffMs = 1000 * Math.pow(2, attempt - 1);
+      const backoffMs = rotator429BackoffMs(attempt);
       logger.warn?.(
         `[rotator] page ${page} got 429 — backoff ${backoffMs}ms before retry ${attempt + 1}/${maxRetries}`,
       );
@@ -807,7 +814,7 @@ export async function fetchOpenMarketsViaEvents(restBase, logger = console, opti
           `fetch failed: 429 too_many_requests after ${maxRetries} attempts (${pageLabel})`,
         );
       }
-      const backoffMs = 1000 * Math.pow(2, attempt - 1);
+      const backoffMs = rotator429BackoffMs(attempt);
       logger.warn?.(
         `[rotator] ${pageLabel} got 429 — backoff ${backoffMs}ms retry ${attempt + 1}/${maxRetries}`,
       );
@@ -875,7 +882,7 @@ export async function fetchOpenMarketsViaEvents(restBase, logger = console, opti
         logger.warn?.(`[rotator] market detail ${ticker} 429 after ${maxRetries} attempts`);
         return null;
       }
-      const backoffMs = 1000 * Math.pow(2, attempt - 1);
+      const backoffMs = rotator429BackoffMs(attempt);
       logger.warn?.(`[rotator] market detail ${ticker} 429 — backoff ${backoffMs}ms`);
       await new Promise((res) => setTimeout(res, backoffMs));
     }

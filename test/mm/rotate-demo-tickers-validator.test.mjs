@@ -118,6 +118,7 @@ test("validateTickerForMM rejects demo_only_book when prod has no bid", async ()
   try {
     const r = await validateTickerForMM(baseEligible({ yes_bid_dollars: "0.50" }), {
       nowMs: NOW_MS,
+      runMode: "demo",
     });
     assert.equal(r.ok, false);
     assert.equal(r.reason, "demo_only_book");
@@ -136,7 +137,7 @@ test("validateTickerForMM passes when prod and demo mids align ~0.50", async () 
   try {
     const r = await validateTickerForMM(
       baseEligible({ yes_bid_dollars: "0.49", yes_ask_dollars: "0.51" }),
-      { nowMs: NOW_MS },
+      { nowMs: NOW_MS, runMode: "demo" },
     );
     assert.equal(r.ok, true);
   } finally {
@@ -154,7 +155,7 @@ test("validateTickerForMM rejects demo_prod_divergence when mids differ > 0.05",
   try {
     const r = await validateTickerForMM(
       baseEligible({ yes_bid_dollars: "0.49", yes_ask_dollars: "0.51" }),
-      { nowMs: NOW_MS },
+      { nowMs: NOW_MS, runMode: "demo" },
     );
     assert.equal(r.ok, false);
     assert.equal(r.reason, "demo_prod_divergence");
@@ -173,6 +174,7 @@ test("validateTickerForMM passes when prod fetch throws (warn only)", async () =
     const r = await validateTickerForMM(baseEligible({ ticker: "KXNETFAIL" }), {
       nowMs: NOW_MS,
       logger,
+      runMode: "demo",
     });
     assert.equal(r.ok, true);
     assert.ok(warnings.some((w) => w.includes("KXNETFAIL")), "expected ticker in warn");
