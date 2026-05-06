@@ -2,8 +2,10 @@
 /**
  * MM ticker rotator. Two modes:
  *
- *   MM_RUN_MODE=demo (default) — Kalshi DEMO; legacy 7-day-test behavior.
- *   MM_RUN_MODE=prod          — PROD Kalshi; live capital. ADR-011 spec.
+ *   MM_RUN_MODE=prod (DEFAULT) — PROD Kalshi; live capital. ADR-011/012 spec.
+ *   MM_RUN_MODE=demo           — Kalshi DEMO; pre-2026-05-02 historical only.
+ *                                Default flipped to prod 2026-05-06 per ADR-012
+ *                                cutover; demo is now opt-in via env or CLI flag.
  *
  * Each daily run:
  *   1. Pulls open markets from the appropriate Kalshi REST endpoint
@@ -17,7 +19,7 @@
  * Idempotent: rerunning yields the same DB state as long as the Kalshi market set is unchanged.
  *
  * Env:
- *   MM_RUN_MODE                    — 'demo' (default) | 'prod'
+ *   MM_RUN_MODE                    — 'prod' (default, post-ADR-012) | 'demo' (legacy)
  *   DATABASE_URL                   — required
  *   KALSHI_DEMO_REST_BASE          — defaults to https://demo-api.kalshi.co/trade-api/v2 (demo mode)
  *   KALSHI_PROD_REST_BASE          — defaults to https://api.elections.kalshi.com/trade-api/v2 (prod mode)
@@ -52,7 +54,9 @@ const CLI_ARGS = parseCliArgs(process.argv.slice(2));
 function resolveRunMode() {
   if (CLI_ARGS.mode) return CLI_ARGS.mode;
   const envMode = process.env.MM_RUN_MODE?.trim().toLowerCase();
-  return envMode === "prod" ? "prod" : "demo";
+  // Default flipped 2026-05-06: PROD is the only supported live-capital mode
+  // post-ADR-012 cutover. DEMO is opt-in for historical/legacy testing only.
+  return envMode === "demo" ? "demo" : "prod";
 }
 
 /** @returns {boolean} */
