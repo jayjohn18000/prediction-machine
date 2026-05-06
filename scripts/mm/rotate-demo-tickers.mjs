@@ -994,9 +994,15 @@ export async function fetchOpenMarketsViaEvents(restBase, logger = console, opti
  * @param {import('pg').Client | import('pg').PoolClient} client
  * @param {{ticker: string, raw: object}} sel
  * @param {string} [linkRestBase] Kalshi REST root for permalink (matches run mode)
+ * @param {RunMode} [runMode] defaults demo for back-compat
  * @returns {Promise<number>} provider_markets.id
  */
-async function ensureProviderMarketRow(client, sel, linkRestBase = DEMO_REST_BASE) {
+export async function ensureProviderMarketRow(
+  client,
+  sel,
+  linkRestBase = DEMO_REST_BASE,
+  runMode = "demo",
+) {
   const m = sel.raw;
   const closeIso = typeof m?.close_time === "string" ? m.close_time : null;
   const openIso = typeof m?.open_time === "string" ? m.open_time : null;
@@ -1005,7 +1011,7 @@ async function ensureProviderMarketRow(client, sel, linkRestBase = DEMO_REST_BAS
   const eventRef = (m?.event_ticker ?? null) && String(m.event_ticker);
   const url = m?.market_id ? `${linkRestBase.replace(/\/$/, "")}/markets/${sel.ticker}` : null;
   const metadata = {
-    rotator_source: "kalshi-demo",
+    rotator_source: `kalshi-${runMode}`,
     rotator_inserted_at: new Date().toISOString(),
     yes_bid_dollars: m?.yes_bid_dollars ?? null,
     yes_ask_dollars: m?.yes_ask_dollars ?? null,
@@ -1292,6 +1298,7 @@ export async function runRotation(opts = {}) {
         /** @type {any} */ (client),
         sel,
         restBase,
+        effectiveMode,
       );
       await upsertMmMarketConfig(/** @type {any} */ (client), marketId, {
         expectedPriceCents,

@@ -13,6 +13,7 @@ import {
   fetchOpenMarketsViaEvents,
   parseGameStartFromTicker,
   selectMarketsForRotation,
+  ensureProviderMarketRow,
 } from "../../scripts/mm/rotate-demo-tickers.mjs";
 
 /** Minimal Kalshi-shaped row that survives `selectMarketsForRotation` coarse filters. */
@@ -406,6 +407,35 @@ test("selectMarketsForRotation keeps in-progress game inside buffer window", asy
   );
   assert.equal(selections.length, 1);
   assert.ok(!rejected.some((r) => r.reason === "game_already_ended"));
+});
+
+test("ensureProviderMarketRow sets rotator_source from runMode", async () => {
+  let captured = /** @type {string | null} */ (null);
+  const client = {
+    query: async (/** @type {string} */ _sql, /** @type {unknown[]} */ params) => {
+      captured = String(params[7]);
+      return { rows: [{ id: 42 }] };
+    },
+  };
+  await ensureProviderMarketRow(
+    /** @type {any} */ (client),
+    {
+      ticker: "KXTEST-PROD-SRC",
+      raw: {
+        market_id: "x",
+        close_time: "2030-01-01T00:00:00Z",
+        status: "active",
+        title: "t",
+        yes_bid_dollars: "0.5",
+        yes_ask_dollars: "0.6",
+        volume_24h_fp: "1",
+      },
+    },
+    "https://api.example/trade-api/v2",
+    "prod",
+  );
+  const meta = JSON.parse(captured ?? "{}");
+  assert.equal(meta.rotator_source, "kalshi-prod");
 });
 
 test("selectMarketsForRotation does not reject series ticker without parseable game time", async () => {
