@@ -24,7 +24,7 @@
  *   KALSHI_DEMO_REST_BASE          — defaults to https://demo-api.kalshi.co/trade-api/v2 (demo mode)
  *   KALSHI_PROD_REST_BASE          — defaults to https://api.elections.kalshi.com/trade-api/v2 (prod mode)
  *   MM_ROTATOR_TARGET_COUNT        — default 8 (demo) / 10 (prod)
- *   MM_ROTATOR_MIN_CLOSE_HOURS     — default 48 (demo) / 4 (prod)
+ *   MM_ROTATOR_MIN_CLOSE_HOURS     — default 48 (demo) / 8 (prod)
  *   MM_ROTATOR_RESTART_URL         — runtime restart endpoint (default https://pmci-mm-runtime.fly.dev/admin/restart)
  *   PMCI_ADMIN_KEY                 — admin key for the restart call (skipped if unset)
  *   MM_ROTATOR_DRY_RUN             — '1' | true: enumerate selected/rejected/disabled, perform NO writes
@@ -94,7 +94,7 @@ export function getTargetCountForMode(mode) {
 /** @param {RunMode} mode */
 export function getMinCloseHoursForMode(mode) {
   return Number.parseFloat(
-    process.env.MM_ROTATOR_MIN_CLOSE_HOURS ?? (mode === "prod" ? "4" : "48"),
+    process.env.MM_ROTATOR_MIN_CLOSE_HOURS ?? (mode === "prod" ? "8" : "48"),
   );
 }
 
@@ -142,7 +142,7 @@ const DEFAULT_MM_PARAMS_PROD = Object.freeze({
   stale_quote_timeout_seconds: 300,
   daily_loss_limit_cents: 500,
   inventory_skew_cents: 0,
-  toxicity_threshold: 200,
+  toxicity_threshold: 100,
 });
 
 export const DEFAULT_MM_PARAMS =
