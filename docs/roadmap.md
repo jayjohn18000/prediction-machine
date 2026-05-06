@@ -140,7 +140,51 @@
 
 ---
 
-## Phase F — Execution-Readiness Layer (next after E-category onboarding)
+---
+
+## Phase MM — Market-Making MVP on Kalshi (post-arb-pivot, ACTIVE)
+
+**Status:** PROD live capital running under ADR-012, day 4 of 7 (hour ~90 of 168 as of 2026-05-06). T0 = 2026-05-02T22:37:20Z; expires 2026-05-09T22:37:20Z.
+
+**Origin:** Adopted as the successor thesis after ADR-002 closed the Kalshi+Polymarket arbitrage thesis RED on 2026-04-24. ADR-003 accepted Kalshi-only MM as the MVP successor; ADR-004 retained Polymarket as an information-only wallet-flow source. The arb pivot is archive-only at `docs/archive/pivot-2026-04/`.
+
+### MM W1–W6 — feature build (✅ complete 2026-04-28)
+- W1: Kalshi L2 depth ingestion (`pmci.provider_market_depth`, WS auth, idempotent writes).
+- W2: order placement, client_order_id format (Contract R9), fair_value_at_fill semantics (Contract R8), cancel-on-place sequencing (Contract R11).
+- W3: order reconciler, post-fill backfill cron, fill ingestion.
+- W4: kill-switch wiring (`mm_kill_switch_events`, watchdogs, blocklist).
+- W5: PnL snapshot writer (`mm_pnl_snapshots`), per-market R7 attribution.
+- W6: 7-day continuous-quote test scaffolding, daily ticker rotator, 24h heartbeat verifier.
+- All merged 2026-04-28 → 2026-05-04 across triage tracks A–M and rotator-quality `de5fbc3`.
+
+### MM-Test-1 (DEMO 7-day clock, ADR-008 → ADR-010) — ✗ paused early 2026-05-02
+- T0 = 2026-04-28T17:41:28Z; paused at hour ~92 of 168.
+- Daily-loss criterion RECORDED-FAIL on day 2 (44,372 `mm_kill_switch_events` from the storm; PnL=−2,341.66c vs configured 2,000c cap).
+- Useful for plumbing validation (kill-switch fires correctly, fill ingestion persists, PnL writer healthy). Not useful for strategy validation. Superseded by ADR-012 PROD clock.
+
+### MM-Test-2 (PROD 7-day clock, ADR-011 + ADR-012) — IN FLIGHT
+- T0 = 2026-05-02T22:37:20Z; expires 2026-05-09T22:37:20Z.
+- Risk envelope: $5/day per-market loss cap, $30 notional position cap, `min_half_spread=2c`, toxicity=200, stale_quote=300s.
+- Universe: rotator-managed daily, 1–2 markets at a time per ADR-011 (in practice 8 depth-subscribed, ≤8 enabled, depending on rotator cycle and auto-blocklist state).
+- **Per-criterion at hour 90 (live evidence; ADR-013-reframed criterion #1 in effect):**
+  - System uptime ≥90% across rolling 30-min windows (ADR-013): **RECORDED-FAIL** — 46.41% live (84/181 windows active); dormancy budget exceeded by 63 windows; mathematically unrecoverable. 34.5h dominant gap on day 3.
+  - Net positive PnL after fees: **marginal FAIL** — cumulative −89.0c after 3.7 days (well inside $5/day budget).
+  - ≤1 auto-flatten event: **AT-RISK** — 50 killswitch events since T0 (all on now-blocklisted KXMLBSPREAD); 0 in last 24h.
+  - Zero `daily_loss_limit_cents=500` breach: **PASS**.
+  - Per-market R7 attribution legible: **PASS** (5-min cadence, all columns populated).
+  - Lane-13 fee reconciliation ≤2%: **PENDING** (awaits Kalshi monthly statement).
+- Verdict at hour 168: ADR-014 (TBD 2026-05-09T22:37Z) records pass/fail per dimension and the cutover decision (continue, ramp, or roll back). ADR-013 (Accepted 2026-05-06) is the criterion-reframe ADR; ADR-014 is the verdict ADR.
+
+### MM follow-on (gated on hour-168 verdict)
+- **Hour-96 ramp decision** (already past): $30 → $50 position cap if all green. Operator decision; not automatic. Skipped to date.
+- **Runtime depth-sub rebuild on universe change** (P0 post-clock): orchestrator must reconcile its depth subscriber set against `mm_market_config WHERE enabled=true` per tick — root cause of the 35h dormancy.
+- **Cosmetic fix:** rotator notes string template still hardcodes `mode=demo`.
+- **Track B residual:** migration-secrets rotation (anon JWT + PMCI_API_KEY in two old migrations) deferred until clock closes.
+- **Polymarket indexer W2** (live Polygon ingestion, `pmci-poly-indexer` Fly app): next workstream after MM clock closes.
+
+---
+
+## Phase F — Execution-Readiness Layer (paused; superseded by Phase MM as the active execution thesis)
 **Goal:** Bridge PMCI from intelligence substrate to execution-ready relative-value infrastructure.
 
 **Principle:** PMCI remains the intelligence / canonicalization layer. A downstream execution service should own order placement, inventory, fills, and capital allocation.
@@ -243,15 +287,23 @@
 
 ---
 
-## Current milestone: E2 ∥ E3 — Crypto + Economics/macro (starting 2026-04-14)
-**Goals:** (E2) Extend PMCI cross-linking to crypto markets on Kalshi and Polymarket. (E3) Ingest and link binary macro templates (Fed, rates, CPI-style) with economics category tagging. Apply the same guard-first proposer + strict-audit gate loop proven in E1.
+## Current milestone: Phase MM — PROD 7-day continuous-quote clock (ADR-012)
 
-**E1.6 sprint complete (2026-04-14):** **234** = active **`pmci.market_links` row count** for sports (`category='sports'` via family → canonical_event), i.e. **legs** (two per typical pair) plus a few duplicate-active-version rows on mis-merged families — **not** “234 pairs.” **`~108`** sports families had both providers in `v_market_links_current` at Phase 5 verification (2026-04-19); see **`docs/plans/phase-g-bilateral-linking-postmortem.md`** § *Open questions — resolved*. E1 strict-audit GREEN. See [`docs/plans/e1.6-sports-execution-readiness-sprint.md`](plans/e1.6-sports-execution-readiness-sprint.md) for historical sprint plan.
+**Active phase since 2026-05-02:** Kalshi-only MM with live capital. Operator-driven succession of the closed arb thesis (ADR-002/003). E2 (crypto cross-linking) and E3 (economics/macro cross-linking) are paused for the duration of the MM validation; their scaffolds are merged but no new acceptance work is happening.
 
-**Carry-forward from E1.6 (non-blocking):**
+**Live state (2026-05-06 hour 90 of 168):** see `docs/system-state.md` § Current status block for the canonical numbers and per-criterion progress. Highlights: net PnL −89.0c cumulative; 0 daily_loss breaches; 0 killswitch events in last 24h; 34.5h dominant dormancy on day 3 (live uptime = 46.41%, ADR-013 criterion #1 RECORDED-FAIL). Verdict at hour 168 → ADR-014 (placeholder; ADR-013 is the criterion-reframe ADR).
+
+**Post-MM resumption plan:**
+- If MM-Test-2 passes (or accepts known-failures into ADR-014 cutover spec): continue MM operationally; pick up Polymarket Indexer W2 as the next track.
+- If MM-Test-2 fails decisively: roll back to DEMO; reconvene strategy.
+- E2 / E3 cross-linking work resumes only after MM operational shape is settled (no contention for engineering attention during the active 7-day clock).
+
+**Historical anchor (E1.6 sprint, 2026-04-14):** active `pmci.market_links` row count for sports = 234 legs (≈108 families bilaterally linked); E1 strict-audit GREEN; see `docs/plans/e1.6-sports-execution-readiness-sprint.md`.
+
+**E1.6 carry-forward (non-blocking, deferred to post-MM):**
 - `signals/top-divergences` endpoint returns 503 (1 test failure)
 - 7 families with same-provider duplicate links (96 violation pairs); family 3120 mis-labeled as politics
 - 10 non-sports stale_active markets (politics, sport=NULL)
 - stale-cleanup.mjs not yet scheduled as cron
 
-Latest live smoke snapshot (2026-04-16): **95,314 / 1,432,756 / 3,236 / 369** (provider_markets/snapshots/families/current_links). Smoke counts are runtime-volatile; use latest `npm run pmci:smoke` output for current totals.
+Latest live smoke snapshot (2026-05-06): provider_markets=233,987 / snapshots=9,070,901 / families=205 / current_links=356 (per `pmci-api.fly.dev/v1/health/freshness`). Smoke counts are runtime-volatile; use the live endpoint or `npm run pmci:smoke` for current totals.

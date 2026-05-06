@@ -548,3 +548,108 @@ The 7-day DEMO test breached `daily_loss_limit_cents=2000` on day 2 at PnL=−2,
 
 **Sources update:** `pmci.mm_orders` first 4 PROD orders (id 55169-55172) at 22:37:20Z; `pmci-mm-runtime.fly.dev/health/mm` showing `runMode=prod, depthConnected=2/2, severity=none`.
 
+---
+
+## ADR-013: Reframe ADR-012 exit criterion #1 — system uptime ≥ 90% across rolling 30-min windows — 2026-05-06
+
+**Status:** Accepted. The ADR-012 PROD clock is RECORDED-FAIL on the reframed criterion at the moment of acceptance (hour 90 of 168, mathematically unrecoverable). This ADR records both the criterion change for future clocks and the explicit fail-acceptance for this clock — parallel to ADR-011's acceptance of the DEMO daily-loss fail.
+
+**Decision:** Replace ADR-012 exit criterion #1 — "≥1 market continuously quoted on PROD for 168 hours" — with:
+
+> **System uptime ≥ 90% across rolling 30-minute windows.** Within every 30-min window of the 168h test, the orchestrator must place ≥1 order on at least one enabled market. The pass bar is ≥90% of windows active over the 168h test (i.e., ≤33.6 dormant 30-min windows = ≤16.8 cumulative hours of dormancy). All other ADR-012 exit criteria (net positive PnL after fees, ≤1 auto-flatten, zero `daily_loss_limit_cents=500` breach, per-market R7 attribution legible, lane-13 fee reconciliation ≤2%) are retained verbatim.
+
+**Context:** Hour-90 status check on the active ADR-012 PROD clock surfaced a 34.5h continuous dormancy (2026-05-05 03:37Z → 2026-05-06 13:37Z, 69 consecutive empty 30-min windows). Smaller gaps before that (5.5h on 2026-05-03; 3h, 1.5h, 1h on 2026-05-04) brought total dormant windows since T0 to **97 of 181** = **53.6% downtime / 46.4% uptime**. Resolution required operator-driven `pmci-mm-runtime` restart at 14:48Z to rebuild the WS depth subscription set. The 35h dormancy was caused by a structural runtime bug — when the rotator + auto-blocklist swap `mm_market_config.enabled` mid-run, the orchestrator's depth subscriber doesn't reconcile; it kept running with subscriptions to yesterday's now-blocklisted ticker.
+
+**Diagnosis of the original criterion:**
+
+ADR-012 criterion #1 as written conflates two things:
+
+1. **Per-market continuity** — literal reading: "one specific market continuously quoted for 168 hours straight." This is **structurally impossible** under ADR-010, which intentionally rotated the universe daily because individual markets settle inside the test window (NHL series resolve, NBA games close, MLB spreads expire). No market in any test universe could meet this bar by design.
+2. **System-level uptime** — the version that actually maps to operational risk: a multi-hour silence means the orchestrator isn't earning spread, depth subs are stale, auto-flatten covers nothing, and autonomous run-time confidence is broken.
+
+The reframed criterion targets (2) directly, with a 30-min granularity that matches the rotator and depth-sub timescale, and a 90% threshold that admits brief failures (deploy windows, rotator gaps, transient WS reconnects) without admitting multi-hour silent pauses.
+
+**Why 90% / 30-min:**
+
+- **30-min windows** match the operational cadence: the rotator-disable-watcher cron fires every 5 min and the rotator itself fires daily; 30 min is a comfortable upper bound for "the system rebuilt its depth subs and got back to quoting after a routine universe change." Anything above 30 min is a real outage.
+- **90% threshold** = ≤16.8h dormancy budget over a 168h test. Allows ~16 routine 1h deploy windows OR one larger incident under a day, but not more. Live evidence: a single 35h incident already burns the entire budget on its own — exactly the kind of event the criterion needs to flag.
+- **Tumbling buckets anchored to T0 + n×30min** for measurement; rolling-window evaluation is mathematically equivalent on a binary "any-order-in-window" predicate at this granularity. Tumbling is cheaper to query.
+
+**Canonical measurement query:**
+
+```sql
+WITH params AS (
+  SELECT '<T0>'::timestamptz AS t0,
+         (LEAST(now(), '<T0>'::timestamptz + interval '168 hours')) AS t_end
+),
+buckets AS (
+  SELECT generate_series(date_trunc('minute', (SELECT t0 FROM params)),
+                         date_trunc('minute', (SELECT t_end FROM params)),
+                         interval '30 minutes') AS bucket_start
+),
+bucket_activity AS (
+  SELECT b.bucket_start, CASE WHEN EXISTS (
+    SELECT 1 FROM pmci.mm_orders o
+    WHERE o.placed_at >= b.bucket_start
+      AND o.placed_at <  b.bucket_start + interval '30 minutes'
+  ) THEN 1 ELSE 0 END AS had_order
+  FROM buckets b
+)
+SELECT COUNT(*) AS total_windows,
+       SUM(had_order) AS active_windows,
+       COUNT(*) - SUM(had_order) AS dormant_windows,
+       ROUND(100.0 * SUM(had_order) / COUNT(*), 2) AS uptime_pct
+FROM bucket_activity;
+```
+
+Run at hour 168 (2026-05-09T22:37Z) with T0=`2026-05-02T22:37:20.567Z` to get the canonical PROD-clock figure. The same query runs at any intermediate hour for in-flight monitoring.
+
+**This-clock verdict (recorded fail, accepted):**
+
+At the moment of this ADR's acceptance (2026-05-06 hour 90):
+- **97 dormant 30-min windows of 181 total** since T0.
+- 90%-uptime budget for the full 168h test = **33.6 dormant windows**. Already exceeded by 63 windows.
+- Therefore **mathematically unrecoverable** to PASS criterion #1 (reframed). ≥90% uptime cannot be achieved between hour 90 and hour 168 even with zero further dormancy.
+
+The ADR-012 clock is **recorded-fail on criterion #1 (reframed)**. No mid-clock action; the clock continues to T+168h to gather the remaining data on the four other criteria (net PnL, auto-flatten, daily-loss, R7 attribution) and the lane-13 fee-reconciliation post-statement. This parallels ADR-011's explicit acceptance of the DEMO clock's daily-loss recorded-fail.
+
+**Alternatives considered:**
+
+- **Ship the reframe as part of the hour-168 verdict ADR (ADR-014).** Rejected: leaves the criterion ambiguous mid-clock and forces every status check between now and hour 168 to footnote the metric. Better to lock the metric definition now and record the fail explicitly.
+- **Higher dormancy budget (80% threshold).** Rejected: 80% / 168h = 33.6h dormancy allowed, essentially "one bad day per week" — too lax for a strategy that depends on continuous capture.
+- **Per-day uptime test instead of cumulative.** Rejected: structural bugs under investigation produce day-long silences; per-day evaluation would still mark those days fail; cumulative is simpler and equivalent in practice.
+- **More sophisticated metric (per-market or fill-aware).** Rejected: the metric needs to be cheaply computable and unambiguous. "Fill-quality during quoting periods" mixes uptime with strategy quality; those should remain separate criteria (PnL and fill rate already cover strategy quality).
+- **Lower threshold (50%) just to PASS this clock.** Rejected explicitly: choosing the threshold to make the active clock pass would defeat the purpose of having a criterion. 90% is the right target for a live-capital MM system; the right thing is to record the fail honestly.
+
+**Consequences:**
+
+- ADR-014 (hour-168 verdict, TBD 2026-05-09) records **PASS/FAIL per criterion using ADR-013-reframed criterion #1**, not ADR-012's original wording.
+- Future MM test clocks (DEMO or PROD) inherit the reframed criterion as the standard.
+- The recorded-fail on this clock does not auto-trigger rollback; ADR-014 records the cutover (continue / ramp / roll-back) decision based on the full criterion set.
+- Status reporting (`pmci-status` skill, dashboards, daily updates) should report uptime % using the canonical query above, not "is the system quoting right now."
+
+**Open follow-up (post-clock, gates next test):**
+
+- **P0** — fix `lib/mm/orchestrator.mjs` to reconcile the WS depth subscriber set against `mm_market_config WHERE enabled=true` per main-loop tick. Without this, any future clock will hit the same structural failure mode and the reframed criterion will fail again.
+- **P1** — add an admin endpoint `/admin/refresh-depth-subs` so the rotator cron can trigger reconciliation without a process restart, as a stopgap before the per-tick fix lands.
+- **P2** — add a `pmci.mm_uptime_30min` materialized view or scheduled metric so dashboards don't need to recompute the bucket query every read.
+
+**Sources:**
+- ADR-008 (DEMO clock start); ADR-010 (rotator drift documentation, established the rotated-universe design that invalidated literal per-market continuity); ADR-011 (cutover spec, daily-loss fail acceptance precedent); ADR-012 (PROD clock start, original criterion).
+- Live evidence (2026-05-06 16:30Z): tumbling 30-min bucket query — 181 windows since T0, 84 active, 97 dormant, 46.41% uptime, 90.32 hours elapsed; longest dormant streak 69 consecutive windows (34.5h) starting 2026-05-05 03:37Z.
+- `docs/system-state.md` § Current status (2026-05-06).
+
+---
+
+## ADR-014 (placeholder): MM-Test-2 hour-168 verdict + cutover decision — TBD 2026-05-09T22:37Z
+
+**Status:** Placeholder; decision drafted at hour 168 of the ADR-012 clock.
+
+**Will record:**
+- PASS/FAIL per ADR-012 exit criterion using **ADR-013-reframed criterion #1** for uptime.
+- Final per-criterion live numbers (uptime %, longest gap, net PnL, killswitch totals, daily_loss breaches, R7 attribution legibility, fee-reconciliation status).
+- Cutover decision: continue / ramp ($30→$50 position cap) / roll back.
+- Disposition of the structural depth-sub-rebuild fix (gate on next clock vs land-and-relaunch).
+- Any further criterion edits surfaced by the full 168h dataset.
+
+(Slot reserved here so ADR-013's "verdict ADR" reference resolves. Replace this placeholder with the actual verdict on 2026-05-09.)
