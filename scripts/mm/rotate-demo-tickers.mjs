@@ -142,7 +142,7 @@ const DEFAULT_MM_PARAMS_PROD = Object.freeze({
   stale_quote_timeout_seconds: 300,
   daily_loss_limit_cents: 500,
   inventory_skew_cents: 0,
-  toxicity_threshold: 200,
+  toxicity_threshold: 100,
 });
 
 export const DEFAULT_MM_PARAMS =
