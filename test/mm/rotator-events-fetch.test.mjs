@@ -11,7 +11,22 @@ import {
   marketNeedsIndividualPriceFetch,
   mergeMarketDetailQuote,
   fetchOpenMarketsViaEvents,
+  parseGameStartFromTicker,
+  selectMarketsForRotation,
 } from "../../scripts/mm/rotate-demo-tickers.mjs";
+
+/** Minimal Kalshi-shaped row that survives `selectMarketsForRotation` coarse filters. */
+function sampleSelectableMarket(ticker, overrides = {}) {
+  return {
+    ticker,
+    yes_bid_dollars: "0.45",
+    yes_ask_dollars: "0.55",
+    close_time: "2030-01-01T00:00:00Z",
+    open_time: "2020-01-01T12:00:00Z",
+    volume_24h_fp: "5000",
+    ...overrides,
+  };
+}
 
 function jsonResponse(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
@@ -308,4 +323,103 @@ test("resolveRotatorBackend defaults to events; markets when set", (t) => {
 test("ROTATOR_SERIES_ALLOWLIST_DEFAULT includes core single-game prefixes", () => {
   assert.ok(ROTATOR_SERIES_ALLOWLIST_DEFAULT.includes("KXMLBGAME"));
   assert.ok(!ROTATOR_SERIES_ALLOWLIST_DEFAULT.includes("KXMVEGAME"));
+});
+
+test("parseGameStartFromTicker decodes MLB GAME and TOTAL stems (UTC)", () => {
+  assert.equal(
+    parseGameStartFromTicker("KXMLBGAME-26MAY061310TORTB-TB")?.toISOString(),
+    "2026-05-06T13:10:00.000Z",
+  );
+  assert.equal(
+    parseGameStartFromTicker("KXMLBTOTAL-26MAY061410LADHOU-9")?.toISOString(),
+    "2026-05-06T14:10:00.000Z",
+  );
+  assert.equal(
+    parseGameStartFromTicker("KXMLBSPREAD-26MAY061310TORTB-TB2")?.toISOString(),
+    "2026-05-06T13:10:00.000Z",
+  );
+});
+
+test("parseGameStartFromTicker returns null for series / non-embedded-time tickers", () => {
+  assert.equal(parseGameStartFromTicker("KXNBAGAME-26MAY09OKCLAL-LAL"), null);
+  assert.equal(parseGameStartFromTicker("KXNHLSERIES-26MINCOLR2-COL"), null);
+  assert.equal(parseGameStartFromTicker("KXNBASERIES-26LALOKCR2-LAL"), null);
+});
+
+test("selectMarketsForRotation rejects game_already_ended after buffer", async (t) => {
+  t.after(() => {
+    delete process.env.MM_ROTATOR_GAME_END_BUFFER_HOURS;
+  });
+  process.env.MM_ROTATOR_GAME_END_BUFFER_HOURS = "4";
+  const nowMs = Date.parse("2026-05-06T20:00:00.000Z");
+  const { selections, rejected } = await selectMarketsForRotation(
+    [sampleSelectableMarket("KXMLBGAME-26MAY061310TORTB-TB")],
+    {
+      nowMs,
+      skipProdCrossCheck: true,
+      runMode: "prod",
+      target: 10,
+      minCloseHours: 1,
+    },
+  );
+  assert.equal(selections.length, 0);
+  assert.ok(
+    rejected.some((r) => r.ticker === "KXMLBGAME-26MAY061310TORTB-TB" && r.reason === "game_already_ended"),
+  );
+});
+
+test("selectMarketsForRotation keeps game starting in 2h", async (t) => {
+  t.after(() => {
+    delete process.env.MM_ROTATOR_GAME_END_BUFFER_HOURS;
+  });
+  process.env.MM_ROTATOR_GAME_END_BUFFER_HOURS = "4";
+  const nowMs = Date.parse("2026-05-06T11:00:00.000Z");
+  const { selections, rejected } = await selectMarketsForRotation(
+    [sampleSelectableMarket("KXMLBGAME-26MAY061310TORTB-TB")],
+    {
+      nowMs,
+      skipProdCrossCheck: true,
+      runMode: "prod",
+      target: 10,
+      minCloseHours: 1,
+    },
+  );
+  assert.equal(selections.length, 1);
+  assert.ok(!rejected.some((r) => r.reason === "game_already_ended"));
+});
+
+test("selectMarketsForRotation keeps in-progress game inside buffer window", async (t) => {
+  t.after(() => {
+    delete process.env.MM_ROTATOR_GAME_END_BUFFER_HOURS;
+  });
+  process.env.MM_ROTATOR_GAME_END_BUFFER_HOURS = "4";
+  const nowMs = Date.parse("2026-05-06T14:10:00.000Z");
+  const { selections, rejected } = await selectMarketsForRotation(
+    [sampleSelectableMarket("KXMLBGAME-26MAY061310TORTB-TB")],
+    {
+      nowMs,
+      skipProdCrossCheck: true,
+      runMode: "prod",
+      target: 10,
+      minCloseHours: 1,
+    },
+  );
+  assert.equal(selections.length, 1);
+  assert.ok(!rejected.some((r) => r.reason === "game_already_ended"));
+});
+
+test("selectMarketsForRotation does not reject series ticker without parseable game time", async () => {
+  const nowMs = Date.parse("2026-05-06T20:00:00.000Z");
+  const { selections, rejected } = await selectMarketsForRotation(
+    [sampleSelectableMarket("KXNBASERIES-26LALOKCR2-LAL")],
+    {
+      nowMs,
+      skipProdCrossCheck: true,
+      runMode: "prod",
+      target: 10,
+      minCloseHours: 1,
+    },
+  );
+  assert.equal(selections.length, 1);
+  assert.ok(!rejected.some((r) => r.reason === "game_already_ended"));
 });
