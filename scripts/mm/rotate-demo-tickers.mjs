@@ -29,6 +29,11 @@
  *   PMCI_ADMIN_KEY                 — admin key for the restart call (skipped if unset)
  *   MM_ROTATOR_DRY_RUN             — '1' | true: enumerate selected/rejected/disabled, perform NO writes
  *   MM_ROTATOR_MARKET_PAGES        — max REST pagination pages for /markets (default 25, ~25k rows cap)
+ *   MM_ROTATOR_BACKEND             — 'events' (default) | 'markets': candidate source (/events nested vs /markets flood)
+ *   MM_ROTATOR_SERIES_ALLOWLIST    — optional comma-separated series_ticker overrides for events backend
+ *   MM_ROTATOR_EVENT_PAGES         — max pages for /events cursor pagination (default 50)
+ *   MM_ROTATOR_PRICE_FETCH_CONCURRENCY — parallel GET /markets/{ticker} (default 8)
+ *   MM_ROTATOR_PRICE_FETCH_STAGGER_MS  — optional delay ms after each detail fetch (default 0)
  *
  * CLI flags (override env): --dry-run, --mode=prod|demo
  */
@@ -178,6 +183,124 @@ export const SPREAD_BANDS = Object.freeze([
 
 export const MAX_PER_EVENT = 3;
 export const MAX_PER_SPORT = 5;
+
+/**
+ * Kalshi series tickers allowed for MM rotator candidate discovery via /events.
+ * Multi-game parlay junk (e.g. KXMVE*) is excluded by omission.
+ */
+export const ROTATOR_SERIES_ALLOWLIST_DEFAULT = Object.freeze([
+  // sports — single-game tickers
+  "KXMLBGAME",
+  "KXNBAGAME",
+  "KXNHLGAME",
+  "KXNCAABBGAME",
+  "KXNCAAMBBGAME",
+  "KXMLBSPREAD",
+  "KXMLBTOTAL",
+  "KXNBATOTAL",
+  "KXNBASERIES",
+  "KXNHLSERIES",
+  "KXNFLGAME",
+  "KXNFL",
+  "KXUFC",
+  "KXATP",
+  "KXWTA",
+  "KXPGA",
+  "KXF1",
+  "KXIPL",
+  // crypto monthlies + dailies
+  "KXBTCMAXMON",
+  "KXETHMAXMON",
+  "KXBTCMINY",
+  "KXETHMINY",
+  "KXBTCMAX",
+  "KXETHMAX",
+  "KXBTCDAILY",
+  "KXETHDAILY",
+]);
+
+/** @returns {string[]} uppercase series tickers */
+export function resolveRotatorSeriesAllowlist() {
+  const raw = process.env.MM_ROTATOR_SERIES_ALLOWLIST?.trim();
+  if (!raw) return [...ROTATOR_SERIES_ALLOWLIST_DEFAULT];
+  return raw
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean);
+}
+
+/**
+ * Merge open events' nested markets for series on the rotator allowlist.
+ * Exported for unit tests (mocked REST).
+ *
+ * @param {object[]} events raw `events[]` from Kalshi `/events`
+ * @param {Set<string>} allowlistSet uppercase series_tickers
+ * @returns {object[]}
+ */
+export function flattenAllowlistedNestedMarkets(events, allowlistSet) {
+  /** @type {object[]} */
+  const out = [];
+  for (const ev of Array.isArray(events) ? events : []) {
+    const st = String(ev?.series_ticker ?? "")
+      .trim()
+      .toUpperCase();
+    if (!st || !allowlistSet.has(st)) continue;
+    const eventTicker = String(ev?.event_ticker ?? "");
+    const categoryFallback = ev?.category;
+    const nested = Array.isArray(ev?.markets) ? ev.markets : [];
+    for (const m of nested) {
+      if (!m || typeof m !== "object") continue;
+      const ticker = String(m.ticker ?? "").trim();
+      if (!ticker) continue;
+      out.push({
+        ...m,
+        ticker,
+        event_ticker: String(m.event_ticker ?? eventTicker),
+        category: m.category ?? categoryFallback,
+        volume_24h_fp: m.volume_24h_fp ?? m.volume_24h ?? "0",
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * Kalshi `/events` nested payloads often omit live bid/ask; use individual /markets pulls when book is unusable.
+ * @param {object} m
+ */
+export function marketNeedsIndividualPriceFetch(m) {
+  const yesBid = Number.parseFloat(m?.yes_bid_dollars ?? "0");
+  const yesAsk = Number.parseFloat(m?.yes_ask_dollars ?? "0");
+  if (!Number.isFinite(yesBid) || !Number.isFinite(yesAsk)) return true;
+  if (yesBid <= 0.01 || yesAsk <= 0.01) return true;
+  if (yesAsk <= yesBid) return true;
+  if (yesAsk >= 0.99) return true;
+  return false;
+}
+
+/** @param {object} target flattened market mut
+ * @param {object|null|undefined} detail from GET /markets/{ticker} → `{ market }`
+ */
+export function mergeMarketDetailQuote(target, detail) {
+  if (!detail || typeof detail !== "object") return;
+  const pick = [
+    "yes_bid_dollars",
+    "yes_ask_dollars",
+    "last_price_dollars",
+    "close_time",
+    "open_time",
+    "status",
+    "title",
+  ];
+  for (const f of pick) {
+    if (detail[f] != null && detail[f] !== "") target[f] = detail[f];
+  }
+  if (detail.volume_24h_fp != null && detail.volume_24h_fp !== "") {
+    target.volume_24h_fp = detail.volume_24h_fp;
+  } else if (detail.volume_24h != null && detail.volume_24h !== "") {
+    target.volume_24h_fp = String(detail.volume_24h);
+  }
+}
 
 /** @param {string} categoryKey */
 export function categoryMultiplier(categoryKey) {
@@ -562,7 +685,7 @@ export async function selectMarketsForRotation(markets, opts = {}) {
   return { selections, rejected };
 }
 
-async function fetchOpenMarkets(restBase, logger = console) {
+async function fetchOpenMarketsFromMarketsEndpoint(restBase, logger = console) {
   const base = `${restBase.replace(/\/$/, "")}/markets`;
   const maxPages = Number.parseInt(process.env.MM_ROTATOR_MARKET_PAGES ?? "25", 10);
   const interPageDelayMs = Number.parseInt(
@@ -627,6 +750,149 @@ async function fetchOpenMarkets(restBase, logger = console) {
     `[rotator] fetched ${all.length} open markets from ${base} (${page} page(s), cap=${maxPages}, 429-retries=${total429s})`,
   );
   return all;
+}
+
+/**
+ * Cursor-paginate `/events?with_nested_markets=true`, keep allowlisted series, flatten nested
+ * markets to the shape expected by `selectMarketsForRotation`, then enrich via GET `/markets/{ticker}`
+ * where nested quotes are blank (usual on PROD nested payloads).
+ *
+ * @param {string} restBase
+ * @param {{ info?: Function, warn?: Function }} logger
+ * @param {{ fetch?: typeof fetch }} [options]
+ */
+export async function fetchOpenMarketsViaEvents(restBase, logger = console, options = {}) {
+  const fetchFn = options.fetch ?? globalThis.fetch;
+  const base = restBase.replace(/\/$/, "");
+  const eventsRoot = `${base}/events`;
+  const maxPages = Number.parseInt(process.env.MM_ROTATOR_EVENT_PAGES ?? "50", 10);
+  const interPageDelayMs = Number.parseInt(
+    process.env.MM_ROTATOR_INTER_PAGE_DELAY_MS ?? "250",
+    10,
+  );
+  const maxRetries = Number.parseInt(process.env.MM_ROTATOR_MAX_429_RETRIES ?? "4", 10);
+  const priceConcurrency = Number.parseInt(process.env.MM_ROTATOR_PRICE_FETCH_CONCURRENCY ?? "8", 10);
+  const priceStaggerMs = Number.parseInt(process.env.MM_ROTATOR_PRICE_FETCH_STAGGER_MS ?? "0", 10);
+
+  const allowlist = new Set(resolveRotatorSeriesAllowlist());
+
+  /** @type {string | null} */
+  let cursor = null;
+  let page = 0;
+  let total429s = 0;
+
+  /** @param {string} url @param {string} pageLabel */
+  const fetchJsonWith429Retry = async (url, pageLabel) => {
+    let attempt = 0;
+    while (true) {
+      const r = await fetchFn(url);
+      if (r.status !== 429) {
+        if (!r.ok) {
+          const body = await r.text().catch(() => "");
+          throw new Error(`fetch failed: ${r.status} ${body}`);
+        }
+        return r.json();
+      }
+      total429s += 1;
+      attempt += 1;
+      if (attempt >= maxRetries) {
+        throw new Error(
+          `fetch failed: 429 too_many_requests after ${maxRetries} attempts (${pageLabel})`,
+        );
+      }
+      const backoffMs = 1000 * Math.pow(2, attempt - 1);
+      logger.warn?.(
+        `[rotator] ${pageLabel} got 429 — backoff ${backoffMs}ms retry ${attempt + 1}/${maxRetries}`,
+      );
+      await new Promise((res) => setTimeout(res, backoffMs));
+    }
+  };
+
+  /** @type {object[]} */
+  const allEventsMarketsNested = [];
+
+  do {
+    const qs = new URLSearchParams({
+      status: "open",
+      limit: "200",
+      with_nested_markets: "true",
+    });
+    if (cursor) qs.set("cursor", cursor);
+    const url = `${eventsRoot}?${qs}`;
+    const j = await fetchJsonWith429Retry(url, `events page ${page}`);
+    const events = Array.isArray(j?.events) ? j.events : [];
+    allEventsMarketsNested.push(...flattenAllowlistedNestedMarkets(events, allowlist));
+    const next = j?.cursor;
+    cursor = typeof next === "string" && next.trim() ? next : null;
+    page += 1;
+    if (cursor && page < maxPages && interPageDelayMs > 0) {
+      await new Promise((res) => setTimeout(res, interPageDelayMs));
+    }
+  } while (cursor && page < maxPages);
+
+  /** @type {Map<string, object>} */
+  const byTicker = new Map();
+  for (const m of allEventsMarketsNested) {
+    const t = String(m.ticker ?? "");
+    if (t) byTicker.set(t, m);
+  }
+  const flattened = [...byTicker.values()];
+
+  logger.info?.(
+    `[rotator] events path: ${flattened.length} unique nested markets (${page} event page(s), cap=${maxPages}, allowlist=${allowlist.size} series, 429s=${total429s})`,
+  );
+
+  const needIndices = [];
+  for (let i = 0; i < flattened.length; i++) {
+    if (marketNeedsIndividualPriceFetch(flattened[i])) needIndices.push(i);
+  }
+
+  logger.info?.(
+    `[rotator] events path: enriching ${needIndices.length}/${flattened.length} via GET /markets/{ticker} concurrency=${priceConcurrency}`,
+  );
+
+  /** @param {string} ticker */
+  const fetchMarketDetail = async (ticker) => {
+    const detailUrl = `${base}/markets/${encodeURIComponent(ticker)}`;
+    let attempt = 0;
+    while (true) {
+      const r = await fetchFn(detailUrl);
+      if (r.status !== 429) {
+        if (!r.ok) return null;
+        const body = await r.json().catch(() => null);
+        const mk = body?.market ?? body;
+        return mk && typeof mk === "object" ? mk : null;
+      }
+      attempt += 1;
+      if (attempt >= maxRetries) {
+        logger.warn?.(`[rotator] market detail ${ticker} 429 after ${maxRetries} attempts`);
+        return null;
+      }
+      const backoffMs = 1000 * Math.pow(2, attempt - 1);
+      logger.warn?.(`[rotator] market detail ${ticker} 429 — backoff ${backoffMs}ms`);
+      await new Promise((res) => setTimeout(res, backoffMs));
+    }
+  };
+
+  let q = 0;
+  const worker = async () => {
+    for (;;) {
+      const slot = q++;
+      if (slot >= needIndices.length) break;
+      const idx = needIndices[slot];
+      const m = flattened[idx];
+      const mk = await fetchMarketDetail(String(m.ticker));
+      mergeMarketDetailQuote(m, mk);
+      if (priceStaggerMs > 0) await new Promise((res) => setTimeout(res, priceStaggerMs));
+    }
+  };
+
+  const nWorkers = Math.max(1, Math.min(priceConcurrency, needIndices.length || 1));
+  await Promise.all(
+    Array.from({ length: needIndices.length ? nWorkers : 0 }, () => worker()),
+  );
+
+  return flattened;
 }
 
 /**
@@ -881,7 +1147,7 @@ export async function runRotation(opts = {}) {
     }
     if (!blocked) blocked = new Set();
 
-    const markets = await fetchOpenMarkets(restBase, logger);
+    const markets = await fetchOpenMarketsViaEvents(restBase, logger);
     summary.fetched = markets.length;
 
     const { selections, rejected } = await selectMarketsForRotation(markets, {
