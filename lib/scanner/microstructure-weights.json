@@ -1,0 +1,12 @@
+{
+  "w1_microprice_edge": 1.0,
+  "w2_momentum": 0.5,
+  "w3_imbalance_over_spread": 0.3,
+  "w4_cross_venue_gap": 0.2,
+  "liquidity_penalty_coef": 0.08,
+  "spread_penalty_coef": 0.06,
+  "vol_penalty_coef": 0.05,
+  "max_edge": 0.04,
+  "log_threshold": 0.02,
+  "momentum_window_ms": 300000
+}
