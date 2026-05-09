@@ -14,7 +14,6 @@ import { runHeartbeat } from "../../scripts/mm/mm-stream-heartbeat.mjs";
 import { runMarketOutcomeIngest } from "../../lib/resolution/ingest-market-outcomes.mjs";
 import { runWhelanStructuralAggregate } from "../../lib/scanner/whelan-aggregate.mjs";
 import { runDecayMonitorCron } from "../../scripts/scanner/run-decay-cron.mjs";
-import { runDecayMonitorCron } from "../../scripts/scanner/run-decay-cron.mjs";
 
 const ADMIN_JOBS = {
   "ingest-sports":    ["node", ["lib/ingestion/sports-universe.mjs"]],
@@ -151,6 +150,7 @@ export function registerAdminJobRoutes(app, deps) {
         }
       }
 
+      // Whelan band aggregate (Stream B — daily structural signal aggregation from mm_fills).
       if (jobName === "pmci-scanner-whelan-aggregate") {
         const client = createPgClient();
         await client.connect();
@@ -168,7 +168,7 @@ export function registerAdminJobRoutes(app, deps) {
         }
       }
 
-      // Resolution-outcome ingestion
+      // Hypothesis decay monitor (Stream C — PSI/KS + KSWIN + feature importance).
       // Pattern-4 invariant: this returns non-2xx if zero rows landed when at least one
       // settled market existed during the run window — caller (pg_cron) sees the failure.
       if (jobName === "scanner-decay-nightly") {
@@ -187,6 +187,8 @@ export function registerAdminJobRoutes(app, deps) {
           await client.end().catch(() => {});
         }
       }
+
+      // Resolution-outcome ingestion (ADR-011 cutover gate 4: settlement→balance trail).
 
       if (jobName === "mm-ingest-outcomes") {
         const client = createPgClient();
