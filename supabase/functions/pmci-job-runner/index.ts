@@ -25,6 +25,7 @@ const JOB_MAP: Record<string, string> = {
   "mm-ingest-outcomes": "/v1/admin/jobs/mm-ingest-outcomes",
   "pmci-scanner-decay-nightly": "/v1/admin/jobs/scanner-decay-nightly",
   "pmci-scanner-whelan-aggregate": "/v1/admin/jobs/pmci-scanner-whelan-aggregate",
+  "scanner-backtest-nightly": "/v1/admin/jobs/scanner-backtest-nightly",
 };
 
 function jobRunnerBody(job: string): Record<string, unknown> {
