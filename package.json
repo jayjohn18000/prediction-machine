@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "lint:poly-write-guard": "node scripts/lint/no-polymarket-write.mjs",
-    "test": "npm run lint:poly-write-guard && node --test test/**/*.test.mjs",
+    "test": "npm run lint:poly-write-guard && node --test test/**/*.test.mjs tests/**/*.test.mjs tests/scanner/decay/test-kswin-synthetic.mjs",
     "test:poly-indexer": "node --test test/poly-indexer/*.test.mjs",
     "test:mm:pnl": "node --test test/mm/pnl-attribution.test.mjs",
     "test:matching": "node --test test/matching/*.test.mjs",
