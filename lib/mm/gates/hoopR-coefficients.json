@@ -1,0 +1,16 @@
+{
+  "3PT": 0.045,
+  "2PT": 0.022,
+  "LAYUP": 0.02,
+  "DUNK": 0.025,
+  "FREE THROW": 0.008,
+  "TURNOVER": 0.018,
+  "STEAL": 0.015,
+  "REBOUND": 0.006,
+  "FOUL": 0.005,
+  "TIMEOUT": 0.004,
+  "SUB": 0.001,
+  "JUMP": 0.001,
+  "PERIOD": 0.003,
+  "default": 0.012
+}
