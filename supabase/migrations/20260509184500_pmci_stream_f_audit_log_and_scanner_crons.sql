@@ -2,7 +2,11 @@
 -- Requires: Vault secret pmci_job_runner_headers + pmci._job_runner_url() helpers (migration 20260419100000).
 -- Stream A artefacts (pmci.hypotheses, scanner views, pmci.alerts) must exist before this applies.
 
-CREATE OR REPLACE FUNCTION pmci.trigger_job_runner(p_job text)
+-- Drop existing variant first because PostgreSQL forbids changing parameter names
+-- via CREATE OR REPLACE (live remote already has pmci.trigger_job_runner(job_name text)).
+DROP FUNCTION IF EXISTS pmci.trigger_job_runner(text);
+
+CREATE FUNCTION pmci.trigger_job_runner(p_job text)
 RETURNS void
 LANGUAGE plpgsql
 AS $$
