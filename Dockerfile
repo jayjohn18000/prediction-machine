@@ -10,6 +10,8 @@ RUN npm ci --omit=dev
 
 COPY . .
 
+RUN mkdir -p reports/daily reports/weekly
+
 RUN chmod +x docker-entrypoint.sh
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

@@ -66,6 +66,8 @@ const PMCI_TABLES = [
   'mm_vpin_state',
   'mm_protection_state',
   'mm_gm_posterior_state',
+  // Stream F hypothesis audit tail (cron + CLI).
+  'hypothesis_state_log',
 ];
 
 const REQUIRED_COLUMNS = {

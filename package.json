@@ -100,7 +100,13 @@
     "mm:seed": "node scripts/mm/seed-mm-market-config.mjs",
     "mm:enforce:adr012-config": "node scripts/mm/enforce-adr012-mm-config.mjs",
     "mm:repro-rejection": "node scripts/mm/repro-rejection.mjs",
-    "mm:orchestrator": "node scripts/mm/run-mm-orchestrator.mjs"
+    "mm:orchestrator": "node scripts/mm/run-mm-orchestrator.mjs",
+    "pmci:hypothesis": "node scripts/cli/pmci-hypothesis.mjs",
+    "pmci:report": "node scripts/cli/pmci-report.mjs",
+    "scanner:daily-report": "node scripts/scanner/render-daily-report.mjs",
+    "scanner:weekly-digest": "node scripts/scanner/render-weekly-digest.mjs",
+    "scanner:alert-delivery": "node scripts/scanner/alert-delivery-worker.mjs",
+    "scanner:alert-delivery:daemon": "node scripts/scanner/alert-delivery-worker.mjs --daemon"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

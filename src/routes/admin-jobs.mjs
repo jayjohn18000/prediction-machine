@@ -29,6 +29,7 @@ const ADMIN_JOBS = {
   "status-digest":    ["node", ["scripts/digest/pmci-daily-digest.mjs"]],
   "benchmark-coverage": ["node", ["scripts/benchmark/coverage-benchmark.mjs"]],
   "health-poll":      ["node", ["scripts/ops/pmci-health-poll.mjs"]],
+  "scanner-backtest-nightly": ["node", ["scripts/scanner/run-backtest-nightly.mjs"]],
 };
 
 export function registerAdminJobRoutes(app, deps) {
@@ -225,6 +226,7 @@ export function registerAdminJobRoutes(app, deps) {
         }
       }
 
+      // Backtest engine nightly run (Stream E — replay over provider_market_snapshots).
       if (jobName === "scanner-backtest-nightly") {
         try {
           const out = await runBacktestNightly();
@@ -246,6 +248,72 @@ export function registerAdminJobRoutes(app, deps) {
         }
       }
 
+      // Scanner daily report (Stream F — Handlebars HTML render to local/S3).
+      if (jobName === "scanner-daily-report") {
+        const { writeDailyReport } = await import("../../lib/scanner/daily-report-render.mjs");
+        const fs = await import("node:fs/promises");
+        const client = createPgClient();
+        await client.connect();
+        try {
+          const out = await writeDailyReport({ client });
+          await fs.access(out.htmlPath);
+          return reply.code(200).send({ ok: true, job: jobName, ...out });
+        } catch (err) {
+          return reply.code(500).send({
+            ok: false,
+            job: jobName,
+            error: /** @type {Error} */ (err).message,
+          });
+        } finally {
+          await client.end().catch(() => {});
+        }
+      }
+
+      // Scanner alert delivery worker (Stream F — Slack/email/HTTP POST per pmci.alerts).
+      if (jobName === "scanner-alert-delivery") {
+        const { runAlertDeliveryRound } = await import("../../lib/scanner/alert-delivery.mjs");
+        const client = createPgClient();
+        await client.connect();
+        try {
+          const out = await runAlertDeliveryRound(client);
+          const bad = !out.errors.length ? false : out.errors.some((e) => /^load_alerts:/.test(e));
+          return reply.code(bad ? 503 : out.failed > 0 ? 207 : 200).send({
+            ok: true,
+            job: jobName,
+            ...out,
+          });
+        } catch (err) {
+          return reply.code(500).send({
+            ok: false,
+            job: jobName,
+            error: /** @type {Error} */ (err).message,
+          });
+        } finally {
+          await client.end().catch(() => {});
+        }
+      }
+
+      // Scanner weekly digest (Stream F — runs auto-retire + writes weekly HTML).
+      if (jobName === "scanner-weekly-digest") {
+        const { writeWeeklyDigest } = await import("../../lib/scanner/weekly-digest-render.mjs");
+        const fs = await import("node:fs/promises");
+        const client = createPgClient();
+        await client.connect();
+        try {
+          const out = await writeWeeklyDigest({ client });
+          await fs.access(out.htmlPath);
+          return reply.code(200).send({ ok: true, job: jobName, ...out });
+        } catch (err) {
+          return reply.code(500).send({
+            ok: false,
+            job: jobName,
+            error: /** @type {Error} */ (err).message,
+          });
+        } finally {
+          await client.end().catch(() => {});
+        }
+      }
+
       const job = ADMIN_JOBS[jobName];
       if (!job) {
         return reply.code(404).send({
@@ -262,7 +330,10 @@ export function registerAdminJobRoutes(app, deps) {
             "pmci-scanner-whelan-aggregate",
             "scanner-decay-nightly",
             "scanner-backtest-nightly",
-          ],
+            "scanner-daily-report",
+            "scanner-alert-delivery",
+            "scanner-weekly-digest",
+          ].sort(),
         });
       }
 
@@ -296,8 +367,11 @@ export function registerAdminJobRoutes(app, deps) {
         "mm-ingest-outcomes",
         "pmci-scanner-whelan-aggregate",
         "scanner-decay-nightly",
+        "scanner-daily-report",
+        "scanner-alert-delivery",
+        "scanner-weekly-digest",
         "scanner-backtest-nightly",
       ].sort(),
-    })
+    }),
   );
 }
