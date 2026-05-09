@@ -23,6 +23,8 @@ const JOB_MAP: Record<string, string> = {
   "mm-rotator-disable-watcher": "/v1/admin/jobs/mm-rotator-disable-watcher",
   "mm-stream-heartbeat": "/v1/admin/jobs/mm-stream-heartbeat",
   "mm-ingest-outcomes": "/v1/admin/jobs/mm-ingest-outcomes",
+  "pmci-scanner-decay-nightly": "/v1/admin/jobs/scanner-decay-nightly",
+  "pmci-scanner-whelan-aggregate": "/v1/admin/jobs/pmci-scanner-whelan-aggregate",
 };
 
 function jobRunnerBody(job: string): Record<string, unknown> {

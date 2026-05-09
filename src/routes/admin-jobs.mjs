@@ -12,6 +12,9 @@ import { runRotation } from "../../scripts/mm/rotate-demo-tickers.mjs";
 import { runRotatorDisableWatcher } from "../../scripts/mm/rotator-disable-watcher.mjs";
 import { runHeartbeat } from "../../scripts/mm/mm-stream-heartbeat.mjs";
 import { runMarketOutcomeIngest } from "../../lib/resolution/ingest-market-outcomes.mjs";
+import { runWhelanStructuralAggregate } from "../../lib/scanner/whelan-aggregate.mjs";
+import { runDecayMonitorCron } from "../../scripts/scanner/run-decay-cron.mjs";
+import { runDecayMonitorCron } from "../../scripts/scanner/run-decay-cron.mjs";
 
 const ADMIN_JOBS = {
   "ingest-sports":    ["node", ["lib/ingestion/sports-universe.mjs"]],
@@ -148,9 +151,43 @@ export function registerAdminJobRoutes(app, deps) {
         }
       }
 
-      // Resolution-outcome ingestion (ADR-011 cutover gate 4: settlement→balance trail).
+      if (jobName === "pmci-scanner-whelan-aggregate") {
+        const client = createPgClient();
+        await client.connect();
+        try {
+          const { inserted } = await runWhelanStructuralAggregate(client);
+          return reply.code(200).send({ ok: true, job: jobName, rows_delta: inserted });
+        } catch (err) {
+          return reply.code(500).send({
+            ok: false,
+            job: jobName,
+            error: /** @type {Error} */ (err).message,
+          });
+        } finally {
+          await client.end().catch(() => {});
+        }
+      }
+
+      // Resolution-outcome ingestion
       // Pattern-4 invariant: this returns non-2xx if zero rows landed when at least one
       // settled market existed during the run window — caller (pg_cron) sees the failure.
+      if (jobName === "scanner-decay-nightly") {
+        const client = createPgClient();
+        await client.connect();
+        try {
+          const summary = await runDecayMonitorCron(client);
+          return reply.code(summary.ok ? 200 : 500).send({ job: jobName, ...summary });
+        } catch (err) {
+          return reply.code(500).send({
+            ok: false,
+            job: jobName,
+            error: /** @type {Error} */ (err).message,
+          });
+        } finally {
+          await client.end().catch(() => {});
+        }
+      }
+
       if (jobName === "mm-ingest-outcomes") {
         const client = createPgClient();
         await client.connect();
@@ -198,6 +235,8 @@ export function registerAdminJobRoutes(app, deps) {
             "mm-rotator-disable-watcher",
             "mm-stream-heartbeat",
             "mm-ingest-outcomes",
+            "pmci-scanner-whelan-aggregate",
+            "scanner-decay-nightly",
           ],
         });
       }
@@ -230,6 +269,8 @@ export function registerAdminJobRoutes(app, deps) {
         "mm-rotator-disable-watcher",
         "mm-stream-heartbeat",
         "mm-ingest-outcomes",
+        "pmci-scanner-whelan-aggregate",
+        "scanner-decay-nightly",
       ].sort(),
     })
   );
