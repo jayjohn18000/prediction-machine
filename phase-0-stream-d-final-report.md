@@ -3,11 +3,12 @@
 ## Branch
 
 - **Name:** `phase-0/stream-d-mm-v1-patch`
-- **HEAD SHA:** `f7520b3`
-- **Commits on branch not in `origin/main`:**
+- **Tip (verify after pull):** `git fetch origin && git log -1 --oneline origin/phase-0/stream-d-mm-v1-patch`
+
+## Commits on branch not in `origin/main`
 
 ```
-f7520b3 docs(phase-0): correct HEAD SHA in stream-d final report
+2ab1a34 docs(phase-0): correct HEAD SHA in stream-d final report
 4f62c90 docs(phase-0): Stream D final report + verification evidence
 b0189d6 feat(mm): Stream D — VPIN, game-state gate, IProtection ladder, paper mode
 ```
