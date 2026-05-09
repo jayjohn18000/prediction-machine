@@ -57,7 +57,8 @@ After `db push` of the new migration and deploy of `pmci-api` **with** the in-pr
 
 ## Commit
 
-- **Tip:** `f5bdef0` — `feat(mm): Stream E backtest engine + shared computeQuote path`
+- **Engine + wiring:** `f5bdef0` — `feat(mm): Stream E backtest engine + shared computeQuote path`
+- **Branch tip (includes final report SHA line):** `935599d`
 
 ---
 *Generated per `.cursor-prompts/phase-0/05-stream-e-backtest-engine.md`.*
