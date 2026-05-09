@@ -1,0 +1,20 @@
+[Unit]
+Description=PMCI Phase-0 Scanner normalizer (Kalshi WS + NBA CDN ingest)
+After=network-online.target amazon-ssm-agent.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/prediction-machine
+EnvironmentFile=-/etc/pmci-normalizer.env
+ExecStart=/usr/bin/node /opt/prediction-machine/pmci-normalizer/src/index.mjs
+Restart=on-failure
+RestartSec=15
+LimitNOFILE=65536
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
