@@ -76,11 +76,7 @@ WHERE computed_at > now() - interval '5 minutes';
 
 ### Git remote
 
-```bash
-git push -u origin phase-0/stream-c-decay-monitor
-```
-
-*(Confirm remote tip matches **`f0822223382317a0317652975f06a604e817e553`** after push.)*
+Branch **`phase-0/stream-c-decay-monitor`** is intended to track **`origin/phase-0/stream-c-decay-monitor`**. Confirm what you have reviewed locally with **`git fetch`** then **`git log -3 --oneline`**—third-party tooling URLs omitted intentionally (**no PR** per Stream C brief).
 
 ### Operator stash notice
 
@@ -88,4 +84,4 @@ Unrelated Phase 0 / Stream B work was **`git stash push`**’d as **`wip-before-
 
 ### Final status line
 
-**`BLOCKED ON: Supabase migration-history drift (db push); Fly pmci-api + Edge Function redeploy; seeded live/testing hypotheses for Pattern 4 row-count smoke & feature-importance DB verification`** — **implementation + report committed on `phase-0/stream-c-decay-monitor` (tip `f0822223382317a0317652975f06a604e817e553`).**
+**`BLOCKED ON: Supabase migration-history drift (db push); Fly pmci-api + Edge Function redeploy; seeded live/testing hypotheses for Pattern 4 row-count smoke & feature-importance DB verification`** — **implementation + docs landed on `phase-0/stream-c-decay-monitor` — verify tip via `git log -1`.**
