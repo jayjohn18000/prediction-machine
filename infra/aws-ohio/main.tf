@@ -100,7 +100,7 @@ resource "aws_route_table_association" "public_assoc" {
 resource "aws_security_group" "pmci_normalizer" {
   name_prefix = "pmci-normalizer-"
   vpc_id      = aws_vpc.pmci_scanner_vpc.id
-  description = "Egress-only security group — reach Supabase/Kalshi/S3/AWS APIs over HTTPS."
+  description = "Egress-only security group - reach Supabase/Kalshi/S3/AWS APIs over HTTPS."
 
   egress {
     protocol    = "-1"
