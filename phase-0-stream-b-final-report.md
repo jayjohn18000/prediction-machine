@@ -12,6 +12,7 @@
 ## Commits
 
 ```
+6b7a69a docs(phase-0): fix Stream B report HEAD SHA
 2ff9715 feat(scanner): Stream B Whelan daily cron, NBA lag + microstructure detectors
 ```
 
