@@ -18,6 +18,7 @@ import { registerReviewRoutes } from "./routes/review.mjs";
 import { registerLinksRoutes } from "./routes/links.mjs";
 import { registerAdminJobRoutes } from "./routes/admin-jobs.mjs";
 import { registerMmDashboardRoutes } from "./routes/mm-dashboard.mjs";
+import { registerReportStaticRoutes } from "./routes/reports-static.mjs";
 import { resolveProviderIdByCode } from "./repositories/providers-repo.mjs";
 import { percentile, typeFactor, computeConsensus, computeDivergence } from "./utils/metrics.mjs";
 import { parseSince } from "./utils/time.mjs";
@@ -236,7 +237,10 @@ export async function buildApp() {
   app.addHook("onRequest", async (req, reply) => {
     const apiKey = config.apiKey;
     if (!apiKey) return;
-    if (req.url.startsWith("/v1/health/")) return;
+    const raw = req.raw.url ?? req.url ?? "/";
+    const p = typeof raw === "string" ? raw.split("?")[0] ?? raw : "";
+    if (p.startsWith("/v1/health/")) return;
+    if (p.startsWith("/reports/")) return;
     const provided = req.headers["x-pmci-api-key"];
     if (provided !== apiKey) {
       reply.code(401);
@@ -257,6 +261,7 @@ export async function buildApp() {
   registerLinksRoutes(app, deps);
   registerAdminJobRoutes(app, deps);
   registerMmDashboardRoutes(app, deps);
+  registerReportStaticRoutes(app);
 
   return app;
 }

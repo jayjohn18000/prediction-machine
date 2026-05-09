@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Weekly scanner digest — {{weekStamp}}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; background: #fdfcfa; color: #111; }
+    h1,h2 { margin: 0 0 12px; }
+    .meta { color: #555; font-size: 14px; margin-bottom: 24px; }
+    table { border-collapse: collapse; background: #fff; width: 100%; margin-bottom: 28px;
+            box-shadow: 0 1px 3px rgb(0 0 0 / 0.06); }
+    th, td { border: 1px solid #e2e2e2; padding: 8px 10px; text-align: left; font-size: 14px; vertical-align: top; }
+    th { background: #f0f4f8; }
+    .muted { color: #666; font-size: 13px; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 6px; background: #fee; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Weekly scanner digest</h1>
+  <div class="meta">{{weekStamp}} · generated {{generatedAt}}</div>
+
+  <h2>Cross-day patterns</h2>
+  <table>
+    <thead><tr><th>Day (UTC)</th><th>Signals</th><th>Hypotheses</th></tr></thead>
+    <tbody>
+      {{#each crossDayPatterns}}
+      <tr><td>{{day_utc}}</td><td>{{signal_count}}</td><td>{{hypotheses_touched}}</td></tr>
+      {{else}}
+      <tr><td colspan="3" class="muted">No activity window.</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <h2>Decay state</h2>
+  <table>
+    <thead><tr><th>Hypothesis</th><th>triggers_retire</th><th>snapshot</th></tr></thead>
+    <tbody>
+      {{#each decay}}
+      <tr>
+        <td><code>{{hypothesis_id}}</code></td>
+        <td>{{triggers_retire}}</td>
+        <td><pre class="muted">{{jsonify snapshot}}</pre></td>
+      </tr>
+      {{else}}
+      <tr><td colspan="3" class="muted">No decay rows.</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <h2>Promotion candidates</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Status</th></tr></thead>
+    <tbody>
+      {{#each promotionCandidates}}
+      <tr><td><code>{{id}}</code></td><td>{{status}}</td></tr>
+      {{else}}
+      <tr><td colspan="2" class="muted">None.</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <h2>Retirement queue <span class="pill">triggers_retire</span></h2>
+  <table>
+    <thead><tr><th>Hypothesis</th></tr></thead>
+    <tbody>
+      {{#each retirementList}}
+      <tr><td><code>{{hypothesis_id}}</code></td></tr>
+      {{else}}
+      <tr><td class="muted">Empty</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <h2>Capital / status allocation</h2>
+  <table>
+    <thead><tr><th>Status</th><th>Hypotheses</th></tr></thead>
+    <tbody>
+      {{#each capital}}
+      <tr><td>{{status}}</td><td>{{hypotheses}}</td></tr>
+      {{else}}
+      <tr><td colspan="2" class="muted">Unknown</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <h2>Hypotheses (latest)</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Status</th><th>retired</th></tr></thead>
+    <tbody>
+      {{#each hypotheses}}
+      <tr>
+        <td><code>{{id}}</code></td>
+        <td>{{status}}</td>
+        <td>{{retired_at}} {{retired_reason}}</td>
+      </tr>
+      {{else}}
+      <tr><td colspan="3" class="muted">No rows.</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <h2>Signal sample</h2>
+  <table>
+    <thead><tr><th>Hypothesis</th><th>Type</th><th>Score</th><th>Observed</th></tr></thead>
+    <tbody>
+      {{#each signalsSample}}
+      <tr>
+        <td><code>{{hypothesis_id}}</code></td>
+        <td>{{signal_type}}</td>
+        <td>{{score}}</td>
+        <td>{{observed_at}}</td>
+      </tr>
+      {{else}}
+      <tr><td colspan="4" class="muted">No signals.</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <p class="muted">Total unified rows considered: {{signalCount}}</p>
+</body>
+</html>

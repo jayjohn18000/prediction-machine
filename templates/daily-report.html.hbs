@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Daily scanner report — {{dateStamp}}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; background: #f7f7f8; color: #111; }
+    h1,h2 { margin: 0 0 12px; }
+    .meta { color: #555; font-size: 14px; margin-bottom: 24px; }
+    table { border-collapse: collapse; background: #fff; width: 100%; margin-bottom: 32px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.06); }
+    th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; font-size: 14px; vertical-align: top; }
+    th { background: #eee; }
+    .muted { color: #666; font-size: 13px; }
+    .star { color: #c60; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>Daily scanner report</h1>
+  <div class="meta">{{dateStamp}} · generated {{generatedAt}} UTC</div>
+
+  <h2>Hit-rate ranking (Wilson 95% CI; * = interval straddles 0.50)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Hypothesis</th>
+        <th>Hits / n</th>
+        <th>Rate</th>
+        <th>CI low</th>
+        <th>CI high</th>
+        <th>Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each ranked}}
+      <tr>
+        <td><code>{{hypothesis_id}}</code></td>
+        <td>{{hits}} / {{n}}</td>
+        <td>{{hit_rate}}</td>
+        <td>{{ci_low}}</td>
+        <td>{{ci_high}}</td>
+        <td>{{#if ambiguous_star}}<span class="star">*</span>{{/if}}</td>
+      </tr>
+      {{else}}
+      <tr><td colspan="6" class="muted">No labelled signal rows yet (needs payload.correct).</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <h2>Promotion candidates</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Status</th><th>created</th></tr></thead>
+    <tbody>
+      {{#each promotionCandidates}}
+      <tr><td><code>{{id}}</code></td><td>{{status}}</td><td>{{created_at}}</td></tr>
+      {{else}}
+      <tr><td colspan="3" class="muted">None loaded.</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <h2>Hypothesis decay (snapshot)</h2>
+  <table>
+    <thead><tr><th>Hypothesis</th><th>triggers_retire</th></tr></thead>
+    <tbody>
+      {{#each decay}}
+      <tr><td><code>{{hypothesis_id}}</code></td><td>{{triggers_retire}}</td></tr>
+      {{else}}
+      <tr><td colspan="2" class="muted">No decay rows.</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <h2>Recent unified signals</h2>
+  <table>
+    <thead><tr><th>Hypothesis</th><th>Type</th><th>Score</th><th>Observed</th></tr></thead>
+    <tbody>
+      {{#each signals}}
+      <tr>
+        <td><code>{{hypothesis_id}}</code></td>
+        <td>{{signal_type}}</td>
+        <td>{{score}}</td>
+        <td>{{observed_at}}</td>
+      </tr>
+      {{else}}
+      <tr><td colspan="4" class="muted">No unified signals (view unavailable or empty).</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <h2>Cross-day volume (UTC, last 14d)</h2>
+  <table>
+    <thead><tr><th>Day</th><th>Signals</th><th>Distinct hypotheses</th></tr></thead>
+    <tbody>
+      {{#each crossDayPatterns}}
+      <tr><td>{{day_utc}}</td><td>{{signal_count}}</td><td>{{hypotheses_touched}}</td></tr>
+      {{else}}
+      <tr><td colspan="3" class="muted">No scanner activity.</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <p class="muted">signals in view snapshot: {{signalCount}}</p>
+</body>
+</html>
