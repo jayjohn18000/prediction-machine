@@ -12,7 +12,7 @@
 ## Commits
 
 ```
-9709852 feat(scanner): Stream B Whelan daily cron, NBA lag + microstructure detectors
+2ff9715 feat(scanner): Stream B Whelan daily cron, NBA lag + microstructure detectors
 ```
 
 Pushed: **`origin/phase-0/stream-b-detectors`**
