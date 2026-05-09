@@ -19,7 +19,12 @@ import {
   runMmOrchestratorLoop,
   fetchEnabledMarketConfigs,
 } from "../../lib/mm/orchestrator.mjs";
-import { kalshiEnvFromMode, guardKalshiTradingBase } from "../../lib/mm/kalshi-env.mjs";
+import {
+  kalshiEnvFromMode,
+  guardKalshiTradingBase,
+  resolveKalshiRunMode,
+  isPaperModeEnabledFromEnv,
+} from "../../lib/mm/kalshi-env.mjs";
 import { createPgClient } from "../../lib/mm/order-store.mjs";
 import { loadPrivateKey } from "../../lib/providers/kalshi-ws-auth.mjs";
 import { startDepthIngestion, makePgDepthWriter } from "../../lib/ingestion/depth.mjs";
@@ -111,6 +116,13 @@ async function startDepthWithRetry(attempt, onError) {
 let depthGetHealthSnapshot = null;
 
 async function main() {
+  if (resolveKalshiRunMode() === "paper" && !isPaperModeEnabledFromEnv()) {
+    console.warn(
+      "[mm] MM_RUN_MODE=paper requires MM_PAPER_MODE_ENABLED=true — exiting cleanly (Stream D gate)",
+    );
+    process.exit(0);
+  }
+
   const app = Fastify({ logger: false });
   // /health/mm returns 503 when the runtime is in severity=crit so Fly's
   // health-check actually flips the machine — the 2026-05-02 incident showed
@@ -299,8 +311,8 @@ async function main() {
         if (!keyId?.trim()) {
           /** @type {any} */
           (health).depthStartError =
-            kalshiEnv.runMode === "prod"
-              ? "KALSHI_PROD_API_KEY_ID required for depth (MM_RUN_MODE=prod)"
+            kalshiEnv.runMode === "prod" || kalshiEnv.runMode === "paper"
+              ? "KALSHI_PROD_API_KEY_ID required for depth (MM_RUN_MODE=prod or paper)"
               : "KALSHI_DEMO_API_KEY_ID (or KALSHI_API_KEY_ID) required for depth";
           return;
         }
