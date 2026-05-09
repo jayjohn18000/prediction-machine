@@ -1,10 +1,11 @@
 ## Phase 0 Stream A — final report
 
 - **Branch:** `phase-0/stream-a-schema-normalizer`
-- **HEAD SHA:** `8f05e1f065ec424626a3b01db7c1b28afc384860`
+- **HEAD SHA:** `df7303100657052132de5cdf13d0117048f86ee6`
 - **Tracked vs `origin/main` (newest-first):**
 
 ```
+df73031 docs(phase-0): sync final-report with branch tip
 8f05e1f docs(phase-0): correct final-report HEAD SHA
 c6c9730 docs(phase-0): capture Stream A SQL validation outputs
 e90d187 feat(infra): Terraform Ohio VPC + EC2 normalizer bootstrap
