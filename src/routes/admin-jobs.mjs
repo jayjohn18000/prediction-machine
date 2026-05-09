@@ -12,6 +12,7 @@ import { runRotation } from "../../scripts/mm/rotate-demo-tickers.mjs";
 import { runRotatorDisableWatcher } from "../../scripts/mm/rotator-disable-watcher.mjs";
 import { runHeartbeat } from "../../scripts/mm/mm-stream-heartbeat.mjs";
 import { runMarketOutcomeIngest } from "../../lib/resolution/ingest-market-outcomes.mjs";
+import { runBacktestNightly } from "../../lib/backtest/nightly.mjs";
 
 const ADMIN_JOBS = {
   "ingest-sports":    ["node", ["lib/ingestion/sports-universe.mjs"]],
@@ -185,6 +186,27 @@ export function registerAdminJobRoutes(app, deps) {
         }
       }
 
+      if (jobName === "scanner-backtest-nightly") {
+        try {
+          const out = await runBacktestNightly();
+          return reply.code(200).send({
+            ok: true,
+            job: jobName,
+            runId: out.runId,
+            valid: out.valid,
+            pass: out.pass,
+            acceptance: out.acceptance,
+            netEdge: out.netEdge,
+          });
+        } catch (err) {
+          return reply.code(500).send({
+            ok: false,
+            job: jobName,
+            error: /** @type {Error} */ (err).message,
+          });
+        }
+      }
+
       const job = ADMIN_JOBS[jobName];
       if (!job) {
         return reply.code(404).send({
@@ -198,6 +220,7 @@ export function registerAdminJobRoutes(app, deps) {
             "mm-rotator-disable-watcher",
             "mm-stream-heartbeat",
             "mm-ingest-outcomes",
+            "scanner-backtest-nightly",
           ],
         });
       }
@@ -230,6 +253,7 @@ export function registerAdminJobRoutes(app, deps) {
         "mm-rotator-disable-watcher",
         "mm-stream-heartbeat",
         "mm-ingest-outcomes",
+        "scanner-backtest-nightly",
       ].sort(),
     })
   );

@@ -23,6 +23,7 @@ const JOB_MAP: Record<string, string> = {
   "mm-rotator-disable-watcher": "/v1/admin/jobs/mm-rotator-disable-watcher",
   "mm-stream-heartbeat": "/v1/admin/jobs/mm-stream-heartbeat",
   "mm-ingest-outcomes": "/v1/admin/jobs/mm-ingest-outcomes",
+  "scanner-backtest-nightly": "/v1/admin/jobs/scanner-backtest-nightly",
 };
 
 function jobRunnerBody(job: string): Record<string, unknown> {
