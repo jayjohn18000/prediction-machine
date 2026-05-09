@@ -57,7 +57,7 @@ After `db push` of the new migration and deploy of `pmci-api` **with** the in-pr
 
 ## Commit
 
-After push, record: `git log -1 --oneline` on `phase-0/stream-e-backtest-engine`.
+- **Tip:** `f5bdef0` — `feat(mm): Stream E backtest engine + shared computeQuote path`
 
 ---
 *Generated per `.cursor-prompts/phase-0/05-stream-e-backtest-engine.md`.*
