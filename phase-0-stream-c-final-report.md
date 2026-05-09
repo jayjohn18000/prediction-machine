@@ -7,8 +7,8 @@
 ### Commits (this Stream)
 
 ```
-34de5deb feat(scanner): Stream C nightly decay monitor (PSI/KS, KSWIN, logistic FI)
-8f5dbaf7 docs(phase-0): Stream C final report
+34de5deb3a83777609caa371b2a07d35a57861f0 feat(scanner): Stream C nightly decay monitor (PSI/KS, KSWIN, logistic FI)
+f0822223382317a0317652975f06a604e817e553 docs(phase-0): Stream C final report
 ```
 
 ### What shipped
@@ -80,7 +80,7 @@ WHERE computed_at > now() - interval '5 minutes';
 git push -u origin phase-0/stream-c-decay-monitor
 ```
 
-*(Confirm remote tip matches **`8f5dbaf7`** after push.)*
+*(Confirm remote tip matches **`f0822223382317a0317652975f06a604e817e553`** after push.)*
 
 ### Operator stash notice
 
@@ -88,4 +88,4 @@ Unrelated Phase 0 / Stream B work was **`git stash push`**’d as **`wip-before-
 
 ### Final status line
 
-**`BLOCKED ON: Supabase migration-history drift (db push); Fly pmci-api + Edge Function redeploy; seeded live/testing hypotheses for Pattern 4 row-count smoke & feature-importance DB verification`** — **implementation + report committed on `phase-0/stream-c-decay-monitor` (tip `8f5dbaf7`).**
+**`BLOCKED ON: Supabase migration-history drift (db push); Fly pmci-api + Edge Function redeploy; seeded live/testing hypotheses for Pattern 4 row-count smoke & feature-importance DB verification`** — **implementation + report committed on `phase-0/stream-c-decay-monitor` (tip `f0822223382317a0317652975f06a604e817e553`).**
