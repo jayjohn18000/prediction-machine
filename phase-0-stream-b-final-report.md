@@ -11,13 +11,11 @@
 
 ## Commits
 
-```
-db9c333 docs(phase-0): list both Stream B commits in final report
-6b7a69a docs(phase-0): fix Stream B report HEAD SHA
-2ff9715 feat(scanner): Stream B Whelan daily cron, NBA lag + microstructure detectors
-```
+Newest-first on `phase-0/stream-b-detectors`: `git log --oneline -8 phase-0/stream-b-detectors`
 
-Pushed: **`origin/phase-0/stream-b-detectors`**
+(Feature commit implementing detectors + Whelan: **`2ff9715`**.)
+
+Pushed: **`origin/phase-0/stream-b-detectors`** (branch tip advances with doc-only commits on the same branch.)
 
 ## Deliverables
 
