@@ -1,10 +1,11 @@
 ## Phase 0 Stream A — final report
 
 - **Branch:** `phase-0/stream-a-schema-normalizer`
-- **HEAD SHA:** `c6c973092a63bb9681752294166a9ac23889e0bc`
+- **HEAD SHA:** `b0af1d8b4be48f4d89108cf61b10d05e208d134e`
 - **Tracked vs `origin/main` (newest-first):**
 
 ```
+b0af1d8 docs(phase-0): Stream A final report (operator evidence)
 c6c9730 docs(phase-0): capture Stream A SQL validation outputs
 e90d187 feat(infra): Terraform Ohio VPC + EC2 normalizer bootstrap
 7ee9c9a feat(pmci-normalizer): Stream A provenance ingest (Kalshi PROD WS + NBA CDN)
